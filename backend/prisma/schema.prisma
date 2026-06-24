@@ -1,0 +1,91 @@
+// TipVan backend schema. Field names mirror the frontend's TypeScript types
+// (Driver / Tip) so the API can return shapes the UI already expects.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  driver
+  admin
+}
+
+enum SubscriptionStatus {
+  none
+  trialing
+  active
+  past_due
+  canceled
+}
+
+enum TipStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+model Driver {
+  id           String  @id @default(uuid())
+  publicId     String  @unique // short code shown on QR / typed by customers (e.g. "5HQN7")
+  email        String  @unique
+  passwordHash String
+  role         Role    @default(driver)
+
+  // Profile (mirrors frontend Driver interface)
+  name      String
+  company   String?
+  phone     String?
+  photoUrl  String?
+  vanPhotoUrl String?
+  city      String?
+  tagline   String?
+  verified  Boolean @default(false)
+  yearsActive Int   @default(0)
+  deliveries  Int   @default(0)
+
+  // Stripe / billing
+  stripeAccountId    String?            @unique
+  stripeCustomerId   String?            @unique
+  subscriptionStatus SubscriptionStatus @default(none)
+  stripeOnboarded    Boolean            @default(false)
+  isActive           Boolean            @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tips Tip[]
+}
+
+model Tip {
+  id         String @id @default(uuid())
+  driverId   String
+  driver     Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  amount   Int       // pence
+  currency String    @default("gbp")
+  rating   Int?      // 1..5
+  status   TipStatus @default(pending)
+
+  customerName    String?
+  customerAddress String?
+  message         String?
+
+  stripePaymentIntentId String? @unique
+
+  createdAt DateTime @default(now())
+
+  @@index([driverId])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+}

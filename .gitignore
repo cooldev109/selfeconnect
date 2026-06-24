@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+*/node_modules/
+manual-tests/node_modules
+
+# Builds / generated output
+backend/dist/
+frontend/.output/
+frontend/.nitro/
+frontend/.vinxi/
+frontend/.tanstack/
+frontend/dist/
+
+# Environment & secrets (NEVER commit real values)
+.env
+.env.*
+!.env.example
+!.env.*.example
+ecosystem.config.cjs
+
+# Uploaded user data
+backend/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Temp
+*.tmp
+scratchpad/
