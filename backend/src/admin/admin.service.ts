@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-const MONTHLY_FEE = 9.99;
+// Must match the Stripe subscription price. Configurable so a price change
+// only needs an env update (defaults to the current £5.49).
+const MONTHLY_FEE = Number(process.env.SUBSCRIPTION_PRICE_GBP) || 5.49;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 @Injectable()

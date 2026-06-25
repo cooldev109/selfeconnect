@@ -18,6 +18,7 @@ module.exports = {
         STRIPE_SECRET_KEY: "sk_test_or_sk_live_...",
         STRIPE_SUBSCRIPTION_PRICE_ID: "price_...",
         STRIPE_WEBHOOK_SECRET: "whsec_...",
+        SUBSCRIPTION_PRICE_GBP: "5.49",
       },
     },
     {

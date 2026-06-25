@@ -79,7 +79,7 @@ describe('Admin (e2e)', () => {
     expect(res.body.totalDrivers).toBe(2);
     expect(res.body.activeSubs).toBe(1);
     expect(res.body.totalTipsProcessed).toBe(7.5); // (500+250)/100
-    expect(res.body.platformRevenue).toBe(9.99); // 1 × 9.99
+    expect(res.body.platformRevenue).toBe(5.49); // 1 × 5.49
     expect(res.body.monthly).toHaveLength(6);
   });
 
