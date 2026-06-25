@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { Camera, CheckCircle2, Loader2, Truck } from "lucide-react";
+import { Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/auth-side.jpg";
 import { signup as signupRequest } from "@/lib/auth";
@@ -139,9 +140,7 @@ function SignupPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/50 via-primary/25 to-primary/85" />
         <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
           <Link to="/" className="flex w-fit items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/15 backdrop-blur">
-              <Truck size={18} strokeWidth={2.5} />
-            </div>
+            <LogoMark className="h-9 w-9" tone="white" />
             <span className="text-lg font-bold tracking-tight font-display">SelfeConnect</span>
           </Link>
           <div className="max-w-md space-y-5">

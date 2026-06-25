@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { BadgeCheck, Camera, Download, FileText, Truck, Link2, Lightbulb } from "lucide-react";
+import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
 import {
   Badge,
   Button,
@@ -10,7 +10,7 @@ import {
   Input,
 } from "@/components/shared";
 import { useMe } from "@/hooks/useDriver";
-import { LOGO_MARK_SVG } from "@/components/Logo";
+import { LOGO_MARK_SVG, LogoMark } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import vanQr from "@/assets/van-qr.jpg";
@@ -205,9 +205,7 @@ function ProfilePage() {
       {/* Header */}
       <header className="bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-2xl items-center gap-2 px-6 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-foreground/15">
-            <Truck className="h-5 w-5" />
-          </div>
+          <LogoMark className="h-9 w-9" tone="white" />
           <span className="text-lg font-bold tracking-tight">SelfeConnect</span>
         </div>
       </header>

@@ -1,7 +1,8 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, Receipt, Settings, LogOut, Truck } from "lucide-react";
+import { LayoutDashboard, Users, Receipt, Settings, LogOut } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 import { me, logout, type AuthDriver } from "@/lib/auth";
 import {
   Sidebar,
@@ -61,9 +62,7 @@ function AdminLayout() {
         <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link to="/admin" className="flex items-center gap-2 px-2 py-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Truck className="h-4 w-4" />
-              </div>
+              <LogoMark className="h-8 w-8" />
               <span className="font-bold tracking-tight">SelfeConnect</span>
             </Link>
           </SidebarHeader>

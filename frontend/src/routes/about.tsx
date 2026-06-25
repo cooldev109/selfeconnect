@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Truck, Star, Wallet, ShieldCheck } from "lucide-react";
+import { Star, Wallet, ShieldCheck } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -17,9 +18,7 @@ function About() {
       <header className="border-b border-border/60">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Truck className="h-4 w-4" />
-            </div>
+            <LogoMark className="h-8 w-8" />
             <span className="font-display font-bold tracking-tight text-foreground">SelfeConnect</span>
           </Link>
           <Link to="/signup" className="text-sm font-semibold text-primary hover:underline">

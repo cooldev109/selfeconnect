@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ShieldCheck, Truck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/auth-side.jpg";
 import { login as loginRequest } from "@/lib/auth";
@@ -64,9 +65,7 @@ function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/20 to-primary/80" />
         <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
           <Link to="/" className="flex w-fit items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/15 backdrop-blur">
-              <Truck size={18} strokeWidth={2.5} />
-            </div>
+            <LogoMark className="h-9 w-9" tone="white" />
             <span className="text-lg font-bold tracking-tight font-display">SelfeConnect</span>
           </Link>
           <div className="max-w-md">
@@ -87,9 +86,7 @@ function LoginPage() {
         <div className="absolute inset-0 -z-10 bg-mesh opacity-70" />
         <div className="w-full max-w-md animate-fade-up">
           <Link to="/" className="mx-auto mb-7 flex w-fit items-center gap-2 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-elevated">
-              <Truck size={18} strokeWidth={2.5} />
-            </div>
+            <LogoMark className="h-9 w-9" />
             <span className="text-lg font-bold tracking-tight text-foreground font-display">SelfeConnect</span>
           </Link>
         <div className="text-center">

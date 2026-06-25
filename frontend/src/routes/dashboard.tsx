@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Truck,
   ChevronDown,
   User,
   CreditCard,
@@ -426,9 +425,7 @@ function TopNav({ driverName, onLogout }: { driverName: string; onLogout: () => 
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-elevated">
-            <Truck className="h-4 w-4" />
-          </div>
+          <LogoMark className="h-8 w-8" />
           <span className="font-display font-bold tracking-tight text-foreground">SelfeConnect</span>
         </Link>
 
