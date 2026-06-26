@@ -13,7 +13,7 @@ import {
 import heroDriver from "@/assets/hero-driver.jpg";
 import { api } from "@/lib/api";
 import scanQr from "@/assets/scan-qr.jpg";
-import vanQr from "@/assets/van-qr.jpg";
+import professionalsFlyer from "@/assets/professionals-flyer.png";
 import dashboardEmpty from "@/assets/dashboard-empty.jpg";
 import {
   Accordion,
@@ -71,7 +71,7 @@ function Home() {
               to="/login"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Professional Log in
+              Log in
             </Link>
             <Button asChild size="sm" className="rounded-xl">
               <Link to="/signup">Join as a professional</Link>
@@ -192,8 +192,8 @@ function Home() {
               number={2}
               title="Print it"
               description="Print the QR code label and hand it to your customer. They can instantly rate your service, share their feedback, and reward exceptional work with a tip."
-              image={vanQr}
-              imageAlt="A teal SelfeConnect QR code label ready to hand to a customer"
+              image={professionalsFlyer}
+              imageAlt="Self-employed professionals handing a SelfeConnect QR code flyer to happy customers"
             />
             <Step
               number={3}
@@ -262,8 +262,10 @@ function Home() {
             <AccordionItem value="commission">
               <AccordionTrigger>Is there really no commission?</AccordionTrigger>
               <AccordionContent>
-                Absolutely. One flat monthly subscription and you keep 100% of
-                every tip. We never take a cut.
+                Absolutely. We charge a simple monthly subscription and never
+                take a percentage of your tips or payments. You keep 100% of
+                every tip, less any standard payment processing fees charged by
+                our payment partner. We never take a cut.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

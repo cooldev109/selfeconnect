@@ -13,6 +13,7 @@ import {
   MapPin,
   Quote,
 } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 import {
   Area,
   AreaChart,

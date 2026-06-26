@@ -70,7 +70,7 @@ function ProfilePage() {
 
   const downloadPng = () => {
     const canvas = qrRef.current?.querySelector("canvas");
-    if (!canvas) return;
+    if (!canvas || !driver) return;
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = url;
@@ -80,7 +80,7 @@ function ProfilePage() {
 
   const downloadPdf = () => {
     const canvas = qrRef.current?.querySelector("canvas");
-    if (!canvas) return;
+    if (!canvas || !driver) return;
     const dataUrl = canvas.toDataURL("image/png");
     const w = window.open("", "_blank");
     if (!w) return;

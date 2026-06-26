@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Loader2,
   Lock,
-  Package,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -263,11 +262,6 @@ function TipPage() {
               {driver.rating.toFixed(1)}
               <span className="text-white/60">({driver.ratingsCount})</span>
             </span>
-            <span className="text-white/30">·</span>
-            <span className="flex items-center gap-1">
-              <Package className="h-3.5 w-3.5" />
-              {driver.deliveries.toLocaleString()} {t.deliveries}
-            </span>
           </div>
 
           <p className="mt-4 max-w-[280px] text-sm italic leading-relaxed text-white/85">
@@ -277,7 +271,7 @@ function TipPage() {
       </header>
 
       {/* Tip card (pulled up onto hero) */}
-      <div className="mx-auto -mt-12 max-w-md px-4 animate-fade-up">
+      <div className="relative z-10 mx-auto -mt-12 max-w-md px-4 animate-fade-up">
         <Card className="overflow-hidden rounded-3xl border-border/70 shadow-elevated">
           <CardContent className="p-6">
             <div className="text-center">
