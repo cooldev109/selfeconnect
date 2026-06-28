@@ -62,19 +62,22 @@ function Home() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
             <Logo />
           </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
             <Link
               to="/login"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Log in
             </Link>
-            <Button asChild size="sm" className="rounded-xl">
-              <Link to="/signup">Join as a professional</Link>
+            <Button asChild size="sm" className="shrink-0 rounded-xl">
+              <Link to="/signup">
+                <span className="sm:hidden">Join</span>
+                <span className="hidden sm:inline">Join as a professional</span>
+              </Link>
             </Button>
           </div>
         </div>

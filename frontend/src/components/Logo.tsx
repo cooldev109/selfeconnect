@@ -55,7 +55,7 @@ export function Logo({
         </span>
         {withTagline && (
           <span
-            className={`text-[10px] font-medium tracking-wide ${invert ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+            className={`hidden text-[10px] font-medium tracking-wide sm:block ${invert ? "text-primary-foreground/80" : "text-muted-foreground"}`}
           >
             Independent. Impartial. Impactful.
           </span>

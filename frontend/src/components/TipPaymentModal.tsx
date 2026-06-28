@@ -56,17 +56,20 @@ function PayForm({
   };
 
   return (
-    <form onSubmit={submit} className="space-y-5">
-      <PaymentElement onReady={() => setReady(true)} />
-      {error && (
-        <p className="text-sm font-medium text-destructive" role="alert">
-          {error}
-        </p>
-      )}
+    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+      {/* Card form scrolls; the Pay button below stays pinned and reachable. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-0.5 py-1">
+        <PaymentElement onReady={() => setReady(true)} />
+        {error && (
+          <p className="mt-3 text-sm font-medium text-destructive" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
       <Button
         type="submit"
         disabled={!stripe || !ready || busy}
-        className="h-12 w-full rounded-2xl bg-primary text-base font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+        className="mt-3 h-12 w-full shrink-0 rounded-2xl bg-primary text-base font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
       >
         {busy ? (
           <span className="inline-flex items-center gap-2">
@@ -106,7 +109,12 @@ export function TipPaymentModal({
   onPaid: () => void;
 }) {
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} title={title}>
+    <Modal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={title}
+      className="flex max-h-[90dvh] flex-col rounded-2xl"
+    >
       {clientSecret && stripePromise ? (
         <Elements
           stripe={stripePromise}
