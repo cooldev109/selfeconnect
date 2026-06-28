@@ -144,9 +144,6 @@ function SignupPage() {
             <span className="text-lg font-bold tracking-tight font-display">SelfeConnect</span>
           </Link>
           <div className="max-w-md space-y-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground/80">
-              Join 3,200+ UK professionals
-            </p>
             <h2 className="text-3xl font-bold leading-tight font-display">
               Set up once. Get rated &amp; tipped.
             </h2>

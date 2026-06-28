@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
 import {
   Badge,
   Button,
@@ -13,7 +13,7 @@ import { useMe } from "@/hooks/useDriver";
 import { LOGO_MARK_SVG, LogoMark } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
 import { useRequireAuth } from "@/lib/useRequireAuth";
-import vanQr from "@/assets/van-qr.jpg";
+import professionalsFlyer from "@/assets/professionals-flyer.png";
 import scanQr from "@/assets/scan-qr.jpg";
 
 export const Route = createFileRoute("/profile")({
@@ -204,9 +204,17 @@ function ProfilePage() {
     <main className="min-h-screen bg-background pb-16">
       {/* Header */}
       <header className="bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-2xl items-center gap-2 px-6 py-4">
-          <LogoMark className="h-9 w-9" tone="white" />
-          <span className="text-lg font-bold tracking-tight">SelfeConnect</span>
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-6 py-4">
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <LogoMark className="h-9 w-9" tone="white" />
+            <span className="text-lg font-bold tracking-tight">SelfeConnect</span>
+          </Link>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-primary-foreground/90 transition hover:bg-primary-foreground/10"
+          >
+            <ArrowLeft className="h-4 w-4" /> Dashboard
+          </Link>
         </div>
       </header>
 
@@ -297,14 +305,14 @@ function ProfilePage() {
           <CardContent className="grid gap-0 p-0 md:grid-cols-2">
             <div className="grid grid-cols-2 gap-px bg-border/60">
               <img
-                src={vanQr}
-                alt="QR code sticker applied to the side of a white delivery van"
+                src={professionalsFlyer}
+                alt="A professional handing a SelfeConnect QR flyer to a happy customer"
                 loading="lazy"
                 className="aspect-square w-full object-cover"
               />
               <img
                 src={scanQr}
-                alt="Customer scanning a QR sticker on a parcel with their phone"
+                alt="Customer scanning a QR code with their phone"
                 loading="lazy"
                 className="aspect-square w-full object-cover"
               />
@@ -314,16 +322,17 @@ function ProfilePage() {
                 <Lightbulb className="h-3.5 w-3.5" /> Pro tip
               </span>
               <h3 className="mt-3 text-lg font-bold text-foreground font-display">
-                Where to stick your QR
+                Where to show your QR
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Drivers who place their code in <strong>two visible spots</strong> get up to
-                3× more tips. Try the side of your van and on every parcel you hand over.
+                Professionals who show their code in <strong>two visible spots</strong> get
+                more reviews and tips. Hand the printed flyer to your customer and keep it
+                on display where they can see it.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-foreground">
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Eye-level on the van door</li>
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> A sticker on each parcel</li>
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for doorstep handovers</li>
+                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Hand it to customers</li>
+                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On display where customers can see it</li>
+                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for quick handovers</li>
               </ul>
             </div>
           </CardContent>

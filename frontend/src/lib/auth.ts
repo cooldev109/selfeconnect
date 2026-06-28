@@ -35,3 +35,13 @@ export function logout() {
 export function me() {
   return api<{ driver: AuthDriver }>("/auth/me");
 }
+
+export function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  return api<{ ok: true }>("/auth/password", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}

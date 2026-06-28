@@ -73,4 +73,20 @@ export class AuthService {
     const driver = await this.prisma.driver.findUnique({ where: { id } });
     return driver ? this.toPublic(driver) : null;
   }
+
+  async changePassword(
+    driverId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const driver = await this.prisma.driver.findUnique({ where: { id: driverId } });
+    if (!driver) throw new UnauthorizedException('unauthenticated');
+    const ok = await bcrypt.compare(currentPassword, driver.passwordHash);
+    if (!ok) throw new UnauthorizedException('invalid_current_password');
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.driver.update({
+      where: { id: driverId },
+      data: { passwordHash },
+    });
+  }
 }

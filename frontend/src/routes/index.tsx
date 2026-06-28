@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Get recognised, receive reviews, and earn tips. A personal QR code your customers scan to rate your service and tip you in seconds. No app. No account. No commission.",
+          "Get recognised and rewarded. Collect customer reviews, build trust, and receive tips. Give customers a simple way to rate your service and tip instantly with your personal QR code. No app. No account. No commission.",
       },
     ],
   }),
@@ -93,15 +93,19 @@ function Home() {
               Now live for UK professionals and business
             </span>
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
-              Get <span className="text-primary">rated</span> &amp; tipped
+              Get recognised and <span className="text-primary">rewarded</span>.
             </h1>
             <p className="mt-5 text-base leading-relaxed text-foreground/80 lg:text-lg">
-              Join the UK's largest community of self-employed professionals. Get
-              recognised, receive reviews, and earn tips for going the extra mile.
+              Join a community built for self-employed professionals. Collect
+              customer reviews, build trust, and receive tips for delivering
+              exceptional service.
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              A personal QR code your customers scan to rate your service and
-              leave a tip in seconds. No app. No account. No commission.
+              Give your customers a simple way to rate your service and leave a
+              tip instantly with your personal QR code.
+            </p>
+            <p className="mt-2 text-sm font-semibold text-foreground/70">
+              No app. No account. No commission.
             </p>
             <div className="mt-8 flex flex-col gap-2.5 lg:max-w-sm">
               <Button
@@ -201,7 +205,7 @@ function Home() {
             <Step
               number={3}
               title="Customers scan, rate & tip"
-              description="They scan, rate and choose an amount to tip. The money lands in your account."
+              description="They scan, rate and choose an amount to tip. The money is paid directly into your account."
               image={scanQr}
               imageAlt="A customer scanning a SelfeConnect QR code with their smartphone"
             />

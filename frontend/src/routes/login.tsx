@@ -73,10 +73,10 @@ function LoginPage() {
               For professionals, by professionals
             </p>
             <p className="mt-3 text-3xl font-bold leading-tight font-display">
-              "Made an extra £180 last month — straight to my account."
+              Reviews and tips, made simple.
             </p>
             <p className="mt-4 text-sm text-primary-foreground/85">
-              — Marco, parcel courier in Manchester
+              Collect customer reviews, build trust, and keep 100% of every tip.
             </p>
           </div>
         </div>
@@ -122,12 +122,12 @@ function LoginPage() {
               <label className="block">
                 <span className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
                   Password
-                  <Link
-                    to="/login"
+                  <a
+                    href="mailto:support@selfeconnect.com?subject=Password%20reset%20request"
                     className="text-xs font-normal text-primary hover:underline"
                   >
                     Forgot password?
-                  </Link>
+                  </a>
                 </span>
                 <Input
                   type="password"

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Res,
   UseGuards,
@@ -11,6 +12,7 @@ import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuthGuard, SESSION_COOKIE } from './auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthUser } from './current-user.decorator';
@@ -65,5 +67,15 @@ export class AuthController {
   @UseGuards(AuthGuard)
   me(@CurrentUser() user: AuthUser) {
     return { driver: user };
+  }
+
+  @Patch('password')
+  @UseGuards(AuthGuard)
+  async changePassword(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword);
+    return { ok: true };
   }
 }

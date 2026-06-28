@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { CheckCircle2, LogOut, ExternalLink, Wallet, BadgeCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
 import { useRequireAuth } from "@/lib/useRequireAuth";
-import { logout } from "@/lib/auth";
+import { logout, changePassword } from "@/lib/auth";
 import {
   getAccount,
   updateContact,
@@ -48,6 +48,38 @@ function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Change password
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwErr, setPwErr] = useState<string | null>(null);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSaved, setPwSaved] = useState(false);
+
+  const onChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwErr(null);
+    setPwSaved(false);
+    if (pwNew.length < 8) {
+      setPwErr("New password must be at least 8 characters.");
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await changePassword({ currentPassword: pwCurrent, newPassword: pwNew });
+      setPwSaved(true);
+      setPwCurrent("");
+      setPwNew("");
+    } catch (err) {
+      setPwErr(
+        err instanceof ApiError && err.status === 401
+          ? "Current password is incorrect."
+          : "Could not change password. Please try again.",
+      );
+    } finally {
+      setPwSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (accountQ.data) {
@@ -102,6 +134,12 @@ function AccountPage() {
   return (
     <main className="min-h-screen bg-background px-6 py-10">
       <div className="mx-auto max-w-2xl space-y-6">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to dashboard
+        </Link>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -243,6 +281,63 @@ function AccountPage() {
                   className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {saving ? "Saving…" : "Save changes"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Change password */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <KeyRound className="h-4 w-4 text-primary" /> Password
+            </h2>
+            <form onSubmit={onChangePassword} noValidate className="mt-5 space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Current password</span>
+                <Input
+                  type="password"
+                  value={pwCurrent}
+                  autoComplete="current-password"
+                  onChange={(e) => {
+                    setPwCurrent(e.target.value);
+                    setPwSaved(false);
+                    setPwErr(null);
+                  }}
+                  maxLength={72}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">New password</span>
+                <Input
+                  type="password"
+                  value={pwNew}
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  onChange={(e) => {
+                    setPwNew(e.target.value);
+                    setPwSaved(false);
+                    setPwErr(null);
+                  }}
+                  maxLength={72}
+                />
+              </label>
+              {pwErr && <p className="text-xs text-destructive">{pwErr}</p>}
+              <div className="flex items-center justify-between">
+                {pwSaved ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-primary">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Password updated
+                  </span>
+                ) : (
+                  <span />
+                )}
+                <Button
+                  type="submit"
+                  disabled={pwSaving || !pwCurrent || !pwNew}
+                  className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {pwSaving ? "Updating…" : "Update password"}
                 </Button>
               </div>
             </form>
