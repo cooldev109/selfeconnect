@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Elements,
+  ExpressCheckoutElement,
   PaymentElement,
   useElements,
   useStripe,
@@ -28,15 +29,14 @@ function PayForm({
   const elements = useElements();
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [hasWallet, setHasWallet] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Shared by the card form and the Apple/Google Pay buttons.
+  const confirm = async () => {
     if (!stripe || !elements || busy) return;
     setBusy(true);
     setError(null);
-    // return_url is required for wallet/redirect methods (Apple/Google Pay);
-    // redirect:"if_required" keeps card payments inline.
     const { error: err, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: "if_required",
@@ -56,9 +56,27 @@ function PayForm({
   };
 
   return (
-    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void confirm();
+      }}
+      className="flex min-h-0 flex-1 flex-col"
+    >
       {/* Card form scrolls; the Pay button below stays pinned and reachable. */}
       <div className="min-h-0 flex-1 overflow-y-auto px-0.5 py-1">
+        {/* Apple Pay / Google Pay — only renders when a wallet is available. */}
+        <ExpressCheckoutElement
+          onReady={(e) => setHasWallet(!!e.availablePaymentMethods)}
+          onConfirm={() => void confirm()}
+        />
+        {hasWallet && (
+          <div className="my-4 flex items-center gap-3 text-xs font-medium text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            or pay by card
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        )}
         <PaymentElement onReady={() => setReady(true)} />
         {error && (
           <p className="mt-3 text-sm font-medium text-destructive" role="alert">

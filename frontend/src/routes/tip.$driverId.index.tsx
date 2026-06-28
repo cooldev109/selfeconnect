@@ -103,7 +103,7 @@ function TipPage() {
   const navigate = useNavigate();
   const { data: driver, isError } = useDriverPublic(driverId);
 
-  const [lang, setLang] = useState<"EN" | "PT">("EN");
+  const [lang] = useState<"EN" | "PT">("EN");
   const [preset, setPreset] = useState<number | null>(2);
   const [custom, setCustom] = useState("");
   const [rating, setRating] = useState(5);
@@ -207,23 +207,6 @@ function TipPage() {
         )}
       >
         <span className="truncate">{LIVE ? t.secure : t.demo}</span>
-        <div className="flex shrink-0 overflow-hidden rounded-full border border-amber-300 bg-white">
-          {(["PT", "EN"] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLang(l)}
-              className={cn(
-                "px-2.5 py-0.5 text-[11px] font-semibold transition",
-                lang === l
-                  ? "bg-foreground text-background"
-                  : "text-foreground/70 hover:bg-amber-50",
-              )}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Driver hero */}
