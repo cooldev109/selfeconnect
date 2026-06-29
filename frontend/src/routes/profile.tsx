@@ -122,12 +122,19 @@ function ProfilePage() {
         body { display: flex; align-items: center; justify-content: center; background: #fff; }
         .sheet { position: relative; height: 297mm; }
         .sheet .bg { height: 297mm; display: block; }
-        /* QR placeholder box as % of the artwork; object-fit centres the square QR. */
-        .sheet .qr { position: absolute; left: 62.17%; top: 52.63%; width: 30.28%; height: 22.26%; object-fit: contain; }
+        /* Crisp QR frame drawn over the (now blank) placeholder, matching Raul's
+           green rounded box. Positioned as % of the artwork; the square QR is
+           centred inside with object-fit. */
+        .sheet .frame {
+          position: absolute; left: 60.24%; top: 52.1%; width: 34.06%; height: 20.86%;
+          border: 1.1mm solid #46A050; border-radius: 3mm; background: #fff;
+          display: flex; align-items: center; justify-content: center; padding: 1.6mm;
+        }
+        .sheet .frame img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
       </style></head><body>
       <div class="sheet">
         <img class="bg" src="${bg}" alt="" />
-        <img class="qr" src="${qr}" alt="QR code" />
+        <div class="frame"><img src="${qr}" alt="QR code" /></div>
       </div>
       <script>
         var bg = document.querySelector('.bg');
