@@ -10,11 +10,11 @@ import {
   Input,
 } from "@/components/shared";
 import { useMe } from "@/hooks/useDriver";
-import { LogoMark } from "@/components/Logo";
+import { LOGO_MARK_SVG, LogoMark } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
-import flyerBg from "@/assets/flyer-bg.png";
+import flyerDriver from "@/assets/flyer-driver.png";
 import scanQr from "@/assets/scan-qr.jpg";
 
 export const Route = createFileRoute("/profile")({
@@ -104,42 +104,126 @@ function ProfilePage() {
     w.document.close();
   };
 
-  // Printable flyer: Raul's artwork as the background image, with each
-  // professional's own QR overlaid into the blank QR placeholder.
+  // Printable flyer matching Raul's model. Fully crisp: HTML/CSS text, SVG
+  // icons, a high-resolution illustration and the per-professional QR.
   const downloadFlyer = () => {
     const canvas = qrRef.current?.querySelector("canvas");
     if (!canvas || !driver) return;
     const qr = canvas.toDataURL("image/png");
     const w = window.open("", "_blank");
     if (!w) return;
-    const bg = `${window.location.origin}${flyerBg}`;
+    const origin = window.location.origin;
+    const I = {
+      shield: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
+      pound: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 17h6M9.5 17c1-1 1-2 1-3.5S9.8 9 11.5 9c1 0 1.6.5 2 1M8.5 13H13"/></svg>`,
+      heart: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
+      heartFill: `<svg viewBox="0 0 24 24" width="22" height="22" fill="#1D9E75"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
+      people: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20c0-2.5-1.5-4.2-4-4.8"/></svg>`,
+      mega: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1z"/><path d="M18 8a4 4 0 0 1 0 8"/></svg>`,
+      arrow: `<svg viewBox="0 0 40 40" width="46" height="46" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10c10 1 20 6 26 18"/><path d="M26 18l6 10-11 1"/></svg>`,
+    };
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"/>
       <title>SelfeConnect flyer — ${driver.id}</title>
       <style>
         @page { size: A4; margin: 0; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        html, body { margin: 0; height: 100%; }
-        body { display: flex; align-items: center; justify-content: center; background: #fff; }
-        .sheet { position: relative; height: 297mm; }
-        .sheet .bg { height: 297mm; display: block; }
-        /* Crisp QR frame drawn over the (now blank) placeholder, matching Raul's
-           green rounded box. Positioned as % of the artwork; the square QR is
-           centred inside with object-fit. */
-        .sheet .frame {
-          position: absolute; left: 60.24%; top: 52.1%; width: 34.06%; height: 20.86%;
-          border: 1.1mm solid #46A050; border-radius: 3mm; background: #fff;
-          display: flex; align-items: center; justify-content: center; padding: 1.6mm;
-        }
-        .sheet .frame img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+        body { margin: 0; font-family: 'Manrope', Inter, system-ui, sans-serif; color: #102A43; }
+        .page { width: 210mm; min-height: 297mm; padding: 16mm 14mm; margin: 0 auto; display: flex; flex-direction: column; }
+        .body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 10mm 0 4mm; }
+        .brand { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .brand .mark { width: 42px; height: 42px; }
+        .wordmark { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+        .wordmark .a { color: #102A43; } .wordmark .b { color: #1D9E75; }
+        .tagline { text-align: center; font-size: 9.5px; letter-spacing: 2.5px; color: #94A3B8; text-transform: uppercase; margin-top: 3px; }
+        .hero { display: flex; align-items: center; gap: 6px; margin-top: 0; }
+        .hero-l { flex: 1.05; }
+        .hero-r { flex: 1; }
+        .hero-r img { width: 100%; display: block; }
+        h1 { font-size: 52px; line-height: 0.98; margin: 0 0 14px; font-weight: 800; color: #102A43; }
+        h1 .teal { color: #1D9E75; }
+        .lead { font-size: 15px; line-height: 1.45; color: #475569; max-width: 92%; margin: 0; }
+        .rule { width: 64px; height: 3px; background: #1D9E75; border-radius: 2px; margin: 0 0 14px; }
+        .scanrow { display: flex; align-items: center; gap: 16px; margin: 0 0 6px; }
+        .scanbox { background: #EEF7F1; border-radius: 16px; padding: 16px 18px; flex: 1; display: flex; align-items: center; gap: 14px; }
+        .hcircle { width: 40px; height: 40px; min-width: 40px; border: 2px solid #1D9E75; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+        .scan-title { color: #1D9E75; font-size: 18px; font-weight: 800; }
+        .scan-sub { font-size: 14px; color: #475569; margin-top: 2px; }
+        .arrow { display: flex; align-items: center; }
+        .qr { width: 168px; height: 168px; min-width: 168px; border: 3px solid #1D9E75; border-radius: 16px; padding: 7px; background: #fff; }
+        .qr img { width: 100%; height: 100%; }
+        .pid { font-family: monospace; font-weight: 700; letter-spacing: 2px; color: #102A43; font-size: 13px; margin: 4px 0 0; text-align: right; }
+        .about { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 4px; }
+        .about .ic { width: 38px; height: 38px; min-width: 38px; border: 2px solid #1D9E75; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+        .about-title { color: #1D9E75; font-weight: 800; font-size: 14px; }
+        .about-text { color: #475569; font-size: 12.5px; line-height: 1.4; }
+        .about-note { color: #1D9E75; font-size: 12px; font-style: italic; margin-top: 2px; }
+        .feats { display: flex; gap: 16px; border-top: 1px solid #E2E8F0; margin-top: 0; padding-top: 18px; }
+        .feat { flex: 1; text-align: center; }
+        .feat .t { font-weight: 800; color: #1D9E75; margin-top: 6px; font-size: 14px; }
+        .feat .s { color: #475569; font-size: 12.5px; }
+        .note { background: #EEF7F1; border-radius: 14px; padding: 14px 16px; margin-top: 0; color: #475569; font-size: 12.5px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
+        .note b { color: #1D9E75; }
+        .note .green { color: #1D9E75; }
+        .foot { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 16px; }
+        .foot b { color: #1D9E75; }
       </style></head><body>
-      <div class="sheet">
-        <img class="bg" src="${bg}" alt="" />
-        <div class="frame"><img src="${qr}" alt="QR code" /></div>
+      <div class="page">
+        <div class="brand">
+          <span class="mark">${LOGO_MARK_SVG}</span>
+          <span class="wordmark"><span class="a">Selfe</span><span class="b">Connect</span></span>
+        </div>
+        <div class="tagline">Independent. Impartial. Impactful.</div>
+
+        <div class="body">
+        <div class="hero">
+          <div class="hero-l">
+            <h1>Enjoying<br/>your<br/><span class="teal">delivery?</span></h1>
+            <div class="rule"></div>
+            <p class="lead">Your driver helped make it happen and get your order safely to your door.</p>
+          </div>
+          <div class="hero-r"><img src="${origin}${flyerDriver}" alt="" /></div>
+        </div>
+
+        <div class="scanrow">
+          <div class="scanbox">
+            <span class="hcircle">${I.heartFill}</span>
+            <span>
+              <div class="scan-title">Want to say thanks?</div>
+              <div class="scan-sub">Scan the QR code to leave a tip <b>in seconds</b>.</div>
+            </span>
+          </div>
+          <span class="arrow">${I.arrow}</span>
+          <div class="qr"><img src="${qr}" alt="QR code"/></div>
+        </div>
+        <div class="pid">ID: ${driver.id}</div>
+
+        <div class="about">
+          <span class="ic">${I.people}</span>
+          <span>
+            <div class="about-title">About this review</div>
+            <div class="about-text">This review is for the professional driver only and for the SelfeConnect community.</div>
+            <div class="about-note">We are an independent review company.</div>
+          </span>
+        </div>
+
+        <div class="feats">
+          <div class="feat">${I.shield}<div class="t">100% Secure</div></div>
+          <div class="feat">${I.pound}<div class="t">Goes directly</div><div class="s">to your driver.</div></div>
+          <div class="feat">${I.heart}<div class="t">Any amount</div><div class="s">is appreciated.</div></div>
+        </div>
+
+        <div class="note">
+          <span>${I.mega}</span>
+          <span><b>Official feedback still matters.</b> Reviews and reports are still encouraged to be made through the company's official channels. <span class="green">Thank you for helping recognise excellent service. ♥</span></span>
+        </div>
+        </div>
+
+        <div class="foot">Learn more: <b>www.selfeconnect.com</b></div>
       </div>
       <script>
-        var bg = document.querySelector('.bg');
+        var img = document.querySelector('.hero-r img');
         function go(){ window.print(); }
-        if (bg && !bg.complete) { bg.onload = go; bg.onerror = go; } else { window.onload = go; }
+        if (img && !img.complete) { img.onload = go; img.onerror = go; } else { window.onload = go; }
       </script>
     </body></html>`);
     w.document.close();
