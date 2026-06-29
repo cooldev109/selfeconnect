@@ -127,13 +127,14 @@ function ProfilePage() {
         @page { size: A4; margin: 0; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body { margin: 0; font-family: 'Manrope', Inter, system-ui, sans-serif; color: #102A43; }
-        .page { width: 210mm; min-height: 297mm; padding: 14mm 14mm; margin: 0 auto; }
+        .page { width: 210mm; min-height: 297mm; padding: 16mm 14mm; margin: 0 auto; display: flex; flex-direction: column; }
+        .body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 10mm 0 4mm; }
         .brand { display: flex; align-items: center; justify-content: center; gap: 10px; }
         .brand .mark { width: 42px; height: 42px; }
         .wordmark { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
         .wordmark .a { color: #102A43; } .wordmark .b { color: #1D9E75; }
         .tagline { text-align: center; font-size: 9.5px; letter-spacing: 2.5px; color: #94A3B8; text-transform: uppercase; margin-top: 3px; }
-        .hero { display: flex; align-items: center; gap: 6px; margin-top: 18px; }
+        .hero { display: flex; align-items: center; gap: 6px; margin-top: 0; }
         .hero-l { flex: 1.05; }
         .hero-r { flex: 1; }
         .hero-r img { width: 100%; display: block; }
@@ -141,7 +142,7 @@ function ProfilePage() {
         h1 .teal { color: #1D9E75; }
         .lead { font-size: 15px; line-height: 1.45; color: #475569; max-width: 92%; margin: 0; }
         .rule { width: 64px; height: 3px; background: #1D9E75; border-radius: 2px; margin: 0 0 14px; }
-        .scanrow { display: flex; align-items: center; gap: 16px; margin: 24px 0 6px; }
+        .scanrow { display: flex; align-items: center; gap: 16px; margin: 0 0 6px; }
         .scanbox { background: #EEF7F1; border-radius: 16px; padding: 16px 18px; flex: 1; display: flex; align-items: center; gap: 14px; }
         .hcircle { width: 40px; height: 40px; min-width: 40px; border: 2px solid #1D9E75; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
         .scan-title { color: #1D9E75; font-size: 18px; font-weight: 800; }
@@ -155,11 +156,11 @@ function ProfilePage() {
         .about-title { color: #1D9E75; font-weight: 800; font-size: 14px; }
         .about-text { color: #475569; font-size: 12.5px; line-height: 1.4; }
         .about-note { color: #1D9E75; font-size: 12px; font-style: italic; margin-top: 2px; }
-        .feats { display: flex; gap: 16px; border-top: 1px solid #E2E8F0; margin-top: 18px; padding-top: 18px; }
+        .feats { display: flex; gap: 16px; border-top: 1px solid #E2E8F0; margin-top: 0; padding-top: 18px; }
         .feat { flex: 1; text-align: center; }
         .feat .t { font-weight: 800; color: #1D9E75; margin-top: 6px; font-size: 14px; }
         .feat .s { color: #475569; font-size: 12.5px; }
-        .note { background: #EEF7F1; border-radius: 14px; padding: 14px 16px; margin-top: 20px; color: #475569; font-size: 12.5px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
+        .note { background: #EEF7F1; border-radius: 14px; padding: 14px 16px; margin-top: 0; color: #475569; font-size: 12.5px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
         .note b { color: #1D9E75; }
         .note .green { color: #1D9E75; }
         .foot { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 16px; }
@@ -172,6 +173,7 @@ function ProfilePage() {
         </div>
         <div class="tagline">Independent. Impartial. Impactful.</div>
 
+        <div class="body">
         <div class="hero">
           <div class="hero-l">
             <h1>Enjoying<br/>your<br/><span class="teal">delivery?</span></h1>
@@ -212,6 +214,7 @@ function ProfilePage() {
         <div class="note">
           <span>${I.mega}</span>
           <span><b>Official feedback still matters.</b> Reviews and reports are still encouraged to be made through the company's official channels. <span class="green">Thank you for helping recognise excellent service. ♥</span></span>
+        </div>
         </div>
 
         <div class="foot">Learn more: <b>www.selfeconnect.com</b></div>
