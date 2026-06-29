@@ -345,18 +345,18 @@ function ProfilePage() {
         {/* Where to put it */}
         <Card className="overflow-hidden rounded-2xl border-border/60">
           <CardContent className="grid gap-0 p-0 md:grid-cols-2">
-            <div className="grid grid-cols-2 gap-px bg-border/60">
+            <div className="flex gap-px bg-border/60">
               <img
                 src={professionalsFlyer}
                 alt="A professional handing a SelfeConnect QR flyer to a happy customer"
                 loading="lazy"
-                className="aspect-square w-full object-cover"
+                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
               />
               <img
                 src={scanQr}
                 alt="Customer scanning a QR code with their phone"
                 loading="lazy"
-                className="aspect-square w-full object-cover"
+                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
               />
             </div>
             <div className="p-6">
