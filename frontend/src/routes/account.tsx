@@ -48,6 +48,10 @@ function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<{
+    scope: "sub" | "payout";
+    message: string;
+  } | null>(null);
 
   // Change password
   const [pwCurrent, setPwCurrent] = useState("");
@@ -91,12 +95,23 @@ function AccountPage() {
   const active = !!accountQ.data?.isActive;
   const onboarded = !!accountQ.data?.stripeOnboarded;
 
-  const go = async (fn: () => Promise<{ url: string }>) => {
+  const go = async (
+    fn: () => Promise<{ url: string }>,
+    scope: "sub" | "payout",
+  ) => {
     setBusy(true);
+    setActionError(null);
     try {
       const { url } = await fn();
       window.location.href = url;
-    } catch {
+    } catch (err) {
+      setActionError({
+        scope,
+        message:
+          err instanceof ApiError
+            ? err.message
+            : "Something went wrong. Please try again.",
+      });
       setBusy(false);
     }
   };
@@ -172,7 +187,7 @@ function AccountPage() {
                     type="button"
                     disabled={busy}
                     className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => go(startPortal)}
+                    onClick={() => go(startPortal, "sub")}
                   >
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Manage subscription
@@ -190,12 +205,17 @@ function AccountPage() {
                   type="button"
                   disabled={busy}
                   className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                  onClick={() => go(startCheckout)}
+                  onClick={() => go(startCheckout, "sub")}
                 >
                   {busy ? "Redirecting…" : "Activate subscription"}
                 </Button>
               )}
             </div>
+            {actionError?.scope === "sub" && (
+              <p className="mt-3 text-sm text-destructive" role="alert">
+                {actionError.message}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -223,10 +243,15 @@ function AccountPage() {
                   type="button"
                   disabled={busy}
                   className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                  onClick={() => go(startConnect)}
+                  onClick={() => go(startConnect, "payout")}
                 >
                   {busy ? "Redirecting…" : "Connect payouts"}
                 </Button>
+                {actionError?.scope === "payout" && (
+                  <p className="mt-3 text-sm text-destructive" role="alert">
+                    {actionError.message}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
