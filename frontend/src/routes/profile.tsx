@@ -114,115 +114,115 @@ function ProfilePage() {
     if (!w) return;
     const origin = window.location.origin;
     const I = {
-      shield: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
-      pound: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 17h6M9.5 17c1-1 1-2 1-3.5S9.8 9 11.5 9c1 0 1.6.5 2 1M8.5 13H13"/></svg>`,
-      heart: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
-      heartFill: `<svg viewBox="0 0 24 24" width="22" height="22" fill="#1D9E75"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
-      people: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20c0-2.5-1.5-4.2-4-4.8"/></svg>`,
-      mega: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1z"/><path d="M18 8a4 4 0 0 1 0 8"/></svg>`,
-      arrow: `<svg viewBox="0 0 40 40" width="46" height="46" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10c10 1 20 6 26 18"/><path d="M26 18l6 10-11 1"/></svg>`,
+      shield: `<svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
+      pound: `<svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 17h6M9.5 17c1-1 1-2 1-3.5S9.8 9 11.5 9c1 0 1.6.5 2 1M8.5 13H13"/></svg>`,
+      heart: `<svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
+      heartFill: `<svg viewBox="0 0 24 24" fill="#1D9E75"><path d="M19 6.5c-1.7-1.9-4.6-2-6.4-.2L12 7l-.6-.7C9.6 4.5 6.7 4.6 5 6.5c-1.6 1.8-1.5 4.6.3 6.3L12 19l6.7-6.2c1.8-1.7 1.9-4.5.3-6.3z"/></svg>`,
+      people: `<svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20c0-2.5-1.5-4.2-4-4.8"/></svg>`,
     };
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"/>
       <title>SelfeConnect flyer — ${driver.id}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
       <style>
         @page { size: A4; margin: 0; }
-        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body { margin: 0; font-family: 'Manrope', Inter, system-ui, sans-serif; color: #102A43; }
-        .page { width: 210mm; min-height: 297mm; padding: 16mm 14mm; margin: 0 auto; display: flex; flex-direction: column; }
-        .body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 10mm 0 4mm; }
-        .brand { display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .brand .mark { width: 42px; height: 42px; }
-        .wordmark { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
-        .wordmark .a { color: #102A43; } .wordmark .b { color: #1D9E75; }
-        .tagline { text-align: center; font-size: 9.5px; letter-spacing: 2.5px; color: #94A3B8; text-transform: uppercase; margin-top: 3px; }
-        .hero { display: flex; align-items: center; gap: 6px; margin-top: 0; }
-        .hero-l { flex: 1.05; }
-        .hero-r { flex: 1; }
-        .hero-r img { width: 100%; display: block; }
-        h1 { font-size: 52px; line-height: 0.98; margin: 0 0 14px; font-weight: 800; color: #102A43; }
-        h1 .teal { color: #1D9E75; }
-        .lead { font-size: 15px; line-height: 1.45; color: #475569; max-width: 92%; margin: 0; }
-        .rule { width: 64px; height: 3px; background: #1D9E75; border-radius: 2px; margin: 0 0 14px; }
-        .scanrow { display: flex; align-items: center; gap: 16px; margin: 0 0 6px; }
-        .scanbox { background: #EEF7F1; border-radius: 16px; padding: 16px 18px; flex: 1; display: flex; align-items: center; gap: 14px; }
-        .hcircle { width: 40px; height: 40px; min-width: 40px; border: 2px solid #1D9E75; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
-        .scan-title { color: #1D9E75; font-size: 18px; font-weight: 800; }
-        .scan-sub { font-size: 14px; color: #475569; margin-top: 2px; }
-        .arrow { display: flex; align-items: center; }
-        .qr { width: 168px; height: 168px; min-width: 168px; border: 3px solid #1D9E75; border-radius: 16px; padding: 7px; background: #fff; }
-        .qr img { width: 100%; height: 100%; }
-        .pid { font-family: monospace; font-weight: 700; letter-spacing: 2px; color: #102A43; font-size: 13px; margin: 4px 0 0; text-align: right; }
-        .about { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 4px; }
-        .about .ic { width: 38px; height: 38px; min-width: 38px; border: 2px solid #1D9E75; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
-        .about-title { color: #1D9E75; font-weight: 800; font-size: 14px; }
-        .about-text { color: #475569; font-size: 12.5px; line-height: 1.4; }
-        .about-note { color: #1D9E75; font-size: 12px; font-style: italic; margin-top: 2px; }
-        .feats { display: flex; gap: 16px; border-top: 1px solid #E2E8F0; margin-top: 0; padding-top: 18px; }
-        .feat { flex: 1; text-align: center; }
-        .feat .t { font-weight: 800; color: #1D9E75; margin-top: 6px; font-size: 14px; }
-        .feat .s { color: #475569; font-size: 12.5px; }
-        .note { background: #EEF7F1; border-radius: 14px; padding: 14px 16px; margin-top: 0; color: #475569; font-size: 12.5px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
-        .note b { color: #1D9E75; }
-        .note .green { color: #1D9E75; }
-        .foot { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 16px; }
-        .foot b { color: #1D9E75; }
+        :root{
+          --ink:#0F2438; --ink2:#33475B; --muted:#7C8DA0;
+          --teal:#1D9E75; --teal-d:#15805E; --mint:#E9F6F0; --mint2:#F4FBF8; --line:#E6EDF2;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+        .page { width: 794px; height: 1123px; background: #fff; padding: 50px 54px 34px; margin: 0 auto; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .blob { position: absolute; border-radius: 999px; background: var(--mint); opacity: .55; }
+        .blob.a { width: 320px; height: 320px; top: -140px; right: -120px; }
+        .blob.b { width: 240px; height: 240px; bottom: -120px; left: -110px; }
+        .inner { position: relative; display: flex; flex-direction: column; flex: 1; }
+        .brand { display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .brand .mark { width: 46px; height: 46px; display: inline-flex; }
+        .brand .mark svg { width: 100%; height: 100%; }
+        .wm { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+        .wm .b { color: var(--teal); }
+        .tag { text-align: center; margin-top: 7px; font-size: 11px; letter-spacing: 3.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+        .hero { margin-top: 26px; background: linear-gradient(135deg, var(--mint) 0%, var(--mint2) 70%); border: 1px solid var(--line); border-radius: 30px; padding: 30px 32px; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+        .hero .copy { flex: 1.15; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid var(--line); color: var(--teal-d); font-weight: 700; font-size: 12px; padding: 7px 13px; border-radius: 999px; margin-bottom: 16px; }
+        .eyebrow svg { width: 14px; height: 14px; }
+        h1 { font-size: 50px; line-height: 0.96; font-weight: 800; letter-spacing: -1.6px; }
+        h1 .t { color: var(--teal); }
+        .hero p { margin-top: 15px; font-size: 15.5px; line-height: 1.5; color: var(--ink2); max-width: 300px; }
+        .ill { width: 286px; flex-shrink: 0; margin: -6px -14px -26px 0; }
+        .ill img { width: 100%; display: block; }
+        .tip { margin-top: 24px; background: var(--ink); border-radius: 30px; padding: 28px 32px; display: flex; align-items: center; gap: 26px; color: #fff; box-shadow: 0 26px 46px -24px rgba(15,36,56,.55); position: relative; overflow: hidden; }
+        .tip::after { content: ""; position: absolute; width: 240px; height: 240px; border-radius: 999px; background: rgba(29,158,117,.18); right: -90px; top: -110px; }
+        .tip .copy { flex: 1; position: relative; }
+        .kicker { font-size: 12.5px; color: #7FE0C2; font-weight: 800; letter-spacing: 1.5px; }
+        .tip h2 { font-size: 31px; font-weight: 800; margin-top: 7px; line-height: 1.04; letter-spacing: -.5px; }
+        .tip p { margin-top: 11px; color: #BCccD8; font-size: 14px; line-height: 1.5; max-width: 300px; }
+        .qrwrap { background: #fff; border-radius: 22px; padding: 15px 15px 9px; text-align: center; position: relative; z-index: 2; }
+        .qrwrap img { width: 166px; height: 166px; display: block; }
+        .qrwrap .id { margin-top: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: 2px; color: var(--ink); }
+        .trust { margin-top: 24px; display: flex; }
+        .trust .c { flex: 1; text-align: center; padding: 0 8px; position: relative; }
+        .trust .c + .c::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
+        .trust .ic { width: 46px; height: 46px; border-radius: 999px; background: var(--mint); display: flex; align-items: center; justify-content: center; margin: 0 auto 11px; }
+        .trust .ic svg { width: 23px; height: 23px; }
+        .trust .t { font-weight: 700; font-size: 14.5px; }
+        .trust .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+        .review { display: flex; gap: 13px; align-items: flex-start; padding: 17px 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-top: 24px; }
+        .review .ic { width: 40px; height: 40px; border: 2px solid var(--teal); border-radius: 999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .review .ic svg { width: 20px; height: 20px; }
+        .review .rt { font-weight: 800; color: var(--teal-d); font-size: 14px; }
+        .review .rb { font-size: 12.8px; color: var(--ink2); margin-top: 2px; line-height: 1.4; }
+        .review .rn { font-size: 12.5px; color: var(--teal); font-style: italic; margin-top: 3px; }
+        .foot { margin-top: auto; text-align: center; padding-top: 16px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+        .foot b { color: var(--ink2); }
+        .foot .site { color: var(--teal); font-weight: 800; }
       </style></head><body>
       <div class="page">
-        <div class="brand">
-          <span class="mark">${LOGO_MARK_SVG}</span>
-          <span class="wordmark"><span class="a">Selfe</span><span class="b">Connect</span></span>
-        </div>
-        <div class="tagline">Independent. Impartial. Impactful.</div>
-
-        <div class="body">
-        <div class="hero">
-          <div class="hero-l">
-            <h1>Enjoying<br/>your<br/><span class="teal">delivery?</span></h1>
-            <div class="rule"></div>
-            <p class="lead">Your driver helped make it happen and get your order safely to your door.</p>
+        <div class="blob a"></div><div class="blob b"></div>
+        <div class="inner">
+          <div class="brand">
+            <span class="mark">${LOGO_MARK_SVG}</span>
+            <span class="wm">Selfe<span class="b">Connect</span></span>
           </div>
-          <div class="hero-r"><img src="${origin}${flyerDriver}" alt="" /></div>
-        </div>
+          <div class="tag">Independent &nbsp;·&nbsp; Impartial &nbsp;·&nbsp; Impactful</div>
 
-        <div class="scanrow">
-          <div class="scanbox">
-            <span class="hcircle">${I.heartFill}</span>
-            <span>
-              <div class="scan-title">Want to say thanks?</div>
-              <div class="scan-sub">Scan the QR code to leave a tip <b>in seconds</b>.</div>
-            </span>
+          <div class="hero">
+            <div class="copy">
+              <span class="eyebrow">${I.heartFill} A note from your driver</span>
+              <h1>Enjoying your <span class="t">delivery?</span></h1>
+              <p>Your driver helped make it happen — and got your order safely to your door.</p>
+            </div>
+            <div class="ill"><img src="${origin}${flyerDriver}" alt="" /></div>
           </div>
-          <span class="arrow">${I.arrow}</span>
-          <div class="qr"><img src="${qr}" alt="QR code"/></div>
-        </div>
-        <div class="pid">ID: ${driver.id}</div>
 
-        <div class="about">
-          <span class="ic">${I.people}</span>
-          <span>
-            <div class="about-title">About this review</div>
-            <div class="about-text">This review is for the professional driver only and for the SelfeConnect community.</div>
-            <div class="about-note">We are an independent review company.</div>
-          </span>
-        </div>
+          <div class="tip">
+            <div class="copy">
+              <div class="kicker">WANT TO SAY THANKS?</div>
+              <h2>Leave a tip in seconds</h2>
+              <p>Point your phone camera at the code to leave a quick review and tip — <b style="color:#fff">100% goes to your driver.</b></p>
+            </div>
+            <div class="qrwrap"><img src="${qr}" alt="QR code"/><div class="id">ID&nbsp;·&nbsp;${driver.id}</div></div>
+          </div>
 
-        <div class="feats">
-          <div class="feat">${I.shield}<div class="t">100% Secure</div></div>
-          <div class="feat">${I.pound}<div class="t">Goes directly</div><div class="s">to your driver.</div></div>
-          <div class="feat">${I.heart}<div class="t">Any amount</div><div class="s">is appreciated.</div></div>
-        </div>
+          <div class="trust">
+            <div class="c"><div class="ic">${I.shield}</div><div class="t">100% Secure</div><div class="s">Powered by Stripe</div></div>
+            <div class="c"><div class="ic">${I.pound}</div><div class="t">Goes directly</div><div class="s">to your driver</div></div>
+            <div class="c"><div class="ic">${I.heart}</div><div class="t">Any amount</div><div class="s">is appreciated</div></div>
+          </div>
 
-        <div class="note">
-          <span>${I.mega}</span>
-          <span><b>Official feedback still matters.</b> Reviews and reports are still encouraged to be made through the company's official channels. <span class="green">Thank you for helping recognise excellent service. ♥</span></span>
-        </div>
-        </div>
+          <div class="review">
+            <div class="ic">${I.people}</div>
+            <div><div class="rt">About this review</div><div class="rb">This review is for the professional driver only and for the SelfeConnect community.</div><div class="rn">We are an independent review company.</div></div>
+          </div>
 
-        <div class="foot">Learn more: <b>www.selfeconnect.com</b></div>
+          <div class="foot"><b>Official feedback still matters.</b> Reviews and reports should still be made through the company's official channels.<br>Learn more at <span class="site">www.selfeconnect.com</span></div>
+        </div>
       </div>
       <script>
-        var img = document.querySelector('.hero-r img');
-        function go(){ window.print(); }
+        var img = document.querySelector('.ill img');
+        function go(){ setTimeout(function(){ window.print(); }, 250); }
         if (img && !img.complete) { img.onload = go; img.onerror = go; } else { window.onload = go; }
       </script>
     </body></html>`);
