@@ -11,9 +11,10 @@ export class RealStripeGateway implements StripeGateway {
 
   async createConnectAccount(i: { email: string; driverId: string }) {
     // Controller-based account (Express dashboard, Stripe-hosted onboarding).
-    // The platform owns the payment and losses; the driver only needs the
-    // `transfers` capability to receive tips via destination charges. This
-    // works without the legacy dashboard "sign up for Connect" step.
+    // The platform owns the payment and losses; the driver receives tips via
+    // destination charges. Stripe requires `card_payments` to be requested
+    // alongside `transfers` (requesting transfers alone needs special platform
+    // approval), so we request both — payments still settle on the platform.
     const a = await this.stripe.accounts.create({
       controller: {
         stripe_dashboard: { type: 'express' },
@@ -23,7 +24,10 @@ export class RealStripeGateway implements StripeGateway {
       },
       country: 'GB',
       email: i.email,
-      capabilities: { transfers: { requested: true } },
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
       metadata: { driverId: i.driverId },
     });
     return { accountId: a.id };
