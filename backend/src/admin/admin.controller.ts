@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AdminGuard } from './admin.guard';
@@ -22,5 +22,10 @@ export class AdminController {
   @Get('transactions')
   transactions() {
     return this.admin.getTransactions();
+  }
+
+  @Delete('drivers/:id')
+  removeDriver(@Param('id') id: string) {
+    return this.admin.deleteDriver(id);
   }
 }

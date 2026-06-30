@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, MoreHorizontal, Star } from "lucide-react";
-import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, MoreHorizontal, Star, Trash2 } from "lucide-react";
+import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
+import { api } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -46,10 +48,22 @@ const PAGE_SIZE = 8;
 
 function AdminDrivers() {
   const { drivers } = useAdminData();
+  const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AdminDriver | null>(null);
+  const [toDelete, setToDelete] = useState<AdminDriver | null>(null);
+
+  const removeDriver = useMutation({
+    mutationFn: (id: string) => api(`/admin/drivers/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-drivers"] });
+      qc.invalidateQueries({ queryKey: ["admin-overview"] });
+      setToDelete(null);
+      setSelected(null);
+    },
+  });
 
   const filtered = useMemo(() => {
     return drivers.filter((d) => {
@@ -160,8 +174,11 @@ function AdminDrivers() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl">
                           <DropdownMenuItem onClick={() => setSelected(d)}>View</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive">
-                            Suspend
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setToDelete(d)}
+                          >
+                            Remove driver
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -233,11 +250,50 @@ function AdminDrivers() {
                 <Detail label="Total tips" value={`£${selected.totalTips.toFixed(2)}`} />
                 <Detail label="Average rating" value={selected.avgRating.toFixed(1)} />
                 <Detail label="Joined" value={new Date(selected.joinDate).toLocaleDateString()} />
+                <Button
+                  variant="destructive"
+                  className="mt-2 w-full rounded-xl"
+                  onClick={() => setToDelete(selected)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove driver
+                </Button>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      <Modal
+        open={!!toDelete}
+        onOpenChange={(o) => !o && !removeDriver.isPending && setToDelete(null)}
+        title="Remove this driver?"
+        description={
+          toDelete
+            ? `This permanently deletes ${toDelete.name} (${toDelete.id}) and all of their tip history. This cannot be undone.`
+            : ""
+        }
+        footer={
+          <>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              disabled={removeDriver.isPending}
+              onClick={() => setToDelete(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-xl"
+              disabled={removeDriver.isPending}
+              onClick={() => toDelete && removeDriver.mutate(toDelete.id)}
+            >
+              {removeDriver.isPending ? "Removing…" : "Yes, remove"}
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

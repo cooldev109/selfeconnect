@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Must match the Stripe subscription price. Configurable so a price change
@@ -103,5 +107,17 @@ export class AdminService {
       status: t.status,
       timestamp: t.createdAt.toISOString(),
     }));
+  }
+
+  // Permanently remove a driver (and, via cascade, their tips). Admin accounts
+  // are not listed in the console and may not be deleted here.
+  async deleteDriver(publicId: string) {
+    const driver = await this.prisma.driver.findUnique({ where: { publicId } });
+    if (!driver) throw new NotFoundException('driver_not_found');
+    if (driver.role !== 'driver') {
+      throw new ForbiddenException('cannot_delete_admin');
+    }
+    await this.prisma.driver.delete({ where: { id: driver.id } });
+    return { ok: true };
   }
 }
