@@ -30,24 +30,43 @@ enum TipStatus {
   refunded
 }
 
+enum JobStatus {
+  open
+  closed
+}
+
+// Whether a service-seeker account is an individual or a business.
+enum CustomerType {
+  person
+  business
+}
+
 model Driver {
-  id           String  @id @default(uuid())
-  publicId     String  @unique // short code shown on QR / typed by customers (e.g. "5HQN7")
-  email        String  @unique
+  id           String @id @default(uuid())
+  publicId     String @unique // short code shown on QR / typed by customers (e.g. "5HQN7")
+  email        String @unique
   passwordHash String
-  role         Role    @default(driver)
+  role         Role   @default(driver)
 
   // Profile (mirrors frontend Driver interface)
-  name      String
-  company   String?
-  phone     String?
-  photoUrl  String?
+  name        String
+  company     String?
+  phone       String?
+  photoUrl    String?
   vanPhotoUrl String?
-  city      String?
-  tagline   String?
-  verified  Boolean @default(false)
-  yearsActive Int   @default(0)
-  deliveries  Int   @default(0)
+  city        String?
+  tagline     String?
+  verified    Boolean @default(false)
+  yearsActive Int     @default(0)
+  deliveries  Int     @default(0)
+
+  // Marketplace profile + location (UK postcode geocoded via postcodes.io).
+  // NOTE: `Driver` is the platform's "professional" entity — it can now belong
+  // to one or more service categories (Cleaner, Gardener, Driver, …).
+  bio       String?
+  postcode  String?
+  latitude  Float?
+  longitude Float?
 
   // Stripe / billing
   stripeAccountId    String?            @unique
@@ -59,17 +78,19 @@ model Driver {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tips Tip[]
+  tips       Tip[]
+  categories ServiceCategory[]  @relation("DriverCategories")
+  jobUnlocks JobContactUnlock[]
 }
 
 model Tip {
-  id         String @id @default(uuid())
-  driverId   String
-  driver     Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
-  amount   Int       // pence
+  amount   Int // pence
   currency String    @default("gbp")
-  rating   Int?      // 1..5
+  rating   Int? // 1..5
   status   TipStatus @default(pending)
 
   customerName    String?
@@ -88,4 +109,93 @@ model WebhookEvent {
   id        String   @id
   type      String
   createdAt DateTime @default(now())
+}
+
+// A service/occupation professionals can offer and customers can search by.
+model ServiceCategory {
+  id          String  @id @default(uuid())
+  slug        String  @unique // e.g. "cleaner", "delivery-driver"
+  name        String
+  description String?
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professionals Driver[] @relation("DriverCategories")
+  jobs          Job[]
+
+  @@index([active])
+}
+
+// Service-seeker account (individual or business). No subscription — free.
+model Customer {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  phone        String?
+  type         CustomerType @default(person)
+  companyName  String?
+
+  // Optional home/business location for defaulting a job's area.
+  postcode  String?
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs Job[]
+}
+
+// A job opportunity posted by a customer, visible to professionals in the
+// matching category. Contact details live on the Customer and are revealed to
+// subscribed professionals.
+model Job {
+  id         String          @id @default(uuid())
+  customerId String
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+
+  title       String
+  description String
+  status      JobStatus @default(open)
+
+  // Location (UK postcode geocoded to lat/lng for distance search).
+  addressLine String?
+  postcode    String
+  latitude    Float?
+  longitude   Float?
+
+  // Scheduling / commercials (kept flexible for Phase 1).
+  workingDays  String[] // e.g. ["mon","tue","wed","thu","fri"]
+  workingHours String? // e.g. "After 5:00 PM, 3 hours/day"
+  budget       String? // free-text, e.g. "£15/hr"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  unlocks JobContactUnlock[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Records when a professional unlocked a job's contact details (analytics +
+// "already unlocked" UX). Access itself is gated by an active subscription.
+model JobContactUnlock {
+  id       String @id @default(uuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, driverId])
+  @@index([driverId])
 }
