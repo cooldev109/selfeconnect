@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
@@ -7,6 +8,7 @@ import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/auth-side.jpg";
 import { signup as signupRequest } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/driver";
+import { getCategories } from "@/lib/categories";
 import { ApiError } from "@/lib/api";
 
 const PRICE_PER_MONTH = 5.49;
@@ -31,6 +33,12 @@ const signupSchema = z.object({
     .max(20)
     .regex(/^[+0-9 ()-]+$/, "Only digits, spaces and + ( ) -"),
   company: z.string().trim().max(80).optional(),
+  postcode: z
+    .string()
+    .trim()
+    .min(5, "Enter your postcode")
+    .max(12, "Enter a valid postcode"),
+  categorySlugs: z.array(z.string()).min(1, "Select at least one service"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -45,6 +53,8 @@ type FormState = {
   email: string;
   phone: string;
   company: string;
+  postcode: string;
+  categorySlugs: string[];
   password: string;
   photo: string;
 };
@@ -59,12 +69,29 @@ function SignupPage() {
     email: "",
     phone: "",
     company: "",
+    postcode: "",
+    categorySlugs: [],
     password: "",
     photo: "",
   });
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const categoriesQ = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+
+  const toggleCategory = (slug: string) => {
+    setForm((f) => ({
+      ...f,
+      categorySlugs: f.categorySlugs.includes(slug)
+        ? f.categorySlugs.filter((s) => s !== slug)
+        : [...f.categorySlugs, slug],
+    }));
+    if (errors.categorySlugs)
+      setErrors((e) => ({ ...e, categorySlugs: undefined }));
+  };
 
   const priceLabel = useMemo(
     () => `£${PRICE_PER_MONTH.toFixed(2)}/month`,
@@ -113,6 +140,8 @@ function SignupPage() {
         password: parsed.data.password,
         phone: parsed.data.phone,
         company: parsed.data.company,
+        postcode: parsed.data.postcode,
+        categorySlugs: parsed.data.categorySlugs,
       });
       // Signup logs the driver in (session cookie set), so the required photo
       // they chose is uploaded here rather than being silently discarded.
@@ -122,6 +151,14 @@ function SignupPage() {
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setErrors((e) => ({ ...e, email: "That email is already registered." }));
+      } else if (
+        err instanceof ApiError &&
+        err.status === 400 &&
+        String((err.body as { message?: string })?.message ?? "").includes(
+          "postcode",
+        )
+      ) {
+        setErrors((e) => ({ ...e, postcode: "Enter a valid UK postcode." }));
       } else {
         setFormError("Something went wrong. Please try again.");
       }
@@ -257,6 +294,58 @@ function SignupPage() {
                   />
                 }
               />
+
+              {/* Occupations / services offered */}
+              <div>
+                <span className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
+                  Your services
+                  <span className="text-xs font-normal text-muted-foreground">
+                    Select all that apply
+                  </span>
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {(categoriesQ.data ?? []).map((c) => {
+                    const active = form.categorySlugs.includes(c.slug);
+                    return (
+                      <button
+                        key={c.slug}
+                        type="button"
+                        onClick={() => toggleCategory(c.slug)}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                          active
+                            ? "border-primary bg-[#E1F5EE] text-primary"
+                            : "border-border text-muted-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.categorySlugs && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {errors.categorySlugs}
+                  </p>
+                )}
+              </div>
+
+              <Field
+                label="Postcode"
+                error={errors.postcode}
+                input={
+                  <Input
+                    value={form.postcode}
+                    onChange={(e) => update("postcode", e.target.value)}
+                    placeholder="e.g. M1 1AE"
+                    autoComplete="postal-code"
+                    maxLength={12}
+                  />
+                }
+              />
+              <p className="-mt-3 text-xs text-muted-foreground">
+                Used to match you with nearby jobs and customers.
+              </p>
 
               <Field
                 label="Password"

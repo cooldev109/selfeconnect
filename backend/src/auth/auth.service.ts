@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { GeoService } from '../geo/geo.service';
 import { generateUniquePublicId } from '../common/public-id';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -19,7 +21,10 @@ export type PublicDriver = {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly geo: GeoService,
+  ) {}
 
   private toPublic(d: {
     id: string;
@@ -42,6 +47,29 @@ export class AuthService {
     const existing = await this.prisma.driver.findUnique({ where: { email } });
     if (existing) throw new ConflictException('email_taken');
 
+    // Geocode the postcode up front so an invalid one is rejected before we
+    // create the account (the pro can then fix it).
+    const postcode = dto.postcode?.trim();
+    let geo: { latitude: number; longitude: number } | null = null;
+    if (postcode) {
+      geo = await this.geo.geocode(postcode);
+      if (!geo) throw new BadRequestException('invalid_postcode');
+    }
+
+    // Resolve occupation slugs -> category ids; reject any unknown/inactive.
+    let categoryConnect: { id: string }[] = [];
+    if (dto.categorySlugs?.length) {
+      const slugs = [...new Set(dto.categorySlugs)];
+      const cats = await this.prisma.serviceCategory.findMany({
+        where: { slug: { in: slugs }, active: true },
+        select: { id: true },
+      });
+      if (cats.length !== slugs.length) {
+        throw new BadRequestException('invalid_category');
+      }
+      categoryConnect = cats.map((c) => ({ id: c.id }));
+    }
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const publicId = await generateUniquePublicId(this.prisma);
 
@@ -53,6 +81,12 @@ export class AuthService {
         name: dto.name.trim(),
         phone: dto.phone?.trim(),
         company: dto.company?.trim(),
+        postcode: postcode || undefined,
+        latitude: geo?.latitude,
+        longitude: geo?.longitude,
+        categories: categoryConnect.length
+          ? { connect: categoryConnect }
+          : undefined,
       },
     });
     return this.toPublic(driver);

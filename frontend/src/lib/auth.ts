@@ -14,6 +14,8 @@ export function signup(input: {
   password: string;
   phone?: string;
   company?: string;
+  postcode?: string;
+  categorySlugs?: string[];
 }) {
   return api<{ driver: AuthDriver }>("/auth/signup", {
     method: "POST",

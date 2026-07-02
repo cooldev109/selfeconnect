@@ -4,9 +4,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
+import { GeoModule } from '../geo/geo.module';
 
 @Module({
   imports: [
+    GeoModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
