@@ -1,0 +1,205 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+import { Loader2, Search } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
+import { Button, Card, CardContent, Input } from "@/components/shared";
+import authSide from "@/assets/auth-side.jpg";
+import { customerLogin } from "@/lib/customer-auth";
+
+export const Route = createFileRoute("/customer/login")({
+  head: () => ({
+    meta: [
+      { title: "Customer log in — SelfeConnect" },
+      {
+        name: "description",
+        content: "Log in to post jobs and find trusted professionals.",
+      },
+    ],
+  }),
+  component: CustomerLoginPage,
+});
+
+const schema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(1, "Enter your password").max(72),
+});
+
+function CustomerLoginPage() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      const fe: typeof errors = {};
+      for (const i of parsed.error.issues) {
+        const k = i.path[0] as "email" | "password";
+        if (!fe[k]) fe[k] = i.message;
+      }
+      setErrors(fe);
+      return;
+    }
+    setErrors({});
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      await customerLogin(parsed.data);
+      navigate({ to: "/customer" });
+    } catch {
+      setFormError("Invalid email or password.");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="relative grid min-h-screen lg:grid-cols-2">
+      <aside className="relative hidden overflow-hidden lg:block">
+        <img
+          src={authSide}
+          alt="People connecting with local professionals"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/20 to-primary/80" />
+        <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
+          <Link to="/" className="flex w-fit items-center gap-2">
+            <LogoMark className="h-9 w-9" tone="white" />
+            <span className="text-lg font-bold tracking-tight font-display">
+              SelfeConnect
+            </span>
+          </Link>
+          <div className="max-w-md">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground/80">
+              Find the right professional
+            </p>
+            <p className="mt-3 text-3xl font-bold leading-tight font-display">
+              Post a job. Get matched. Done.
+            </p>
+            <p className="mt-4 text-sm text-primary-foreground/85">
+              Reach trusted, reviewed professionals near you — free to post.
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <section className="relative flex items-center justify-center overflow-hidden bg-background px-6 py-12">
+        <div className="absolute inset-0 -z-10 bg-mesh opacity-70" />
+        <div className="w-full max-w-md animate-fade-up">
+          <Link
+            to="/"
+            className="mx-auto mb-7 flex w-fit items-center gap-2 lg:hidden"
+          >
+            <LogoMark className="h-9 w-9" />
+            <span className="text-lg font-bold tracking-tight text-foreground font-display">
+              SelfeConnect
+            </span>
+          </Link>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-foreground font-display">
+              Welcome back
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Log in to manage your jobs and find professionals.
+            </p>
+          </div>
+
+          <Card className="mt-6 rounded-2xl border-border/70 shadow-soft">
+            <CardContent className="p-6">
+              <form onSubmit={onSubmit} noValidate className="space-y-5">
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-foreground">
+                    Email
+                  </span>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, email: e.target.value }));
+                      if (errors.email)
+                        setErrors((er) => ({ ...er, email: undefined }));
+                    }}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    maxLength={255}
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.email}
+                    </p>
+                  )}
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-foreground">
+                    Password
+                  </span>
+                  <Input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, password: e.target.value }));
+                      if (errors.password)
+                        setErrors((er) => ({ ...er, password: undefined }));
+                    }}
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    maxLength={72}
+                  />
+                  {errors.password && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.password}
+                    </p>
+                  )}
+                </label>
+
+                {formError && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {formError}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-12 w-full rounded-xl bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in…
+                    </>
+                  ) : (
+                    "Log in"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Need an account?{" "}
+            <Link
+              to="/customer/signup"
+              className="font-semibold text-primary hover:underline"
+            >
+              Sign up free
+            </Link>
+          </p>
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+            <Search className="h-3.5 w-3.5 text-primary" /> Are you a
+            professional?{" "}
+            <Link to="/login" className="font-semibold text-primary hover:underline">
+              Professional log in
+            </Link>
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
