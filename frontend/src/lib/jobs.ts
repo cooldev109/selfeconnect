@@ -43,6 +43,40 @@ export const updateJob = (
 export const deleteJob = (id: string) =>
   api<{ ok: true }>(`/jobs/${id}`, { method: "DELETE" });
 
+// ---- Professional job board ----
+export interface ProJobContact {
+  name: string;
+  email: string;
+  phone: string | null;
+  addressLine: string | null;
+}
+export interface ProJob {
+  id: string;
+  title: string;
+  description: string;
+  categorySlug: string;
+  categoryName: string;
+  postcode: string;
+  distanceMiles: number | null;
+  workingDays: string[];
+  workingHours: string | null;
+  budget: string | null;
+  createdAt: string;
+  unlocked: boolean;
+  contact: ProJobContact | null;
+}
+
+export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
+  const p = new URLSearchParams();
+  if (opts.radius) p.set("radius", String(opts.radius));
+  if (opts.category) p.set("category", opts.category);
+  const qs = p.toString();
+  return api<ProJob[]>(`/pro/jobs${qs ? `?${qs}` : ""}`);
+};
+
+export const proUnlockJob = (id: string) =>
+  api<ProJob>(`/pro/jobs/${id}/unlock`, { method: "POST" });
+
 export const WEEK_DAYS: { value: string; label: string }[] = [
   { value: "mon", label: "Mon" },
   { value: "tue", label: "Tue" },

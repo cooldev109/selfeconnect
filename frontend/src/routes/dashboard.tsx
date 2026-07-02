@@ -12,6 +12,7 @@ import {
   Flame,
   MapPin,
   Quote,
+  Briefcase,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import {
@@ -430,6 +431,13 @@ function TopNav({ driverName, onLogout }: { driverName: string; onLogout: () => 
           <span className="font-display font-bold tracking-tight text-foreground">SelfeConnect</span>
         </Link>
 
+        <div className="flex items-center gap-2">
+        <Link
+          to="/jobs"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+        >
+          <Briefcase className="h-4 w-4 text-primary" /> Find work
+        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-full px-2 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
             {driverName}
@@ -452,6 +460,7 @@ function TopNav({ driverName, onLogout }: { driverName: string; onLogout: () => 
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </header>
   );
