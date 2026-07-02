@@ -82,7 +82,11 @@ function CustomerHome() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="rounded-xl" disabled title="Coming next">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => navigate({ to: "/customer/search" })}
+            >
               <Search className="mr-2 h-4 w-4" /> Find a professional
             </Button>
             <Button

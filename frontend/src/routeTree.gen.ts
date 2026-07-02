@@ -25,11 +25,13 @@ import { Route as CustomerIndexRouteImport } from './routes/customer.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TipDriverIdRouteImport } from './routes/tip.$driverId'
 import { Route as CustomerSignupRouteImport } from './routes/customer.signup'
+import { Route as CustomerSearchRouteImport } from './routes/customer.search'
 import { Route as CustomerLoginRouteImport } from './routes/customer.login'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as TipDriverIdIndexRouteImport } from './routes/tip.$driverId.index'
 import { Route as TipDriverIdSuccessRouteImport } from './routes/tip.$driverId.success'
+import { Route as CustomerProsPublicIdRouteImport } from './routes/customer.pros.$publicId'
 import { Route as CustomerJobsNewRouteImport } from './routes/customer.jobs.new'
 import { Route as CustomerJobsJobIdEditRouteImport } from './routes/customer.jobs.$jobId.edit'
 
@@ -113,6 +115,11 @@ const CustomerSignupRoute = CustomerSignupRouteImport.update({
   path: '/customer/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerSearchRoute = CustomerSearchRouteImport.update({
+  id: '/customer/search',
+  path: '/customer/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomerLoginRoute = CustomerLoginRouteImport.update({
   id: '/customer/login',
   path: '/customer/login',
@@ -137,6 +144,11 @@ const TipDriverIdSuccessRoute = TipDriverIdSuccessRouteImport.update({
   id: '/success',
   path: '/success',
   getParentRoute: () => TipDriverIdRoute,
+} as any)
+const CustomerProsPublicIdRoute = CustomerProsPublicIdRouteImport.update({
+  id: '/customer/pros/$publicId',
+  path: '/customer/pros/$publicId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CustomerJobsNewRoute = CustomerJobsNewRouteImport.update({
   id: '/customer/jobs/new',
@@ -165,11 +177,13 @@ export interface FileRoutesByFullPath {
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/customer/': typeof CustomerIndexRoute
   '/customer/jobs/new': typeof CustomerJobsNewRoute
+  '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
   '/tip/$driverId/': typeof TipDriverIdIndexRoute
   '/customer/jobs/$jobId/edit': typeof CustomerJobsJobIdEditRoute
@@ -189,10 +203,12 @@ export interface FileRoutesByTo {
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/admin': typeof AdminIndexRoute
   '/customer': typeof CustomerIndexRoute
   '/customer/jobs/new': typeof CustomerJobsNewRoute
+  '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
   '/tip/$driverId': typeof TipDriverIdIndexRoute
   '/customer/jobs/$jobId/edit': typeof CustomerJobsJobIdEditRoute
@@ -214,11 +230,13 @@ export interface FileRoutesById {
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/customer/': typeof CustomerIndexRoute
   '/customer/jobs/new': typeof CustomerJobsNewRoute
+  '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
   '/tip/$driverId/': typeof TipDriverIdIndexRoute
   '/customer/jobs/$jobId/edit': typeof CustomerJobsJobIdEditRoute
@@ -241,11 +259,13 @@ export interface FileRouteTypes {
     | '/admin/drivers'
     | '/admin/transactions'
     | '/customer/login'
+    | '/customer/search'
     | '/customer/signup'
     | '/tip/$driverId'
     | '/admin/'
     | '/customer/'
     | '/customer/jobs/new'
+    | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
     | '/tip/$driverId/'
     | '/customer/jobs/$jobId/edit'
@@ -265,10 +285,12 @@ export interface FileRouteTypes {
     | '/admin/drivers'
     | '/admin/transactions'
     | '/customer/login'
+    | '/customer/search'
     | '/customer/signup'
     | '/admin'
     | '/customer'
     | '/customer/jobs/new'
+    | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
     | '/tip/$driverId'
     | '/customer/jobs/$jobId/edit'
@@ -289,11 +311,13 @@ export interface FileRouteTypes {
     | '/admin/drivers'
     | '/admin/transactions'
     | '/customer/login'
+    | '/customer/search'
     | '/customer/signup'
     | '/tip/$driverId'
     | '/admin/'
     | '/customer/'
     | '/customer/jobs/new'
+    | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
     | '/tip/$driverId/'
     | '/customer/jobs/$jobId/edit'
@@ -313,10 +337,12 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   CustomerLoginRoute: typeof CustomerLoginRoute
+  CustomerSearchRoute: typeof CustomerSearchRoute
   CustomerSignupRoute: typeof CustomerSignupRoute
   TipDriverIdRoute: typeof TipDriverIdRouteWithChildren
   CustomerIndexRoute: typeof CustomerIndexRoute
   CustomerJobsNewRoute: typeof CustomerJobsNewRoute
+  CustomerProsPublicIdRoute: typeof CustomerProsPublicIdRoute
   CustomerJobsJobIdEditRoute: typeof CustomerJobsJobIdEditRoute
 }
 
@@ -434,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/search': {
+      id: '/customer/search'
+      path: '/customer/search'
+      fullPath: '/customer/search'
+      preLoaderRoute: typeof CustomerSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer/login': {
       id: '/customer/login'
       path: '/customer/login'
@@ -468,6 +501,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tip/$driverId/success'
       preLoaderRoute: typeof TipDriverIdSuccessRouteImport
       parentRoute: typeof TipDriverIdRoute
+    }
+    '/customer/pros/$publicId': {
+      id: '/customer/pros/$publicId'
+      path: '/customer/pros/$publicId'
+      fullPath: '/customer/pros/$publicId'
+      preLoaderRoute: typeof CustomerProsPublicIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/customer/jobs/new': {
       id: '/customer/jobs/new'
@@ -528,10 +568,12 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
   CustomerLoginRoute: CustomerLoginRoute,
+  CustomerSearchRoute: CustomerSearchRoute,
   CustomerSignupRoute: CustomerSignupRoute,
   TipDriverIdRoute: TipDriverIdRouteWithChildren,
   CustomerIndexRoute: CustomerIndexRoute,
   CustomerJobsNewRoute: CustomerJobsNewRoute,
+  CustomerProsPublicIdRoute: CustomerProsPublicIdRoute,
   CustomerJobsJobIdEditRoute: CustomerJobsJobIdEditRoute,
 }
 export const routeTree = rootRouteImport
