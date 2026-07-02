@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -132,5 +133,136 @@ export class JobsService {
     if (!existing) throw new NotFoundException('job_not_found');
     await this.prisma.job.delete({ where: { id } });
     return { ok: true };
+  }
+
+  // ---- Professional (driver) side: browse jobs + unlock contact ----
+
+  private round1(n: number) {
+    return Math.round(n * 10) / 10;
+  }
+
+  private shapePro(
+    j: Prisma.JobGetPayload<{
+      include: { category: true; customer: true };
+    }>,
+    distanceMiles: number | null,
+    unlocked: boolean,
+  ) {
+    return {
+      id: j.id,
+      title: j.title,
+      description: j.description,
+      categorySlug: j.category.slug,
+      categoryName: j.category.name,
+      postcode: j.postcode,
+      distanceMiles,
+      workingDays: j.workingDays,
+      workingHours: j.workingHours ?? null,
+      budget: j.budget ?? null,
+      createdAt: j.createdAt.toISOString(),
+      unlocked,
+      // Contact is only ever populated once the pro has unlocked it.
+      contact: unlocked
+        ? {
+            name: j.customer.companyName || j.customer.name,
+            email: j.customer.email,
+            phone: j.customer.phone ?? null,
+            addressLine: j.addressLine ?? null,
+          }
+        : null,
+    };
+  }
+
+  // Open jobs in the professional's own categories, optionally within `radius`
+  // miles of their postcode, nearest first. Contact stays hidden until unlocked.
+  async browseForPro(
+    driverId: string,
+    opts: { radiusMiles?: number; categorySlug?: string },
+  ) {
+    const driver = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      include: { categories: { select: { id: true, slug: true } } },
+    });
+    if (!driver) throw new NotFoundException('driver_not_found');
+
+    let categoryIds = driver.categories.map((c) => c.id);
+    if (opts.categorySlug) {
+      const match = driver.categories.find((c) => c.slug === opts.categorySlug);
+      categoryIds = match ? [match.id] : [];
+    }
+    if (categoryIds.length === 0) return [];
+
+    const jobs = await this.prisma.job.findMany({
+      where: { status: 'open', categoryId: { in: categoryIds } },
+      include: {
+        category: true,
+        customer: true,
+        unlocks: { where: { driverId }, select: { id: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const hasLoc = driver.latitude != null && driver.longitude != null;
+    const rows = jobs.map((j) => {
+      let distanceMiles: number | null = null;
+      if (hasLoc && j.latitude != null && j.longitude != null) {
+        distanceMiles = this.round1(
+          this.geo.distanceMiles(
+            { latitude: driver.latitude!, longitude: driver.longitude! },
+            { latitude: j.latitude, longitude: j.longitude },
+          ),
+        );
+      }
+      return { j, distanceMiles, unlocked: j.unlocks.length > 0 };
+    });
+
+    let filtered = rows;
+    if (hasLoc && opts.radiusMiles != null) {
+      filtered = rows
+        .filter((r) => r.distanceMiles != null && r.distanceMiles <= opts.radiusMiles!)
+        .sort((a, b) => a.distanceMiles! - b.distanceMiles!);
+    }
+    return filtered.map((r) => this.shapePro(r.j, r.distanceMiles, r.unlocked));
+  }
+
+  // Reveal a job's contact details — requires an active subscription. Idempotent.
+  async unlockContact(driverId: string, jobId: string) {
+    const driver = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      include: { categories: { select: { id: true } } },
+    });
+    if (!driver) throw new NotFoundException('driver_not_found');
+
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: { category: true, customer: true },
+    });
+    // Only jobs in the pro's categories are visible/unlockable.
+    if (!job || !driver.categories.some((c) => c.id === job.categoryId)) {
+      throw new NotFoundException('job_not_found');
+    }
+    if (!driver.isActive) throw new ForbiddenException('subscription_required');
+
+    await this.prisma.jobContactUnlock.upsert({
+      where: { jobId_driverId: { jobId, driverId } },
+      update: {},
+      create: { jobId, driverId },
+    });
+
+    let distanceMiles: number | null = null;
+    if (
+      driver.latitude != null &&
+      driver.longitude != null &&
+      job.latitude != null &&
+      job.longitude != null
+    ) {
+      distanceMiles = this.round1(
+        this.geo.distanceMiles(
+          { latitude: driver.latitude, longitude: driver.longitude },
+          { latitude: job.latitude, longitude: job.longitude },
+        ),
+      );
+    }
+    return this.shapePro(job, distanceMiles, true);
   }
 }
