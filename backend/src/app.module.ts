@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CustomerAuthModule } from './customer-auth/customer-auth.module';
 import { JobsModule } from './jobs/jobs.module';
+import { ProsModule } from './pros/pros.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -28,6 +29,7 @@ import { AppService } from './app.service';
     CategoriesModule,
     CustomerAuthModule,
     JobsModule,
+    ProsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
