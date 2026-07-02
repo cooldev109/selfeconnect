@@ -10,6 +10,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CustomerAuthModule } from './customer-auth/customer-auth.module';
+import { JobsModule } from './jobs/jobs.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -26,6 +27,7 @@ import { AppService } from './app.service';
     AdminModule,
     CategoriesModule,
     CustomerAuthModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

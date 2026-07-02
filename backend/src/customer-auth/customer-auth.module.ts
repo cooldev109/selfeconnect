@@ -8,6 +8,7 @@ import { CustomerAuthGuard } from './customer-auth.guard';
   imports: [AuthModule],
   controllers: [CustomerAuthController],
   providers: [CustomerAuthService, CustomerAuthGuard],
-  exports: [CustomerAuthService, CustomerAuthGuard],
+  // Re-export AuthModule so consumers of CustomerAuthGuard also get JwtService.
+  exports: [CustomerAuthService, CustomerAuthGuard, AuthModule],
 })
 export class CustomerAuthModule {}
