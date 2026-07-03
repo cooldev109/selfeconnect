@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ShieldCheck, Sparkles, Truck } from "lucide-react";
+import {
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  Briefcase,
+  Search,
+  Check,
+  ArrowRight,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import {
   Button,
@@ -68,6 +76,12 @@ function Home() {
           </Link>
           <div className="flex shrink-0 items-center gap-3 sm:gap-4">
             <Link
+              to="/customer/login"
+              className="hidden whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            >
+              Find a pro
+            </Link>
+            <Link
               to="/login"
               className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -84,7 +98,82 @@ function Home() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6">
-        {/* Hero */}
+        {/* Dual-path chooser — the primary entry point */}
+        <section className="pt-12 pb-6 text-center animate-fade-up">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            Trusted local professionals, reviewed &amp; recommended
+          </span>
+          <h1 className="mx-auto mt-5 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
+            One platform. <span className="text-primary">Two ways in.</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+            Whether you offer a service or need one, SelfeConnect connects
+            trusted local professionals with the people who need them.
+          </p>
+
+          <div className="mx-auto mt-9 grid max-w-3xl gap-4 text-left sm:grid-cols-2">
+            {/* Professional path */}
+            <div className="group flex flex-col rounded-2xl border border-border/70 bg-card p-6 shadow-soft transition hover:border-primary/40 hover:shadow-elevated">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <Briefcase className="h-6 w-6" />
+              </span>
+              <h2 className="mt-4 text-lg font-bold text-foreground font-display">
+                I'm a Professional
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Get reviews &amp; tips, your own QR code, and find local jobs in
+                your trade.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-foreground/80">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> Reviews, tips &amp; a personal QR code</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> Browse nearby jobs in your categories</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> Unlimited access with one subscription</li>
+              </ul>
+              <div className="mt-6 flex flex-col gap-2">
+                <Button asChild size="lg" className="h-11 w-full rounded-xl font-semibold">
+                  <Link to="/signup">
+                    Join as a professional <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Link to="/login" className="text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  Already a member? Log in
+                </Link>
+              </div>
+            </div>
+
+            {/* Customer path */}
+            <div className="group flex flex-col rounded-2xl border border-border/70 bg-card p-6 shadow-soft transition hover:border-primary/40 hover:shadow-elevated">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <Search className="h-6 w-6" />
+              </span>
+              <h2 className="mt-4 text-lg font-bold text-foreground font-display">
+                I'm Looking for a Professional
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Find and hire trusted local pros, or post a job and let them come
+                to you.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-foreground/80">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> Search by service &amp; area</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> See ratings, reviews &amp; contact directly</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> Post a job for free</li>
+              </ul>
+              <div className="mt-6 flex flex-col gap-2">
+                <Button asChild size="lg" variant="outline" className="h-11 w-full rounded-xl border-primary/40 font-semibold text-primary hover:bg-primary-soft">
+                  <Link to="/customer/signup">
+                    Find a professional <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Link to="/customer/login" className="text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  Have an account? Log in
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* For professionals — detail */}
         <section className="relative grid items-center gap-10 pt-10 pb-16 lg:grid-cols-2 lg:gap-14 lg:pt-16 animate-fade-up">
           <div className="absolute inset-x-0 -top-10 -z-10 mx-auto h-72 max-w-lg rounded-full bg-mesh blur-2xl opacity-80" />
           <div className="text-center lg:text-left">
@@ -92,9 +181,9 @@ function Home() {
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Now live for UK professionals and business
             </span>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
+            <h2 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
               Get recognised and <span className="text-primary">rewarded</span>.
-            </h1>
+            </h2>
             <p className="mt-5 text-base leading-relaxed text-foreground/80 lg:text-lg">
               Join a community built for self-employed professionals. Collect
               customer reviews, build trust, and receive tips for delivering
