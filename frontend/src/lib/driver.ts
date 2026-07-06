@@ -7,6 +7,9 @@ export function updateMe(input: {
   phone?: string;
   tagline?: string;
   city?: string;
+  bio?: string;
+  postcode?: string;
+  categorySlugs?: string[];
 }) {
   return api<Driver>("/me", { method: "PATCH", body: JSON.stringify(input) });
 }

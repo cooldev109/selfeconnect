@@ -29,9 +29,9 @@ const schema = z
     phone: z
       .string()
       .trim()
+      .min(6, "Enter a valid phone number")
       .max(20)
-      .regex(/^[+0-9 ()-]*$/, "Only digits, spaces and + ( ) -")
-      .optional(),
+      .regex(/^[+0-9 ()-]+$/, "Only digits, spaces and + ( ) -"),
     type: z.enum(["person", "business"]),
     companyName: z.string().trim().max(120).optional(),
     password: z
@@ -93,7 +93,7 @@ function CustomerSignupPage() {
         name: parsed.data.name,
         email: parsed.data.email,
         password: parsed.data.password,
-        phone: parsed.data.phone || undefined,
+        phone: parsed.data.phone,
         type: parsed.data.type,
         companyName:
           parsed.data.type === "business" ? parsed.data.companyName : undefined,
@@ -253,7 +253,7 @@ function CustomerSignupPage() {
 
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-foreground">
-                    Phone <span className="text-muted-foreground">(optional)</span>
+                    Phone
                   </span>
                   <Input
                     value={form.phone}

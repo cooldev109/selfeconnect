@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { QRCodeCanvas } from "qrcode.react";
 import { ArrowLeft, BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
 import {
@@ -12,6 +13,8 @@ import {
 import { useMe } from "@/hooks/useDriver";
 import { LOGO_MARK_SVG, LogoMark } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
+import { getCategories } from "@/lib/categories";
+import { ApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import flyerDriver from "@/assets/flyer-driver.png";
@@ -36,14 +39,27 @@ function ProfilePage() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [photo, setPhoto] = useState("");
+  const [bio, setBio] = useState("");
+  const [postcode, setPostcode] = useState("");
+  const [categorySlugs, setCategorySlugs] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+
+  const toggleCategory = (slug: string) =>
+    setCategorySlugs((s) =>
+      s.includes(slug) ? s.filter((x) => x !== slug) : [...s, slug],
+    );
 
   useEffect(() => {
     if (driver) {
       setName(driver.name);
       setCompany(driver.company);
       setPhoto(driver.photoUrl);
+      setBio(driver.bio);
+      setPostcode(driver.postcode);
+      setCategorySlugs(driver.categorySlugs);
     }
   }, [driver]);
 
@@ -232,9 +248,22 @@ function ProfilePage() {
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSaveError(null);
     try {
-      await updateMe({ name, company });
+      await updateMe({ name, company, bio, postcode, categorySlugs });
       setSavedAt(Date.now());
+    } catch (err) {
+      if (
+        err instanceof ApiError &&
+        err.status === 400 &&
+        String((err.body as { message?: string })?.message ?? "").includes(
+          "postcode",
+        )
+      ) {
+        setSaveError("Enter a valid UK postcode.");
+      } else {
+        setSaveError("Couldn't save. Please try again.");
+      }
     } finally {
       setSaving(false);
     }
@@ -442,6 +471,72 @@ function ProfilePage() {
                   placeholder="Optional"
                 />
               </label>
+
+              {/* Your services (occupations) — editable after registration */}
+              <div>
+                <span className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
+                  Your services
+                  <span className="text-xs font-normal text-muted-foreground">
+                    Select all that apply
+                  </span>
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {(categoriesQ.data ?? []).map((c) => {
+                    const active = categorySlugs.includes(c.slug);
+                    return (
+                      <button
+                        key={c.slug}
+                        type="button"
+                        onClick={() => toggleCategory(c.slug)}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                          active
+                            ? "border-primary bg-[#E1F5EE] text-primary"
+                            : "border-border text-muted-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">
+                  Postcode
+                </span>
+                <Input
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  placeholder="e.g. M1 1AE"
+                  maxLength={12}
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Used to match you with nearby jobs and customers.
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">
+                  About you{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </span>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  maxLength={600}
+                  placeholder="Tell customers about your experience and the services you offer…"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                />
+              </label>
+
+              {saveError && (
+                <p className="text-sm text-destructive" role="alert">
+                  {saveError}
+                </p>
+              )}
 
               <div className="flex items-center justify-between">
                 {savedAt && !saving ? (

@@ -86,6 +86,18 @@ export class RealStripeGateway implements StripeGateway {
     });
     return { url: s.url };
   }
+  async cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
+    const s = (await this.stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    })) as unknown as {
+      current_period_end: number;
+      cancel_at_period_end: boolean;
+    };
+    return {
+      currentPeriodEnd: s.current_period_end,
+      cancelAtPeriodEnd: s.cancel_at_period_end,
+    };
+  }
   async createTipPaymentIntent(i: {
     amount: number;
     currency: string;

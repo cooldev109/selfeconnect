@@ -94,6 +94,15 @@ function AccountPage() {
 
   const active = !!accountQ.data?.isActive;
   const onboarded = !!accountQ.data?.stripeOnboarded;
+  // Cancelled but still within the paid period → "Active until <date>".
+  const endsOn =
+    active && accountQ.data?.cancelAtPeriodEnd && accountQ.data?.currentPeriodEnd
+      ? new Date(accountQ.data.currentPeriodEnd).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : null;
 
   const go = async (
     fn: () => Promise<{ url: string }>,
@@ -170,13 +179,18 @@ function AccountPage() {
                 <p className="text-sm font-medium text-muted-foreground">Current plan</p>
                 <h2 className="mt-1 text-xl font-bold text-foreground">SelfeConnect Professional</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  £5.49/month{active ? " · renews monthly · cancel anytime" : ""}
+                  £5.49/month
+                  {endsOn
+                    ? ` · won't renew · access until ${endsOn}`
+                    : active
+                      ? " · renews monthly · cancel anytime"
+                      : ""}
                 </p>
               </div>
               <Badge
                 className={`rounded-full ${active ? "bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]" : "bg-muted text-muted-foreground hover:bg-muted"}`}
               >
-                {active ? "Active" : "Inactive"}
+                {endsOn ? `Active until ${endsOn}` : active ? "Active" : "Inactive"}
               </Badge>
             </div>
 
@@ -192,13 +206,19 @@ function AccountPage() {
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Manage subscription
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCancel(true)}
-                    className="text-sm font-semibold text-destructive hover:underline"
-                  >
-                    Cancel subscription
-                  </button>
+                  {endsOn ? (
+                    <span className="text-sm text-muted-foreground">
+                      Your subscription is set to cancel on {endsOn}.
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowCancel(true)}
+                      className="text-sm font-semibold text-destructive hover:underline"
+                    >
+                      Cancel subscription
+                    </button>
+                  )}
                 </>
               ) : (
                 <Button

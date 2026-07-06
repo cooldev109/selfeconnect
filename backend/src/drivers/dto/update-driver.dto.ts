@@ -1,4 +1,10 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class UpdateDriverDto {
   @IsOptional()
@@ -25,4 +31,21 @@ export class UpdateDriverDto {
   @IsString()
   @MaxLength(80)
   city?: string;
+
+  // Marketplace profile — editable after registration.
+  @IsOptional()
+  @IsString()
+  @MaxLength(600)
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(12)
+  postcode?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  categorySlugs?: string[];
 }

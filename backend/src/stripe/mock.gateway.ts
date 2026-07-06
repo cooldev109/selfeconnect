@@ -26,6 +26,13 @@ export class MockStripeGateway implements StripeGateway {
   async createBillingPortalSession(i: { returnUrl: string }) {
     return { url: i.returnUrl };
   }
+  async cancelSubscriptionAtPeriodEnd() {
+    // Mock: pretend it stays active for ~30 more days.
+    return {
+      currentPeriodEnd: Math.floor(Date.now() / 1000) + 30 * 24 * 3600,
+      cancelAtPeriodEnd: true,
+    };
+  }
   async createTipPaymentIntent() {
     const id = rid('pi');
     return { paymentIntentId: id, clientSecret: `${id}_secret_mock` };

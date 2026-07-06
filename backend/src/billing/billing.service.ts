@@ -32,6 +32,10 @@ export class BillingService {
       subscriptionStatus: d.subscriptionStatus,
       isActive: d.isActive,
       stripeOnboarded: d.stripeOnboarded,
+      cancelAtPeriodEnd: d.subscriptionCancelAtPeriodEnd,
+      currentPeriodEnd: d.subscriptionCurrentPeriodEnd
+        ? d.subscriptionCurrentPeriodEnd.toISOString()
+        : null,
     };
   }
 
@@ -106,6 +110,26 @@ export class BillingService {
   }
 
   async cancel(driverId: string) {
+    const d = await this.prisma.driver.findUnique({ where: { id: driverId } });
+    if (!d) throw new NotFoundException('not_found');
+
+    // Real subscription: cancel at period end so the pro keeps access until the
+    // paid period runs out. Their account then reads "Active until <date>".
+    if (d.stripeSubscriptionId && !this.stripe.isMock) {
+      const r = await this.stripe.cancelSubscriptionAtPeriodEnd(
+        d.stripeSubscriptionId,
+      );
+      await this.prisma.driver.update({
+        where: { id: driverId },
+        data: {
+          subscriptionCancelAtPeriodEnd: r.cancelAtPeriodEnd,
+          subscriptionCurrentPeriodEnd: new Date(r.currentPeriodEnd * 1000),
+        },
+      });
+      return { ok: true };
+    }
+
+    // Mock / no known subscription: fall back to marking it cancelled now.
     await this.setStatus(driverId, 'canceled');
     return { ok: true };
   }

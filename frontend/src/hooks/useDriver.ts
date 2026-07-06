@@ -16,6 +16,10 @@ export interface Driver {
   yearsActive: number;
   city: string;
   tagline: string;
+  bio: string;
+  postcode: string;
+  categorySlugs: string[];
+  categoryNames: string[];
 }
 
 // The signed-in driver (GET /me).

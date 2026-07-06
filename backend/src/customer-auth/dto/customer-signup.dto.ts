@@ -3,6 +3,7 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -20,10 +21,11 @@ export class CustomerSignupDto {
   @MinLength(8)
   password!: string;
 
-  @IsOptional()
   @IsString()
+  @MinLength(6)
   @MaxLength(20)
-  phone?: string;
+  @Matches(/^[+0-9 ()-]+$/, { message: 'invalid_phone' })
+  phone!: string;
 
   @IsOptional()
   @IsIn(['person', 'business'])

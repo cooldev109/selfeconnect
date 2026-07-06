@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import type { SubscriptionStatus, TipStatus } from '@prisma/client';
+import { Prisma, type SubscriptionStatus, type TipStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   STRIPE_GATEWAY,
@@ -88,10 +88,21 @@ export class WebhooksService {
         await this.setSubscriptionByCustomer(
           obj.customer as string,
           mapSubscriptionStatus(obj.status),
+          {
+            subscriptionId: typeof obj.id === 'string' ? obj.id : undefined,
+            currentPeriodEnd:
+              typeof obj.current_period_end === 'number'
+                ? new Date(obj.current_period_end * 1000)
+                : undefined,
+            cancelAtPeriodEnd: Boolean(obj.cancel_at_period_end),
+          },
         );
         break;
       case 'customer.subscription.deleted':
-        await this.setSubscriptionByCustomer(obj.customer as string, 'canceled');
+        await this.setSubscriptionByCustomer(obj.customer as string, 'canceled', {
+          cancelAtPeriodEnd: false,
+          currentPeriodEnd: null,
+        });
         break;
       default:
         // Unhandled event types are acknowledged but ignored.
@@ -145,11 +156,29 @@ export class WebhooksService {
   private async setSubscriptionByCustomer(
     customerId: string | undefined,
     status: SubscriptionStatus,
+    extra?: {
+      subscriptionId?: string;
+      currentPeriodEnd?: Date | null;
+      cancelAtPeriodEnd?: boolean;
+    },
   ) {
     if (!customerId) return;
+    const data: Prisma.DriverUpdateManyMutationInput = {
+      subscriptionStatus: status,
+      isActive: ACTIVE(status),
+    };
+    if (extra?.subscriptionId !== undefined) {
+      data.stripeSubscriptionId = extra.subscriptionId;
+    }
+    if (extra?.currentPeriodEnd !== undefined) {
+      data.subscriptionCurrentPeriodEnd = extra.currentPeriodEnd;
+    }
+    if (extra?.cancelAtPeriodEnd !== undefined) {
+      data.subscriptionCancelAtPeriodEnd = extra.cancelAtPeriodEnd;
+    }
     await this.prisma.driver.updateMany({
       where: { stripeCustomerId: customerId },
-      data: { subscriptionStatus: status, isActive: ACTIVE(status) },
+      data,
     });
   }
 }

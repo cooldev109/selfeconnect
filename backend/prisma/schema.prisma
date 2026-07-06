@@ -69,11 +69,15 @@ model Driver {
   longitude Float?
 
   // Stripe / billing
-  stripeAccountId    String?            @unique
-  stripeCustomerId   String?            @unique
-  subscriptionStatus SubscriptionStatus @default(none)
-  stripeOnboarded    Boolean            @default(false)
-  isActive           Boolean            @default(false)
+  stripeAccountId      String?            @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  subscriptionStatus   SubscriptionStatus @default(none)
+  stripeOnboarded      Boolean            @default(false)
+  isActive             Boolean            @default(false)
+  // When set + still active, the sub is cancelled but paid until this date.
+  subscriptionCancelAtPeriodEnd Boolean   @default(false)
+  subscriptionCurrentPeriodEnd  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

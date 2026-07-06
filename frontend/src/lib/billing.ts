@@ -6,6 +6,8 @@ export interface AccountInfo {
   subscriptionStatus: string;
   isActive: boolean;
   stripeOnboarded: boolean;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: string | null;
 }
 
 export const getAccount = () => api<AccountInfo>("/me/account");
