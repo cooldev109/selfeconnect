@@ -1,20 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import {
-  Loader2,
-  MapPin,
-  ArrowLeft,
-  Lock,
-  Mail,
-  Phone,
-  Sparkles,
-} from "lucide-react";
-import { LogoMark } from "@/components/Logo";
+import { Loader2, MapPin, Lock, Mail, Phone, Sparkles } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
-import { useRequireAuth } from "@/lib/useRequireAuth";
+import { ProShell } from "@/components/ProShell";
+import { CategorySelect } from "@/components/CategoryPicker";
 import { getAccount } from "@/lib/billing";
-import { getCategories } from "@/lib/categories";
+import { useTips } from "@/hooks/useTips";
 import { proBrowseJobs, proUnlockJob, type ProJob } from "@/lib/jobs";
 
 export const Route = createFileRoute("/jobs")({
@@ -30,19 +22,17 @@ export const Route = createFileRoute("/jobs")({
 const RADII = [5, 10, 25, 50, 100];
 
 function JobBoard() {
-  const auth = useRequireAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [radius, setRadius] = useState(25);
   const [category, setCategory] = useState("");
 
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
-  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const { total, avgRating, tips } = useTips();
   const jobsQ = useQuery({
     queryKey: ["pro-jobs", radius, category],
     queryFn: () => proBrowseJobs({ radius, category: category || undefined }),
     retry: false,
-    enabled: !!auth.data,
   });
 
   const unlock = useMutation({
@@ -50,118 +40,104 @@ function JobBoard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pro-jobs"] }),
   });
 
-  if (!auth.data) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </main>
-    );
-  }
-
   const isActive = !!accountQ.data?.isActive;
   const jobs = jobsQ.data ?? [];
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-bold tracking-tight text-foreground font-display">
-              SelfeConnect
-            </span>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+    <ProShell
+      title="Find work"
+      subtitle="Open jobs in your service categories, nearest first."
+    >
+      {!isActive && (
+        <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-primary/30 bg-[#E1F5EE] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-sm font-medium text-primary">
+            <Sparkles className="h-4 w-4" /> Subscribe to unlock customer contact
+            details and win more work.
+          </p>
+          <Button
+            className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => navigate({ to: "/account" })}
           >
-            <ArrowLeft className="h-4 w-4" /> Dashboard
-          </Link>
+            Activate subscription
+          </Button>
         </div>
-      </header>
+      )}
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-foreground font-display">Find work</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Open jobs in your service categories, nearest first.
-        </p>
-
-        {!isActive && (
-          <div className="mt-5 flex flex-col gap-2 rounded-2xl border border-primary/30 bg-[#E1F5EE] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="h-4 w-4" /> Subscribe to unlock customer
-              contact details and win more work.
-            </p>
-            <Button
-              className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => navigate({ to: "/account" })}
-            >
-              Activate subscription
-            </Button>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Within</span>
-            <select
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
-            >
-              {RADII.map((r) => (
-                <option key={r} value={r}>
-                  {r} miles
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Category</span>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
-            >
-              <option value="">All my services</option>
-              {(categoriesQ.data ?? []).map((c) => (
-                <option key={c.slug} value={c.slug}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {/* Results */}
-        {jobsQ.isLoading ? (
-          <div className="mt-8 flex justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        ) : jobs.length === 0 ? (
-          <Card className="mt-6 rounded-2xl border-dashed">
-            <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              No open jobs match your filters right now. Try a wider radius or a
-              different category.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="mt-6 space-y-3">
-            {jobs.map((j) => (
-              <JobCard
-                key={j.id}
-                job={j}
-                isActive={isActive}
-                unlocking={unlock.isPending && unlock.variables === j.id}
-                onUnlock={() => unlock.mutate(j.id)}
-                onSubscribe={() => navigate({ to: "/account" })}
-              />
-            ))}
-          </div>
-        )}
+      {/* Secondary: tips summary strip (a bonus on top of won work) */}
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        <Stat label="Tips received" value={`£${total.toFixed(2)}`} />
+        <Stat label="Avg rating" value={tips.length ? avgRating.toFixed(1) : "—"} />
+        <Stat label="Jobs nearby" value={String(jobs.length)} />
       </div>
-    </main>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Within</span>
+          <select
+            value={radius}
+            onChange={(e) => setRadius(Number(e.target.value))}
+            className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
+          >
+            {RADII.map((r) => (
+              <option key={r} value={r}>
+                {r} miles
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Category</span>
+          <div className="w-52">
+            <CategorySelect
+              value={category}
+              onChange={setCategory}
+              allLabel="All my services"
+            />
+          </div>
+        </label>
+      </div>
+
+      {/* Results */}
+      {jobsQ.isLoading ? (
+        <div className="mt-8 flex justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      ) : jobs.length === 0 ? (
+        <Card className="mt-6 rounded-2xl border-dashed">
+          <CardContent className="p-10 text-center text-sm text-muted-foreground">
+            No open jobs match your filters right now. Try a wider radius or a
+            different category.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {jobs.map((j) => (
+            <JobCard
+              key={j.id}
+              job={j}
+              isActive={isActive}
+              unlocking={unlock.isPending && unlock.variables === j.id}
+              onUnlock={() => unlock.mutate(j.id)}
+              onSubscribe={() => navigate({ to: "/account" })}
+            />
+          ))}
+        </div>
+      )}
+    </ProShell>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-display text-2xl font-bold tabular-nums text-foreground">
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -239,11 +215,7 @@ function JobCard({
             )}
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            className="mt-4 rounded-xl"
-            onClick={onSubscribe}
-          >
+          <Button variant="outline" className="mt-4 rounded-xl" onClick={onSubscribe}>
             <Lock className="mr-2 h-4 w-4" /> Subscribe to unlock
           </Button>
         )}

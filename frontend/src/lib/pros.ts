@@ -1,4 +1,5 @@
 import { api } from "./api";
+import type { ReviewItem, RatingBreakdown } from "./reviews";
 
 export interface ProSearchResult {
   publicId: string;
@@ -9,13 +10,6 @@ export interface ProSearchResult {
   avgRating: number;
   reviewCount: number;
   distanceMiles: number | null;
-}
-
-export interface ProReview {
-  rating: number | null;
-  message: string | null;
-  customerName: string | null;
-  date: string;
 }
 
 export interface ProProfile {
@@ -29,8 +23,9 @@ export interface ProProfile {
   categories: string[];
   avgRating: number;
   reviewCount: number;
+  breakdown: RatingBreakdown;
   contact: { phone: string | null; email: string };
-  reviews: ProReview[];
+  reviews: ReviewItem[];
 }
 
 export const browsePros = (opts: {

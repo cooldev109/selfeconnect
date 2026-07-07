@@ -46,7 +46,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       const { driver } = await loginRequest(parsed.data);
-      navigate({ to: driver.role === "admin" ? "/admin" : "/dashboard" });
+      navigate({ to: driver.role === "admin" ? "/admin" : "/jobs" });
     } catch {
       setFormError("Invalid email or password.");
       setSubmitting(false);

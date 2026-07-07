@@ -1,9 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ChevronDown,
-  User,
-  CreditCard,
-  LogOut,
   Star,
   Download,
   FileText,
@@ -12,9 +8,7 @@ import {
   Flame,
   MapPin,
   Quote,
-  Briefcase,
 } from "lucide-react";
-import { LogoMark } from "@/components/Logo";
 import {
   Area,
   AreaChart,
@@ -25,17 +19,9 @@ import {
   YAxis,
 } from "recharts";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ProShell } from "@/components/ProShell";
 import { useMe } from "@/hooks/useDriver";
 import { useTips } from "@/hooks/useTips";
-import { useRequireAuth } from "@/lib/useRequireAuth";
-import { logout } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/billing";
 import scanQrImg from "@/assets/scan-qr.jpg";
@@ -58,11 +44,9 @@ function greeting() {
 }
 
 function DashboardPage() {
-  const auth = useRequireAuth();
   const { data: driver } = useMe();
   const { data: account } = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
   const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak } = useTips();
-  const navigate = useNavigate();
 
   const weekTotal = perDay.slice(-7).reduce((s, d) => s + d.total, 0);
   const prevWeekTotal = perDay.slice(0, 7).reduce((s, d) => s + d.total, 0);
@@ -74,19 +58,12 @@ function DashboardPage() {
     ? `${latestReview.customerName ?? "Anonymous"}${latestReview.area ? `, ${latestReview.area}` : ""}`
     : "";
 
-  if (!auth.data || !driver) return null;
-
   return (
-    <div className="min-h-screen bg-background">
-      <TopNav
-        driverName={driver.name}
-        onLogout={async () => {
-          await logout().catch(() => {});
-          navigate({ to: "/login" });
-        }}
-      />
-
-      <main className="mx-auto max-w-6xl px-6 py-10">
+    <ProShell
+      title="Tips & earnings"
+      subtitle="Your tips, ratings and weekly performance."
+    >
+      <div className="space-y-6">
         {account && (!account.isActive || !account.stripeOnboarded) && (
           <Link
             to="/account"
@@ -114,7 +91,7 @@ function DashboardPage() {
               <div>
                 <p className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
                   <Sparkles className="h-3.5 w-3.5" />
-                  {greeting()}, {driver.firstName}
+                  {greeting()}, {driver?.firstName}
                 </p>
                 <p className="mt-5 text-sm font-medium text-muted-foreground">
                   You've earned in tips
@@ -327,8 +304,8 @@ function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </ProShell>
   );
 }
 
@@ -419,50 +396,6 @@ function TipCard({ tip, index }: { tip: { id: string; date: string; amount: numb
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function TopNav({ driverName, onLogout }: { driverName: string; onLogout: () => void }) {
-  return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <LogoMark className="h-8 w-8" />
-          <span className="font-display font-bold tracking-tight text-foreground">SelfeConnect</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-        <Link
-          to="/jobs"
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
-        >
-          <Briefcase className="h-4 w-4 text-primary" /> Find work
-        </Link>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-full px-2 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-            {driverName}
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuItem asChild>
-              <Link to="/profile" className="flex items-center gap-2">
-                <User className="h-4 w-4" /> Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/account" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" /> Account
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout} className="text-destructive focus:text-destructive">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        </div>
-      </div>
-    </header>
   );
 }
 

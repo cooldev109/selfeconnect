@@ -10,7 +10,10 @@ import { GeoService } from '../geo/geo.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 
-const jobInclude = { category: true } satisfies Prisma.JobInclude;
+const jobInclude = {
+  category: true,
+  hiredDriver: { select: { publicId: true, name: true, company: true } },
+} satisfies Prisma.JobInclude;
 type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
 @Injectable()
@@ -50,6 +53,10 @@ export class JobsService {
       workingDays: j.workingDays,
       workingHours: j.workingHours ?? null,
       budget: j.budget ?? null,
+      hiredDriverPublicId: j.hiredDriver?.publicId ?? null,
+      hiredDriverName: j.hiredDriver
+        ? j.hiredDriver.company || j.hiredDriver.name
+        : null,
       createdAt: j.createdAt.toISOString(),
     };
   }
@@ -117,6 +124,21 @@ export class JobsService {
     if (dto.workingHours !== undefined) data.workingHours = dto.workingHours?.trim();
     if (dto.budget !== undefined) data.budget = dto.budget?.trim();
     if (dto.status !== undefined) data.status = dto.status;
+    if (dto.hiredDriverPublicId !== undefined) {
+      if (dto.hiredDriverPublicId) {
+        const hired = await this.prisma.driver.findFirst({
+          where: {
+            publicId: dto.hiredDriverPublicId.trim().toUpperCase(),
+            role: 'driver',
+          },
+          select: { id: true },
+        });
+        if (!hired) throw new BadRequestException('invalid_professional');
+        data.hiredDriver = { connect: { id: hired.id } };
+      } else {
+        data.hiredDriver = { disconnect: true };
+      }
+    }
 
     const job = await this.prisma.job.update({
       where: { id },
@@ -124,6 +146,37 @@ export class JobsService {
       include: jobInclude,
     });
     return this.shape(job);
+  }
+
+  // Professionals who unlocked this job's contact — i.e. those who reached out.
+  // The customer picks from these when marking "I've found my professional".
+  async interestedPros(customerId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+
+    const unlocks = await this.prisma.jobContactUnlock.findMany({
+      where: { jobId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        driver: {
+          select: {
+            publicId: true,
+            name: true,
+            company: true,
+            categories: { select: { name: true } },
+          },
+        },
+      },
+    });
+    return unlocks.map((u) => ({
+      publicId: u.driver.publicId,
+      name: u.driver.name,
+      company: u.driver.company ?? null,
+      categories: u.driver.categories.map((c) => c.name),
+    }));
   }
 
   async remove(customerId: string, id: string) {

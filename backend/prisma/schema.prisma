@@ -85,6 +85,8 @@ model Driver {
   tips       Tip[]
   categories ServiceCategory[]  @relation("DriverCategories")
   jobUnlocks JobContactUnlock[]
+  reviews    Review[]
+  hiredJobs  Job[]              @relation("JobHired")
 }
 
 model Tip {
@@ -151,7 +153,8 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  jobs Job[]
+  jobs    Job[]
+  reviews Review[]
 }
 
 // A job opportunity posted by a customer, visible to professionals in the
@@ -168,6 +171,12 @@ model Job {
   description String
   status      JobStatus @default(open)
 
+  // Which professional the customer says they hired (set when the customer
+  // marks the job "found my professional"). Optional — off-platform hires stay
+  // null. Powers History + a targeted "leave a review".
+  hiredDriverId String?
+  hiredDriver   Driver? @relation("JobHired", fields: [hiredDriverId], references: [id], onDelete: SetNull)
+
   // Location (UK postcode geocoded to lat/lng for distance search).
   addressLine String?
   postcode    String
@@ -183,10 +192,35 @@ model Job {
   updatedAt DateTime @updatedAt
 
   unlocks JobContactUnlock[]
+  reviews Review[]
 
   @@index([categoryId])
   @@index([status])
   @@index([createdAt])
+}
+
+// A customer's rating + written review of a professional. Decoupled from tips:
+// a customer can rate and review without paying (tip is a separate, optional
+// action). One review per customer per professional (re-submitting updates it).
+model Review {
+  id         String   @id @default(uuid())
+  driverId   String
+  driver     Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  // Optional link to the job the customer hired for — makes the review
+  // "verified — hired on SelfeConnect".
+  jobId String?
+  job   Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  rating  Int // 1..5
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([driverId, customerId])
+  @@index([driverId])
 }
 
 // Records when a professional unlocked a job's contact details (analytics +

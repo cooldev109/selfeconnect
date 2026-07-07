@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Res,
   UseGuards,
@@ -11,6 +12,7 @@ import type { Response } from 'express';
 import { CustomerAuthService } from './customer-auth.service';
 import { CustomerSignupDto } from './dto/customer-signup.dto';
 import { CustomerLoginDto } from './dto/customer-login.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomerAuthGuard, CUSTOMER_COOKIE } from './customer-auth.guard';
 import { CurrentCustomer } from './current-customer.decorator';
 import type { CustomerUser } from './current-customer.decorator';
@@ -65,5 +67,15 @@ export class CustomerAuthController {
   @UseGuards(CustomerAuthGuard)
   me(@CurrentCustomer() customer: CustomerUser) {
     return { customer };
+  }
+
+  @Patch('me')
+  @UseGuards(CustomerAuthGuard)
+  async updateMe(
+    @CurrentCustomer() customer: CustomerUser,
+    @Body() dto: UpdateCustomerDto,
+  ) {
+    const updated = await this.customers.updateMe(customer.id, dto);
+    return { customer: updated };
   }
 }

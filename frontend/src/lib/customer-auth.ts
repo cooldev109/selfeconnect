@@ -10,6 +10,7 @@ export interface CustomerUser {
   type: string; // "person" | "business"
   companyName: string | null;
   phone: string | null;
+  postcode: string | null;
 }
 
 export function customerSignup(input: {
@@ -39,4 +40,20 @@ export function customerLogout() {
 
 export function customerMe() {
   return api<{ customer: CustomerUser }>("/customer/auth/me");
+}
+
+export function customerUpdateMe(input: {
+  name?: string;
+  phone?: string;
+  type?: "person" | "business";
+  companyName?: string;
+  postcode?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}) {
+  return api<{ customer: CustomerUser }>("/customer/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
 }

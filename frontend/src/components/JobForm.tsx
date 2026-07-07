@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Button, Input } from "@/components/shared";
-import { getCategories } from "@/lib/categories";
+import { CategorySelect } from "@/components/CategoryPicker";
 import { WEEK_DAYS, type JobInput } from "@/lib/jobs";
 import { ApiError } from "@/lib/api";
 
@@ -37,7 +36,6 @@ export function JobForm({
   submitLabel: string;
   onSubmit: (input: JobInput) => Promise<void>;
 }) {
-  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const [categorySlug, setCategorySlug] = useState(initial?.categorySlug ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -98,26 +96,15 @@ export function JobForm({
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
-      <label className="block">
+      <div className="block">
         <span className="mb-1.5 block text-sm font-medium text-foreground">
           Service category
         </span>
-        <select
-          value={categorySlug}
-          onChange={(e) => setCategorySlug(e.target.value)}
-          className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
-        >
-          <option value="">Select a category…</option>
-          {(categoriesQ.data ?? []).map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <CategorySelect value={categorySlug} onChange={setCategorySlug} />
         {errors.categorySlug && (
           <p className="mt-1 text-xs text-destructive">{errors.categorySlug}</p>
         )}
-      </label>
+      </div>
 
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-foreground">Title</span>

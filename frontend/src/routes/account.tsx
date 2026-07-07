@@ -1,10 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { ArrowLeft, CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck } from "lucide-react";
+import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
-import { useRequireAuth } from "@/lib/useRequireAuth";
+import { ProShell } from "@/components/ProShell";
 import { logout, changePassword } from "@/lib/auth";
 import {
   getAccount,
@@ -37,7 +37,6 @@ const contactSchema = z.object({
 });
 
 function AccountPage() {
-  const auth = useRequireAuth();
   const navigate = useNavigate();
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
 
@@ -153,24 +152,14 @@ function AccountPage() {
     }
   };
 
-  if (!auth.data || !accountQ.data) return null;
+  if (!accountQ.data) return null;
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <ProShell
+      title="Account"
+      subtitle="Manage your subscription, payouts and contact details."
+    >
       <div className="mx-auto max-w-2xl space-y-6">
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Account</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your subscription, payouts and contact details.
-          </p>
-        </div>
-
         {/* Subscription */}
         <Card className="rounded-2xl">
           <CardContent className="p-6">
@@ -438,6 +427,6 @@ function AccountPage() {
           </>
         }
       />
-    </main>
+    </ProShell>
   );
 }

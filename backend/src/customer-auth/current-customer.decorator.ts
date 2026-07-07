@@ -7,6 +7,7 @@ export interface CustomerUser {
   type: string;
   companyName: string | null;
   phone: string | null;
+  postcode: string | null;
 }
 
 export const CurrentCustomer = createParamDecorator(

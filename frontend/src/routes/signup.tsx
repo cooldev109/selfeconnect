@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
+import { CategoryMultiSelect } from "@/components/CategoryPicker";
 import authSide from "@/assets/auth-side.jpg";
 import { signup as signupRequest } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/driver";
-import { getCategories } from "@/lib/categories";
 import { ApiError } from "@/lib/api";
 
 const PRICE_PER_MONTH = 5.49;
@@ -77,21 +76,6 @@ function SignupPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const categoriesQ = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-  });
-
-  const toggleCategory = (slug: string) => {
-    setForm((f) => ({
-      ...f,
-      categorySlugs: f.categorySlugs.includes(slug)
-        ? f.categorySlugs.filter((s) => s !== slug)
-        : [...f.categorySlugs, slug],
-    }));
-    if (errors.categorySlugs)
-      setErrors((e) => ({ ...e, categorySlugs: undefined }));
-  };
 
   const priceLabel = useMemo(
     () => `£${PRICE_PER_MONTH.toFixed(2)}/month`,
@@ -147,7 +131,7 @@ function SignupPage() {
       // they chose is uploaded here rather than being silently discarded.
       const file = fileInputRef.current?.files?.[0];
       if (file) await uploadPhoto(file).catch(() => undefined);
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/jobs" });
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setErrors((e) => ({ ...e, email: "That email is already registered." }));
@@ -303,31 +287,11 @@ function SignupPage() {
                     Select all that apply
                   </span>
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {(categoriesQ.data ?? []).map((c) => {
-                    const active = form.categorySlugs.includes(c.slug);
-                    return (
-                      <button
-                        key={c.slug}
-                        type="button"
-                        onClick={() => toggleCategory(c.slug)}
-                        aria-pressed={active}
-                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                          active
-                            ? "border-primary bg-[#E1F5EE] text-primary"
-                            : "border-border text-muted-foreground hover:bg-secondary"
-                        }`}
-                      >
-                        {c.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {errors.categorySlugs && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {errors.categorySlugs}
-                  </p>
-                )}
+                <CategoryMultiSelect
+                  value={form.categorySlugs}
+                  onChange={(slugs) => update("categorySlugs", slugs)}
+                  error={errors.categorySlugs}
+                />
               </div>
 
               <Field

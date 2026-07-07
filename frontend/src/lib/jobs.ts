@@ -14,7 +14,16 @@ export interface Job {
   workingDays: string[];
   workingHours: string | null;
   budget: string | null;
+  hiredDriverPublicId: string | null;
+  hiredDriverName: string | null;
   createdAt: string;
+}
+
+export interface InterestedPro {
+  publicId: string;
+  name: string;
+  company: string | null;
+  categories: string[];
 }
 
 export interface JobInput {
@@ -37,11 +46,17 @@ export const getJob = (id: string) => api<Job>(`/jobs/${id}`);
 
 export const updateJob = (
   id: string,
-  b: Partial<JobInput> & { status?: "open" | "closed" },
+  b: Partial<JobInput> & {
+    status?: "open" | "closed";
+    hiredDriverPublicId?: string | null;
+  },
 ) => api<Job>(`/jobs/${id}`, { method: "PATCH", body: JSON.stringify(b) });
 
 export const deleteJob = (id: string) =>
   api<{ ok: true }>(`/jobs/${id}`, { method: "DELETE" });
+
+export const jobInterestedPros = (id: string) =>
+  api<InterestedPro[]>(`/jobs/${id}/interested`);
 
 // ---- Professional job board ----
 export interface ProJobContact {

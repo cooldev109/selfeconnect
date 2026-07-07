@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
+import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
 import {
   Badge,
   Button,
@@ -10,12 +9,12 @@ import {
   CardContent,
   Input,
 } from "@/components/shared";
+import { ProShell } from "@/components/ProShell";
+import { CategoryMultiSelect } from "@/components/CategoryPicker";
 import { useMe } from "@/hooks/useDriver";
-import { LOGO_MARK_SVG, LogoMark } from "@/components/Logo";
+import { LOGO_MARK_SVG } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
-import { getCategories } from "@/lib/categories";
 import { ApiError } from "@/lib/api";
-import { useRequireAuth } from "@/lib/useRequireAuth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import flyerDriver from "@/assets/flyer-driver.png";
 import scanQr from "@/assets/scan-qr.jpg";
@@ -31,7 +30,6 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const auth = useRequireAuth();
   const { data: driver } = useMe();
   const qrRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,12 +43,6 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
-
-  const toggleCategory = (slug: string) =>
-    setCategorySlugs((s) =>
-      s.includes(slug) ? s.filter((x) => x !== slug) : [...s, slug],
-    );
 
   useEffect(() => {
     if (driver) {
@@ -269,27 +261,14 @@ function ProfilePage() {
     }
   };
 
-  if (!auth.data || !driver) return null;
+  if (!driver) return null;
 
   return (
-    <main className="min-h-screen bg-background pb-16">
-      {/* Header */}
-      <header className="bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-6 py-4">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <LogoMark className="h-9 w-9" tone="white" />
-            <span className="text-lg font-bold tracking-tight">SelfeConnect</span>
-          </Link>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-primary-foreground/90 transition hover:bg-primary-foreground/10"
-          >
-            <ArrowLeft className="h-4 w-4" /> Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-2xl space-y-6 px-6 pt-6">
+    <ProShell
+      title="Profile & QR"
+      subtitle="Your public profile, services and tipping QR code."
+    >
+      <div className="mx-auto max-w-2xl space-y-6">
         {/* Identity card */}
         <Card className="rounded-2xl">
           <CardContent className="flex flex-col items-center p-6 text-center">
@@ -480,26 +459,10 @@ function ProfilePage() {
                     Select all that apply
                   </span>
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {(categoriesQ.data ?? []).map((c) => {
-                    const active = categorySlugs.includes(c.slug);
-                    return (
-                      <button
-                        key={c.slug}
-                        type="button"
-                        onClick={() => toggleCategory(c.slug)}
-                        aria-pressed={active}
-                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                          active
-                            ? "border-primary bg-[#E1F5EE] text-primary"
-                            : "border-border text-muted-foreground hover:bg-secondary"
-                        }`}
-                      >
-                        {c.name}
-                      </button>
-                    );
-                  })}
-                </div>
+                <CategoryMultiSelect
+                  value={categorySlugs}
+                  onChange={setCategorySlugs}
+                />
               </div>
 
               <label className="block">
@@ -556,6 +519,6 @@ function ProfilePage() {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </ProShell>
   );
 }

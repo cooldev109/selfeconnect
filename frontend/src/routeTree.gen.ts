@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
@@ -27,6 +28,7 @@ import { Route as TipDriverIdRouteImport } from './routes/tip.$driverId'
 import { Route as CustomerSignupRouteImport } from './routes/customer.signup'
 import { Route as CustomerSearchRouteImport } from './routes/customer.search'
 import { Route as CustomerLoginRouteImport } from './routes/customer.login'
+import { Route as CustomerAccountRouteImport } from './routes/customer.account'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as TipDriverIdIndexRouteImport } from './routes/tip.$driverId.index'
@@ -43,6 +45,11 @@ const TermsRoute = TermsRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -125,6 +132,11 @@ const CustomerLoginRoute = CustomerLoginRouteImport.update({
   path: '/customer/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerAccountRoute = CustomerAccountRouteImport.update({
+  id: '/customer/account',
+  path: '/customer/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -172,10 +184,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
@@ -198,10 +212,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
@@ -225,10 +241,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
@@ -254,10 +272,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/reviews'
     | '/signup'
     | '/terms'
     | '/admin/drivers'
     | '/admin/transactions'
+    | '/customer/account'
     | '/customer/login'
     | '/customer/search'
     | '/customer/signup'
@@ -280,10 +300,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/reviews'
     | '/signup'
     | '/terms'
     | '/admin/drivers'
     | '/admin/transactions'
+    | '/customer/account'
     | '/customer/login'
     | '/customer/search'
     | '/customer/signup'
@@ -306,10 +328,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/reviews'
     | '/signup'
     | '/terms'
     | '/admin/drivers'
     | '/admin/transactions'
+    | '/customer/account'
     | '/customer/login'
     | '/customer/search'
     | '/customer/signup'
@@ -334,8 +358,10 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  ReviewsRoute: typeof ReviewsRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  CustomerAccountRoute: typeof CustomerAccountRoute
   CustomerLoginRoute: typeof CustomerLoginRoute
   CustomerSearchRoute: typeof CustomerSearchRoute
   CustomerSignupRoute: typeof CustomerSignupRoute
@@ -360,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -474,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/account': {
+      id: '/customer/account'
+      path: '/customer/account'
+      fullPath: '/customer/account'
+      preLoaderRoute: typeof CustomerAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/transactions': {
       id: '/admin/transactions'
       path: '/transactions'
@@ -565,8 +605,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  ReviewsRoute: ReviewsRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  CustomerAccountRoute: CustomerAccountRoute,
   CustomerLoginRoute: CustomerLoginRoute,
   CustomerSearchRoute: CustomerSearchRoute,
   CustomerSignupRoute: CustomerSignupRoute,

@@ -56,4 +56,12 @@ export class UpdateJobDto {
   @IsOptional()
   @IsIn(['open', 'closed'])
   status?: 'open' | 'closed';
+
+  // The professional the customer says they hired. Pass a publicId to record
+  // the hire, or null to clear it. Typically sent together with status:'closed'
+  // when the customer clicks "I've found my professional".
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  hiredDriverPublicId?: string | null;
 }

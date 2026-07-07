@@ -38,6 +38,12 @@ export class JobsController {
     return this.jobs.getMine(c.id, id);
   }
 
+  // Pros who unlocked this job (candidates for "I've found my professional").
+  @Get(':id/interested')
+  interested(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
+    return this.jobs.interestedPros(c.id, id);
+  }
+
   @Patch(':id')
   update(
     @CurrentCustomer() c: CustomerUser,

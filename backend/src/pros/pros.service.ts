@@ -6,6 +6,23 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
 
+// A rating summary combining legacy tip ratings and standalone reviews.
+export type RatingSummary = {
+  avgRating: number;
+  reviewCount: number;
+  breakdown: Record<1 | 2 | 3 | 4 | 5, number>;
+};
+
+// A single review row shown on a professional's profile / "My reviews".
+export type ReviewItem = {
+  rating: number;
+  comment: string | null;
+  author: string;
+  date: string;
+  verified: boolean; // left by a registered SelfeConnect customer
+  hired: boolean; // linked to a job they hired for
+};
+
 @Injectable()
 export class ProsService {
   constructor(
@@ -15,6 +32,117 @@ export class ProsService {
 
   private round1(n: number) {
     return Math.round(n * 10) / 10;
+  }
+
+  private emptyBreakdown(): Record<1 | 2 | 3 | 4 | 5, number> {
+    return { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  }
+
+  // Combined rating summary per driver, blending Tip.rating + Review.rating.
+  private async ratingSummary(
+    driverIds: string[],
+  ): Promise<Map<string, RatingSummary>> {
+    const map = new Map<string, RatingSummary>();
+    if (driverIds.length === 0) return map;
+
+    const [tipGroups, reviewGroups] = await Promise.all([
+      this.prisma.tip.groupBy({
+        by: ['driverId', 'rating'],
+        where: { driverId: { in: driverIds }, rating: { not: null } },
+        _count: { _all: true },
+      }),
+      this.prisma.review.groupBy({
+        by: ['driverId', 'rating'],
+        where: { driverId: { in: driverIds } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const acc = new Map<
+      string,
+      { sum: number; count: number; breakdown: Record<number, number> }
+    >();
+    const bump = (driverId: string, rating: number, n: number) => {
+      const e =
+        acc.get(driverId) ??
+        (() => {
+          const v = { sum: 0, count: 0, breakdown: {} as Record<number, number> };
+          acc.set(driverId, v);
+          return v;
+        })();
+      e.sum += rating * n;
+      e.count += n;
+      e.breakdown[rating] = (e.breakdown[rating] ?? 0) + n;
+    };
+    for (const g of tipGroups) {
+      if (g.rating != null) bump(g.driverId, g.rating, g._count._all);
+    }
+    for (const g of reviewGroups) {
+      bump(g.driverId, g.rating, g._count._all);
+    }
+
+    for (const id of driverIds) {
+      const e = acc.get(id);
+      const breakdown = this.emptyBreakdown();
+      if (e) {
+        for (const s of [1, 2, 3, 4, 5] as const) {
+          breakdown[s] = e.breakdown[s] ?? 0;
+        }
+      }
+      map.set(id, {
+        avgRating: e && e.count ? this.round1(e.sum / e.count) : 0,
+        reviewCount: e?.count ?? 0,
+        breakdown,
+      });
+    }
+    return map;
+  }
+
+  // Merged, display-ready review list for one driver (reviews + rated tips).
+  private async reviewsForDriver(
+    driverId: string,
+    take = 12,
+  ): Promise<ReviewItem[]> {
+    const [reviews, tips] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { driverId },
+        orderBy: { createdAt: 'desc' },
+        take,
+        include: { customer: { select: { name: true, companyName: true } } },
+      }),
+      this.prisma.tip.findMany({
+        where: { driverId, rating: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        take,
+        select: {
+          rating: true,
+          message: true,
+          customerName: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    const items: ReviewItem[] = [
+      ...reviews.map((r) => ({
+        rating: r.rating,
+        comment: r.comment ?? null,
+        author: r.customer.companyName || r.customer.name || 'Customer',
+        date: r.createdAt.toISOString(),
+        verified: true,
+        hired: r.jobId != null,
+      })),
+      ...tips.map((t) => ({
+        rating: t.rating as number,
+        comment: t.message ?? null,
+        author: t.customerName || 'Anonymous',
+        date: t.createdAt.toISOString(),
+        verified: false,
+        hired: false,
+      })),
+    ];
+    items.sort((a, b) => (a.date < b.date ? 1 : -1));
+    return items.slice(0, take);
   }
 
   // Search active professionals by category, within `radius` miles of a
@@ -49,17 +177,7 @@ export class ProsService {
       include: { categories: { select: { name: true, slug: true } } },
     });
 
-    // Rating summaries in one query.
-    const ids = drivers.map((d) => d.id);
-    const aggs = ids.length
-      ? await this.prisma.tip.groupBy({
-          by: ['driverId'],
-          where: { driverId: { in: ids }, rating: { not: null } },
-          _avg: { rating: true },
-          _count: { rating: true },
-        })
-      : [];
-    const byId = new Map(aggs.map((a) => [a.driverId, a]));
+    const summaries = await this.ratingSummary(drivers.map((d) => d.id));
 
     const rows: {
       publicId: string;
@@ -89,15 +207,15 @@ export class ProsService {
       ) {
         continue;
       }
-      const a = byId.get(d.id);
+      const s = summaries.get(d.id);
       rows.push({
         publicId: d.publicId,
         name: d.name,
         company: d.company ?? null,
         photoUrl: d.photoUrl ?? null,
         categories: d.categories.map((c) => c.name),
-        avgRating: a?._avg.rating ? this.round1(a._avg.rating) : 0,
-        reviewCount: a?._count.rating ?? 0,
+        avgRating: s?.avgRating ?? 0,
+        reviewCount: s?.reviewCount ?? 0,
         distanceMiles,
       });
     }
@@ -119,17 +237,9 @@ export class ProsService {
     });
     if (!d) throw new NotFoundException('professional_not_found');
 
-    const agg = await this.prisma.tip.aggregate({
-      where: { driverId: d.id, rating: { not: null } },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
-    const reviews = await this.prisma.tip.findMany({
-      where: { driverId: d.id, rating: { not: null } },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-      select: { rating: true, message: true, customerName: true, createdAt: true },
-    });
+    const summaries = await this.ratingSummary([d.id]);
+    const summary = summaries.get(d.id)!;
+    const reviews = await this.reviewsForDriver(d.id);
 
     return {
       publicId: d.publicId,
@@ -140,15 +250,24 @@ export class ProsService {
       city: d.city ?? null,
       postcode: d.postcode ?? null,
       categories: d.categories.map((c) => c.name),
-      avgRating: agg._avg.rating ? this.round1(agg._avg.rating) : 0,
-      reviewCount: agg._count.rating,
+      avgRating: summary.avgRating,
+      reviewCount: summary.reviewCount,
+      breakdown: summary.breakdown,
       contact: { phone: d.phone ?? null, email: d.email },
-      reviews: reviews.map((r) => ({
-        rating: r.rating,
-        message: r.message ?? null,
-        customerName: r.customerName ?? null,
-        date: r.createdAt.toISOString(),
-      })),
+      reviews,
+    };
+  }
+
+  // The signed-in professional's own reviews (for their "My reviews" page).
+  async myReviews(driverId: string) {
+    const summaries = await this.ratingSummary([driverId]);
+    const summary = summaries.get(driverId)!;
+    const reviews = await this.reviewsForDriver(driverId, 50);
+    return {
+      avgRating: summary.avgRating,
+      reviewCount: summary.reviewCount,
+      breakdown: summary.breakdown,
+      reviews,
     };
   }
 }

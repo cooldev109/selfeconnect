@@ -1,182 +1,303 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin } from "lucide-react";
-import { LogoMark } from "@/components/Logo";
-import { Badge, Card, CardContent } from "@/components/shared";
-import { useRequireCustomer } from "@/lib/useRequireCustomer";
+import { useState } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Badge, Button, Card, CardContent } from "@/components/shared";
+import { CustomerShell } from "@/components/CustomerShell";
+import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
 import { getProProfile } from "@/lib/pros";
+import { createReview } from "@/lib/reviews";
 
 export const Route = createFileRoute("/customer/pros/$publicId")({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { review?: string; jobId?: string } => ({
+    review: typeof s.review === "string" ? s.review : undefined,
+    jobId: typeof s.jobId === "string" ? s.jobId : undefined,
+  }),
   head: () => ({ meta: [{ title: "Professional profile — SelfeConnect" }] }),
   component: ProProfilePage,
 });
 
-function Stars({ value }: { value: number }) {
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i <= Math.round(value)
-              ? "fill-amber-400 text-amber-400"
-              : "text-muted-foreground/30"
-          }`}
-        />
-      ))}
-    </span>
-  );
-}
-
 function ProProfilePage() {
-  const { customer, loading } = useRequireCustomer();
   const { publicId } = useParams({ from: "/customer/pros/$publicId" });
+  const search = Route.useSearch();
   const q = useQuery({
     queryKey: ["pro-profile", publicId],
     queryFn: () => getProProfile(publicId),
     retry: false,
-    enabled: !!customer,
   });
 
-  if (loading || q.isLoading) {
+  const [reviewing, setReviewing] = useState(search.review === "1");
+
+  if (q.isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </main>
+      <CustomerShell>
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </CustomerShell>
     );
   }
-  if (!customer) return null;
 
   const p = q.data;
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-bold tracking-tight text-foreground font-display">
-              SelfeConnect
-            </span>
-          </div>
-          <Link
-            to="/customer/search"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back to search
-          </Link>
-        </div>
-      </header>
+    <CustomerShell>
+      <Link
+        to="/customer/search"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to search
+      </Link>
 
-      <div className="mx-auto max-w-3xl px-6 py-8">
-        {!p ? (
+      {!p ? (
+        <Card className="rounded-2xl">
+          <CardContent className="p-10 text-center text-sm text-muted-foreground">
+            This professional could not be found.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="mx-auto max-w-3xl space-y-6">
           <Card className="rounded-2xl">
-            <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              This professional could not be found.
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <Card className="rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <img
-                    src={p.photoUrl || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(p.name)}
-                    alt={p.name}
-                    className="h-20 w-20 rounded-full border border-border object-cover"
-                  />
-                  <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-foreground font-display">
-                      {p.name}
-                    </h1>
-                    {p.company && (
-                      <p className="text-sm text-muted-foreground">{p.company}</p>
-                    )}
-                    <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                      <Stars value={p.avgRating} />
-                      <span>
-                        {p.avgRating.toFixed(1)} · {p.reviewCount} review
-                        {p.reviewCount === 1 ? "" : "s"}
-                      </span>
-                    </div>
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <img
+                  src={
+                    p.photoUrl ||
+                    "https://api.dicebear.com/7.x/initials/svg?seed=" +
+                      encodeURIComponent(p.name)
+                  }
+                  alt={p.name}
+                  className="h-20 w-20 rounded-full border border-border object-cover"
+                />
+                <div className="flex-1">
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    {p.name}
+                  </h1>
+                  {p.company && (
+                    <p className="text-sm text-muted-foreground">{p.company}</p>
+                  )}
+                  <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                    <StarRow value={p.avgRating} className="h-4 w-4" />
+                    <span>
+                      {p.avgRating.toFixed(1)} · {p.reviewCount} review
+                      {p.reviewCount === 1 ? "" : "s"}
+                    </span>
                   </div>
                 </div>
+                <Button
+                  className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setReviewing((r) => !r)}
+                >
+                  <Star className="mr-2 h-4 w-4" /> Write a review
+                </Button>
+              </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {p.categories.map((c) => (
-                    <Badge
-                      key={c}
-                      className="rounded-full bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]"
-                    >
-                      {c}
-                    </Badge>
-                  ))}
-                </div>
-
-                {p.bio && (
-                  <p className="mt-4 text-sm text-foreground/90">{p.bio}</p>
-                )}
-                {(p.city || p.postcode) && (
-                  <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" /> {p.city || p.postcode}
-                  </p>
-                )}
-
-                {/* Contact */}
-                <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-5">
-                  {p.contact.phone && (
-                    <a
-                      href={`tel:${p.contact.phone}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      <Phone className="h-4 w-4" /> {p.contact.phone}
-                    </a>
-                  )}
-                  <a
-                    href={`mailto:${p.contact.email}`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+              <div className="mt-4 flex flex-wrap gap-2">
+                {p.categories.map((c) => (
+                  <Badge
+                    key={c}
+                    className="rounded-full bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]"
                   >
-                    <Mail className="h-4 w-4" /> {p.contact.email}
+                    {c}
+                  </Badge>
+                ))}
+              </div>
+
+              {p.bio && <p className="mt-4 text-sm text-foreground/90">{p.bio}</p>}
+              {(p.city || p.postcode) && (
+                <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" /> {p.city || p.postcode}
+                </p>
+              )}
+
+              <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-5">
+                {p.contact.phone && (
+                  <a
+                    href={`tel:${p.contact.phone}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Phone className="h-4 w-4" /> {p.contact.phone}
                   </a>
-                </div>
+                )}
+                <a
+                  href={`mailto:${p.contact.email}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                >
+                  <Mail className="h-4 w-4" /> {p.contact.email}
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+
+          {reviewing && (
+            <ReviewForm
+              publicId={publicId}
+              jobId={search.jobId}
+              onDone={() => setReviewing(false)}
+            />
+          )}
+
+          {/* Reviews */}
+          {p.reviewCount > 0 && (
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <RatingSummary
+                  avgRating={p.avgRating}
+                  reviewCount={p.reviewCount}
+                  breakdown={p.breakdown}
+                />
               </CardContent>
             </Card>
-
-            {/* Reviews */}
-            <h2 className="mt-8 text-lg font-semibold text-foreground">Reviews</h2>
+          )}
+          <div>
+            <h2 className="mb-3 text-lg font-semibold text-foreground">Reviews</h2>
             {p.reviews.length === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                No reviews yet.
+              <p className="text-sm text-muted-foreground">
+                No reviews yet — be the first to leave one.
               </p>
             ) : (
-              <div className="mt-3 space-y-3">
+              <div className="space-y-3">
                 {p.reviews.map((r, i) => (
-                  <Card key={i} className="rounded-2xl">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <Stars value={r.rating ?? 0} />
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(r.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {r.message && (
-                        <p className="mt-2 text-sm text-foreground/90">
-                          "{r.message}"
-                        </p>
-                      )}
-                      {r.customerName && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          — {r.customerName}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <ReviewCard key={i} review={r} />
                 ))}
               </div>
             )}
-          </>
+          </div>
+        </div>
+      )}
+    </CustomerShell>
+  );
+}
+
+function ReviewForm({
+  publicId,
+  jobId,
+  onDone,
+}: {
+  publicId: string;
+  jobId?: string;
+  onDone: () => void;
+}) {
+  const qc = useQueryClient();
+  const [rating, setRating] = useState(5);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState("");
+  const [done, setDone] = useState(false);
+
+  const submit = useMutation({
+    mutationFn: () =>
+      createReview({
+        driverPublicId: publicId,
+        jobId,
+        rating,
+        comment: comment.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setDone(true);
+      qc.invalidateQueries({ queryKey: ["pro-profile", publicId] });
+    },
+  });
+
+  if (done) {
+    return (
+      <Card className="rounded-2xl border-primary/30 bg-[#E1F5EE]/40">
+        <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
+          <Star className="h-7 w-7 fill-amber-400 text-amber-400" />
+          <p className="text-sm font-semibold text-foreground">
+            Thanks for your review!
+          </p>
+          <p className="text-xs text-muted-foreground">
+            It's now live on this professional's profile.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-2 rounded-xl"
+            onClick={onDone}
+          >
+            Close
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="rounded-2xl border-primary/30">
+      <CardContent className="p-6">
+        <h2 className="text-base font-semibold text-foreground">Leave a review</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          How was the service?
+        </p>
+
+        <div className="mt-3 flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setRating(i)}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(0)}
+              aria-label={`${i} star${i > 1 ? "s" : ""}`}
+            >
+              <Star
+                className={`h-8 w-8 transition ${
+                  i <= (hover || rating)
+                    ? "fill-amber-400 text-amber-400"
+                    : "text-muted-foreground/30"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+          maxLength={1000}
+          placeholder="Tell others about your experience (optional)…"
+          className="mt-4 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+        />
+
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-secondary/50 px-3 py-2 text-xs text-muted-foreground">
+          <Heart className="h-3.5 w-3.5 text-primary" />
+          Reviews are free — tipping is entirely optional and separate.
+          <Link
+            to="/tip/$driverId"
+            params={{ driverId: publicId }}
+            className="ml-auto font-semibold text-primary hover:underline"
+          >
+            Say thanks with a tip →
+          </Link>
+        </div>
+
+        {submit.isError && (
+          <p className="mt-3 text-sm text-destructive">
+            Couldn't post your review. Please try again.
+          </p>
         )}
-      </div>
-    </main>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={onDone}>
+            Cancel
+          </Button>
+          <Button
+            className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => submit.mutate()}
+            disabled={submit.isPending}
+          >
+            {submit.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting…
+              </>
+            ) : (
+              "Post review"
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

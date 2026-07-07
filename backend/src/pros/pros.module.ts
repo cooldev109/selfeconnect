@@ -8,5 +8,6 @@ import { GeoModule } from '../geo/geo.module';
   imports: [CustomerAuthModule, GeoModule],
   controllers: [ProsController],
   providers: [ProsService],
+  exports: [ProsService],
 })
 export class ProsModule {}
