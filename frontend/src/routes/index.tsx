@@ -11,18 +11,16 @@ import {
   QrCode,
   Star,
   BadgeCheck,
+  Lock,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
-import { Button, Card, CardContent, Input } from "@/components/shared";
+import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
-import { RatingSummary, ReviewCard } from "@/components/Reviews";
+import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { api } from "@/lib/api";
 import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import proTradesman from "@/assets/pro-tradesman.jpg";
-import proGardener from "@/assets/pro-gardener.jpg";
-import proStylist from "@/assets/pro-stylist.jpg";
-import dashboardEmpty from "@/assets/dashboard-empty.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -117,10 +115,10 @@ function Home() {
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
             <a href="#how-it-works" className="transition-colors hover:text-foreground">
-              How it works
+              For customers
             </a>
-            <a href="#reputation" className="transition-colors hover:text-foreground">
-              Reviews
+            <a href="#professionals" className="transition-colors hover:text-foreground">
+              For professionals
             </a>
             <a href="#pricing" className="transition-colors hover:text-foreground">
               Pricing
@@ -297,60 +295,123 @@ function Home() {
         </div>
       </section>
 
-      {/* ── How it works ───────────────────────────────────────── */}
+      {/* ── For customers: how hiring works ────────────────────── */}
       <section
         id="how-it-works"
         className="scroll-mt-20 border-y border-border/60 bg-secondary/40"
       >
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
           <div className="text-center">
-            <p className="eyebrow text-primary">For professionals</p>
+            <p className="eyebrow text-primary">For customers</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
-              Three steps. Sixty seconds.
+              Hiring someone, without the guesswork.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-              Set up once, and every customer you serve builds the reputation that
-              wins you the next one.
+              Free to search, free to post a job, and no one takes a cut of what you
+              pay your professional.
             </p>
           </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            <Step
-              number={1}
-              title="Get your QR code"
-              description="Sign up in a minute. We generate a unique 5-character ID and QR code that's yours alone."
-              image={dashboardEmpty}
-              imageAlt="A professional checking their SelfeConnect dashboard on their phone"
-            />
-            <Step
-              number={2}
-              title="Share it with customers"
-              description="Print it once, then hand it to every customer you work for — or show it on your phone. Any trade, any job."
-              image={proGardener}
-              imageAlt="A gardener handing a SelfeConnect QR code card to a customer"
-            />
-            <Step
-              number={3}
-              title="They rate you — and tip"
-              description="They scan, leave a review in seconds, and can add a tip if they want to. Tips go straight to you — you keep 100%."
-              image={proStylist}
-              imageAlt="A hair stylist handing a SelfeConnect QR code card to her client"
-            />
+
+          <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
+            <ol className="space-y-7">
+              <Numbered
+                n={1}
+                title="Search, or post the job"
+                body="Search by service and postcode to see who's nearby — or describe the job once, for free, and let professionals in that trade find you."
+              />
+              <Numbered
+                n={2}
+                title="Compare on real reviews"
+                body="Every professional has a public profile with their rating, their star breakdown, and reviews from customers who actually hired them."
+              />
+              <Numbered
+                n={3}
+                title="Contact them directly"
+                body="Call or email them yourself. There's no middleman, no bidding war, and we never take a percentage of the price you agree."
+              />
+              <Numbered
+                n={4}
+                title="Leave a review afterwards"
+                body="Mark the job as filled, then rate the professional you hired — free, no tip required. That's what helps the next customer choose."
+              />
+            </ol>
+
+            <div>
+              <SearchPreview />
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Example search — this is the real SelfeConnect layout.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Reputation: the product moment ─────────────────────── */}
-      <section id="reputation" className="scroll-mt-20">
+      {/* ── For professionals: find work + build reputation ─────── */}
+      <section id="professionals" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+          <div className="text-center">
+            <p className="eyebrow text-primary">For professionals</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
+              Two ways SelfeConnect pays for itself.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
+              Win work you'd never have heard about — and turn the customers you
+              already have into the reviews that win you the next ones.
+            </p>
+          </div>
+
+          {/* Pillar 1 — the job board */}
+          <div className="mt-14 grid items-center gap-14 lg:grid-cols-2">
+            <div>
+              <span className="eyebrow text-muted-foreground">01 — Find work</span>
+              <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
+                Local jobs, on your dashboard the day they're posted.
+              </h3>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                Customers post jobs in your trades and near your postcode. You see
+                them the moment they land, nearest first, and unlock the customer's
+                details when you want the job.
+              </p>
+              <ul className="mt-6 space-y-4">
+                <Feature
+                  icon={Briefcase}
+                  title="Nearest first, in your trades only"
+                  body="Filter by distance and service, so you're not wading through work you'd never take."
+                />
+                <Feature
+                  icon={Lock}
+                  title="Unlock the contact, not a lead fee"
+                  body="Your subscription unlocks every job. We never charge per lead, and we never sell the same job to eight of your competitors."
+                />
+              </ul>
+            </div>
+            <div>
+              <JobBoardPreview />
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Example job board — this is the real SelfeConnect layout.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pillar 2 — reputation (the QR half) ────────────────── */}
+      <section
+        id="reputation"
+        className="scroll-mt-20 border-y border-border/60 bg-secondary/40"
+      >
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
           <div>
-            <p className="eyebrow text-primary">Own your reputation</p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
+            <span className="eyebrow text-muted-foreground">
+              02 — Build reputation
+            </span>
+            <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
               The reviews you earn offline win you work online.
-            </h2>
-            <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-              Every customer you already have can rate you in seconds — no app, no
-              account hassle, no payment required. Those reviews build a public
-              profile that new customers see when they search.
+            </h3>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              Hand your QR code to the customers you already have. They rate you in
+              seconds — no app, no payment required — and those reviews build the
+              public profile that new customers see when they search.
             </p>
             <ul className="mt-7 space-y-4">
               <Feature
@@ -525,6 +586,22 @@ function Home() {
           </h2>
         </div>
         <Accordion type="single" collapsible className="mt-10">
+          <AccordionItem value="cost-to-customer">
+            <AccordionTrigger>What does it cost me as a customer?</AccordionTrigger>
+            <AccordionContent>
+              Nothing. Searching is free, posting a job is free, and we take no
+              commission on what you pay your professional — you agree the price
+              with them directly and pay them directly.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="who-pays">
+            <AccordionTrigger>Who handles payment for the job itself?</AccordionTrigger>
+            <AccordionContent>
+              You and the professional do — exactly as you would today. SelfeConnect
+              never holds or takes a cut of the money for the work. We only handle
+              optional tips, and the professional's monthly subscription.
+            </AccordionContent>
+          </AccordionItem>
           <AccordionItem value="customers-sign-up">
             <AccordionTrigger>Do customers need an account to review me?</AccordionTrigger>
             <AccordionContent>
@@ -608,8 +685,8 @@ function Home() {
             <FooterCol
               title="Platform"
               links={[
-                { label: "How it works", href: "#how-it-works" },
-                { label: "Reviews", href: "#reputation" },
+                { label: "For customers", href: "#how-it-works" },
+                { label: "For professionals", href: "#professionals" },
                 { label: "Pricing", href: "#pricing" },
               ]}
             />
@@ -635,6 +712,108 @@ function Home() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ── Product previews ──────────────────────────────────────────────
+// The marketplace is the half of the product a QR photo can't show. These
+// render the real UI so it's visible, and are labelled as examples.
+
+function SearchPreview() {
+  const results = [
+    { name: "Sam Rivers", trades: "Plumber · Electrician", rating: 4.9, count: 38, miles: "2.1" },
+    { name: "Aisha Bello", trades: "Plumber", rating: 4.8, count: 21, miles: "3.4" },
+    { name: "Tom Whyte", trades: "Heating & Gas", rating: 4.7, count: 12, miles: "5.0" },
+  ];
+  return (
+    <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-elevated">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-secondary/50 p-4">
+        <span className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground">
+          Plumber
+        </span>
+        <span className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground">
+          M1 1AE
+        </span>
+        <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground">
+          <Search className="h-3.5 w-3.5" /> Search
+        </span>
+      </div>
+      <div className="divide-y divide-border/60">
+        {results.map((r) => (
+          <div key={r.name} className="flex items-center gap-3 p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+              {r.name.split(" ").map((w) => w[0]).join("")}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-semibold text-foreground">{r.name}</p>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {r.miles} mi
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <StarRow value={r.rating} className="h-3 w-3" />
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {r.rating.toFixed(1)} ({r.count})
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.trades}</p>
+            </div>
+            <span className="hidden shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:inline">
+              View profile
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function JobBoardPreview() {
+  return (
+    <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-elevated">
+      <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/50 p-4">
+        <p className="text-sm font-bold text-foreground font-display">Find work</p>
+        <span className="text-xs text-muted-foreground">6 open jobs · within 15 mi</span>
+      </div>
+      <div className="space-y-3 p-4">
+        <div className="rounded-xl border border-primary bg-primary-soft/40 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-semibold text-foreground">
+              Boiler not firing — need a Gas Safe engineer
+            </p>
+            <span className="shrink-0 rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              2.1 mi
+            </span>
+          </div>
+          <p className="mt-1.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Heating &amp; Gas</span>
+            <span>WA1 2NT</span>
+            <span>£120 budget</span>
+          </p>
+          <div className="mt-3 rounded-lg border border-dashed border-primary/50 bg-card p-2.5">
+            <p className="text-xs font-semibold text-foreground">Daniel Okafor</p>
+            <p className="text-xs text-primary">d.okafor@example.com · +44 7700 900318</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-semibold text-foreground">Bathroom radiator swap</p>
+            <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              4.6 mi
+            </span>
+          </div>
+          <p className="mt-1.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Plumber</span>
+            <span>WA4 6HL</span>
+            <span>£60–90</span>
+          </p>
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+            <Lock className="h-3 w-3" /> Unlock contact
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -698,6 +877,22 @@ function PathCard({
   );
 }
 
+// A genuine sequence — the customer's journey has a real order, so numbering
+// it carries information rather than decoration.
+function Numbered({ n, title, body }: { n: number; title: string; body: string }) {
+  return (
+    <li className="flex gap-5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-bold text-ink-foreground">
+        {n}
+      </span>
+      <div>
+        <p className="text-lg font-bold text-foreground font-display">{title}</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
+      </div>
+    </li>
+  );
+}
+
 function Feature({
   icon: Icon,
   title,
@@ -751,44 +946,6 @@ function FooterCol({
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-function Step({
-  number,
-  title,
-  description,
-  image,
-  imageAlt,
-}: {
-  number: number;
-  title: string;
-  description: string;
-  image: string;
-  imageAlt: string;
-}) {
-  return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition duration-300 hover:-translate-y-0.5 hover:shadow-elevated">
-      <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-        <img
-          src={image}
-          alt={imageAlt}
-          loading="lazy"
-          width={724}
-          height={543}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-        <div className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-primary-foreground shadow-elevated">
-          {number}
-        </div>
-      </div>
-      <div className="p-6">
-        <h3 className="text-base font-bold text-foreground font-display">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </div>
     </div>
   );
 }
