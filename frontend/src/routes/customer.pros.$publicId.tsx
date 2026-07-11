@@ -59,9 +59,12 @@ function ProProfilePage() {
         </Card>
       ) : (
         <div className="mx-auto max-w-3xl space-y-6">
-          <Card className="rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          {/* Profile hero — the deep ink band gives a hired professional the
+              presence a plain card can't. */}
+          <div className="overflow-hidden rounded-3xl shadow-elevated">
+            <div className="relative bg-ink p-7">
+              <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/20 blur-3xl" />
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
                 <img
                   src={
                     p.photoUrl ||
@@ -69,54 +72,63 @@ function ProProfilePage() {
                       encodeURIComponent(p.name)
                   }
                   alt={p.name}
-                  className="h-20 w-20 rounded-full border border-border object-cover"
+                  className="h-24 w-24 shrink-0 rounded-2xl object-cover ring-2 ring-white/15"
                 />
-                <div className="flex-1">
-                  <h1 className="font-display text-2xl font-bold text-foreground">
+                <div className="min-w-0 flex-1">
+                  <h1 className="font-display text-3xl font-bold text-ink-foreground">
                     {p.name}
                   </h1>
                   {p.company && (
-                    <p className="text-sm text-muted-foreground">{p.company}</p>
+                    <p className="mt-0.5 text-sm text-ink-muted">{p.company}</p>
                   )}
-                  <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StarRow value={p.avgRating} className="h-4 w-4" />
-                    <span>
-                      {p.avgRating.toFixed(1)} · {p.reviewCount} review
-                      {p.reviewCount === 1 ? "" : "s"}
+                    <span className="text-sm font-semibold text-ink-foreground tabular-nums">
+                      {p.avgRating.toFixed(1)}
                     </span>
+                    <span className="text-sm text-ink-muted">
+                      · {p.reviewCount} review{p.reviewCount === 1 ? "" : "s"}
+                    </span>
+                    {(p.city || p.postcode) && (
+                      <span className="inline-flex items-center gap-1 text-sm text-ink-muted">
+                        <MapPin className="h-3.5 w-3.5" /> {p.city || p.postcode}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {p.categories.map((c) => (
+                      <span
+                        key={c}
+                        className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-ink-foreground"
+                      >
+                        {c}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <Button
-                  className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={() => setReviewing((r) => !r)}
                 >
                   <Star className="mr-2 h-4 w-4" /> Write a review
                 </Button>
               </div>
+            </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {p.categories.map((c) => (
-                  <Badge
-                    key={c}
-                    className="rounded-full bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]"
-                  >
-                    {c}
-                  </Badge>
-                ))}
-              </div>
-
-              {p.bio && <p className="mt-4 text-sm text-foreground/90">{p.bio}</p>}
-              {(p.city || p.postcode) && (
-                <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" /> {p.city || p.postcode}
+            {/* Bio + how to reach them */}
+            <div className="bg-card p-6">
+              {p.bio && (
+                <p className="max-w-prose text-sm leading-relaxed text-foreground/90">
+                  {p.bio}
                 </p>
               )}
-
-              <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-5">
+              <div
+                className={`flex flex-wrap gap-3 ${p.bio ? "mt-5 border-t border-border pt-5" : ""}`}
+              >
                 {p.contact.phone && (
                   <a
                     href={`tel:${p.contact.phone}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
                   >
                     <Phone className="h-4 w-4" /> {p.contact.phone}
                   </a>
@@ -128,8 +140,8 @@ function ProProfilePage() {
                   <Mail className="h-4 w-4" /> {p.contact.email}
                 </a>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {reviewing && (
             <ReviewForm

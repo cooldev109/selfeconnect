@@ -24,7 +24,7 @@ import { useMe } from "@/hooks/useDriver";
 import { useTips } from "@/hooks/useTips";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/billing";
-import scanQrImg from "@/assets/scan-qr.jpg";
+import scanQrImg from "@/assets/pro-cleaner.jpg";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -216,7 +216,7 @@ function DashboardPage() {
               </p>
               <Stars rating={avgRating} size="lg" />
               <p className="mt-3 text-sm text-muted-foreground">
-                Across {tips.length} tipped deliveries
+                Across {tips.length} rated jobs
               </p>
               {latestReview && (
                 <div className="mt-6 w-full rounded-2xl bg-white/70 p-4 text-left backdrop-blur">
@@ -249,7 +249,7 @@ function DashboardPage() {
               <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
                 <p className="text-sm font-medium text-foreground">No tips yet</p>
                 <p className="max-w-sm text-sm text-muted-foreground">
-                  Share your QR code on your van, parcels and delivery slips — your first tips will appear right here.
+                  Share your QR code with every customer — on your invoice, your vehicle, your workwear. Your first tips will appear right here.
                 </p>
                 <Button asChild variant="outline" className="mt-2 rounded-xl">
                   <Link to="/profile">Get your QR code</Link>
@@ -275,7 +275,7 @@ function DashboardPage() {
               <div>
                 <h2 className="font-display text-2xl font-bold">More scans, more tips</h2>
                 <p className="mt-2 max-w-md text-sm leading-relaxed text-primary-foreground/85">
-                  Print your QR once, stick it everywhere a customer might see — your van door, your parcels, your delivery slip. The more it's seen, the more it pays.
+                  Print your QR once, then put it everywhere a customer might see — your invoice, your vehicle, your toolbox, your shop window. The more it's seen, the more it pays.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -296,7 +296,7 @@ function DashboardPage() {
             <div className="relative hidden md:block">
               <img
                 src={scanQrImg}
-                alt="Customer scanning a SelfeConnect QR code on a parcel"
+                alt="A cleaner sharing her SelfeConnect QR code with a customer"
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover"
               />

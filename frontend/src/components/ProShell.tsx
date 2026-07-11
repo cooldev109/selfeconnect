@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { PRO_NAV } from "@/components/dashboardNav";
@@ -23,6 +23,7 @@ export function ProShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const auth = useRequireAuth();
   const { data: driver } = useMe();
   const { data: account } = useQuery({
@@ -59,6 +60,7 @@ export function ProShell({
       actions={actions}
       onLogout={async () => {
         await logout().catch(() => {});
+        qc.clear(); // drop all cached session/data so no stale content lingers
         navigate({ to: "/login" });
       }}
       footer={

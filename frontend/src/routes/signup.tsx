@@ -5,7 +5,7 @@ import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
-import authSide from "@/assets/auth-side.jpg";
+import authSide from "@/assets/pro-tradesman.jpg";
 import { signup as signupRequest } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/driver";
 import { ApiError } from "@/lib/api";
@@ -127,7 +127,7 @@ function SignupPage() {
         postcode: parsed.data.postcode,
         categorySlugs: parsed.data.categorySlugs,
       });
-      // Signup logs the driver in (session cookie set), so the required photo
+      // Signup logs the professional in (session cookie set), so the required photo
       // they chose is uploaded here rather than being silently discarded.
       const file = fileInputRef.current?.files?.[0];
       if (file) await uploadPhoto(file).catch(() => undefined);
@@ -155,7 +155,7 @@ function SignupPage() {
       <aside className="relative hidden overflow-hidden lg:block">
         <img
           src={authSide}
-          alt="A SelfeConnect driver standing next to his white van at golden hour"
+          alt="A self-employed tradesman sharing his SelfeConnect QR code with a customer"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/50 via-primary/25 to-primary/85" />
@@ -272,7 +272,7 @@ function SignupPage() {
                   <Input
                     value={form.company}
                     onChange={(e) => update("company", e.target.value)}
-                    placeholder="Lisbon Express Delivery"
+                    placeholder="e.g. Rivers Plumbing Ltd"
                     autoComplete="organization"
                     maxLength={80}
                   />

@@ -3,13 +3,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ShieldCheck,
   Sparkles,
-  Truck,
   Briefcase,
   Search,
   Check,
   ArrowRight,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoMark } from "@/components/Logo";
 import {
   Button,
   Card,
@@ -18,10 +17,10 @@ import {
   CardTitle,
   Input,
 } from "@/components/shared";
-import heroDriver from "@/assets/hero-driver.jpg";
 import { api } from "@/lib/api";
-import scanQr from "@/assets/scan-qr.jpg";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
+import proGardener from "@/assets/pro-gardener.jpg";
+import proStylist from "@/assets/pro-stylist.jpg";
 import dashboardEmpty from "@/assets/dashboard-empty.jpg";
 import {
   Accordion,
@@ -29,6 +28,25 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// A representative slice of the 50+ service categories — enough to make the
+// breadth obvious at a glance without becoming a directory.
+const TRADES = [
+  "Plumber",
+  "Electrician",
+  "Cleaner",
+  "Gardener",
+  "Carpenter",
+  "Painter & Decorator",
+  "Roofer",
+  "Handyman",
+  "Removals",
+  "Mechanic",
+  "Dog Walker",
+  "Personal Trainer",
+  "Photographer",
+  "Tutor",
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -173,6 +191,27 @@ function Home() {
           </div>
         </section>
 
+        {/* Breadth of trades — SelfeConnect is for every self-employed trade,
+            not one. Naming them is the fastest way to say so. */}
+        <section className="pb-4 pt-2">
+          <p className="eyebrow text-center text-muted-foreground">
+            Over 50 services · one platform
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {TRADES.map((t) => (
+              <span
+                key={t}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground/75"
+              >
+                {t}
+              </span>
+            ))}
+            <span className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-ink-foreground">
+              + 40 more
+            </span>
+          </div>
+        </section>
+
         {/* For professionals — detail */}
         <section className="relative grid items-center gap-10 pt-10 pb-16 lg:grid-cols-2 lg:gap-14 lg:pt-16 animate-fade-up">
           <div className="absolute inset-x-0 -top-10 -z-10 mx-auto h-72 max-w-lg rounded-full bg-mesh blur-2xl opacity-80" />
@@ -181,31 +220,47 @@ function Home() {
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Now live for UK professionals and business
             </span>
-            <h2 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
-              Get recognised and <span className="text-primary">rewarded</span>.
+            <h2 className="mt-5 text-4xl font-extrabold tracking-tight text-foreground font-display sm:text-5xl">
+              Win the work. Then get <span className="text-primary">rewarded</span> for it.
             </h2>
             <p className="mt-5 text-base leading-relaxed text-foreground/80 lg:text-lg">
-              Join a community built for self-employed professionals. Collect
-              customer reviews, build trust, and receive tips for delivering
-              exceptional service.
+              Whatever your trade, SelfeConnect puts local jobs in front of you —
+              and turns every happy customer into a review that wins you the next
+              one.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Give your customers a simple way to rate your service and leave a
-              tip instantly with your personal QR code.
-            </p>
-            <p className="mt-2 text-sm font-semibold text-foreground/70">
-              No app. No account. No commission.
-            </p>
+            <ul className="mt-6 space-y-2.5 text-sm text-foreground/80">
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <strong className="font-semibold text-foreground">Find work near you.</strong>{" "}
+                  Browse jobs posted by local customers in your trades.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <strong className="font-semibold text-foreground">Build a reputation.</strong>{" "}
+                  Collect verified reviews customers can actually trust.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <strong className="font-semibold text-foreground">Keep every tip.</strong>{" "}
+                  Your own QR code, zero commission, weekly payouts.
+                </span>
+              </li>
+            </ul>
             <div className="mt-8 flex flex-col gap-2.5 lg:max-w-sm">
               <Button
                 asChild
                 size="lg"
                 className="h-12 w-full rounded-xl text-base font-semibold shadow-elevated transition-transform hover:scale-[1.02]"
               >
-                <Link to="/signup">Get Started with Reviews &amp; Tips</Link>
+                <Link to="/signup">Join as a professional</Link>
               </Button>
               <p className="text-xs text-muted-foreground">
-                £5.49/month · cancel anytime · setup in 60 seconds
+                £5.49/month · one flat fee, no commission · cancel anytime
               </p>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground lg:justify-start">
@@ -217,16 +272,16 @@ function Home() {
             <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-mesh opacity-70 blur-2xl" />
             <div className="overflow-hidden rounded-3xl border border-border/60 shadow-elevated">
               <img
-                src={heroDriver}
-                alt="A self-employed professional handing a parcel to a happy customer at their doorstep"
-                width={1280}
-                height={960}
+                src={professionalsFlyer}
+                alt="Four self-employed professionals — a cleaner, a tradesman, a gardener and a hair stylist — sharing their SelfeConnect QR code with happy customers"
+                width={1448}
+                height={1086}
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
             <div className="absolute -bottom-5 -left-4 hidden rounded-2xl bg-background/95 px-4 py-3 shadow-elevated ring-1 ring-border/60 backdrop-blur sm:block">
-              <p className="text-xs font-medium text-muted-foreground">Last tip today</p>
-              <p className="font-display text-xl font-bold text-primary">+ £4.00 ★★★★★</p>
+              <p className="text-xs font-medium text-muted-foreground">New review today</p>
+              <p className="font-display text-xl font-bold text-primary">★★★★★ + £4.00 tip</p>
             </div>
           </div>
         </section>
@@ -286,43 +341,43 @@ function Home() {
             />
             <Step
               number={2}
-              title="Print it"
-              description="Print the QR code label and hand it to your customer. They can instantly rate your service, share their feedback, and reward exceptional work with a tip."
-              image={professionalsFlyer}
-              imageAlt="Self-employed professionals handing a SelfeConnect QR code flyer to happy customers"
+              title="Share it with customers"
+              description="Print it once, then hand it to every customer you work for — or show it on your phone. Works for any trade, on any job."
+              image={proGardener}
+              imageAlt="A gardener handing a SelfeConnect QR code card to a customer"
             />
             <Step
               number={3}
-              title="Customers scan, rate & tip"
-              description="They scan, rate and choose an amount to tip. The money is paid directly into your account."
-              image={scanQr}
-              imageAlt="A customer scanning a SelfeConnect QR code with their smartphone"
+              title="Customers rate & tip"
+              description="They scan, leave a review in seconds, and can add a tip if they want to. Tips go straight to your account — you keep 100%."
+              image={proStylist}
+              imageAlt="A hair stylist handing a SelfeConnect QR code card to her client"
             />
           </div>
         </section>
 
-        {/* Pricing */}
+        {/* Pricing — the page's dark anchor, in the secondary brand ink. */}
         <section className="pb-16">
-          <Card className="overflow-hidden rounded-2xl border-primary/20 bg-gradient-to-br from-primary-soft to-background shadow-soft">
-            <CardContent className="relative p-7 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-hover">
-                Professional subscription
-              </p>
-              <p className="mt-3 text-5xl font-extrabold tracking-tight text-foreground font-display">
+          <div className="relative overflow-hidden rounded-3xl bg-ink px-7 py-10 text-center shadow-elevated">
+            <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+            <div className="relative">
+              <p className="eyebrow text-primary">Professional subscription</p>
+              <p className="mt-3 font-display text-6xl font-extrabold tracking-tight text-ink-foreground tabular-nums">
                 £5.49
-                <span className="ml-1 text-lg font-medium text-muted-foreground">
+                <span className="ml-1 text-lg font-medium text-ink-muted">
                   /month
                 </span>
               </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                One flat fee. No percentage cuts. No surprises.
+              <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-ink-muted">
+                One flat fee for everything — find work, collect reviews, take
+                tips. No percentage cuts. No surprises.
               </p>
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary-hover">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-                No commission, keep every tip
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                <Check className="h-4 w-4" />
+                No commission — you keep every tip
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
 
         {/* FAQ */}
@@ -379,7 +434,7 @@ function Home() {
             <Link to="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
           </nav>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Truck size={14} />
+            <LogoMark className="h-4 w-4" />
             <span className="text-xs font-medium">SelfeConnect</span>
           </div>
           <p className="text-xs text-muted-foreground">

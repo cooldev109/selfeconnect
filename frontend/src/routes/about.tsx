@@ -40,7 +40,7 @@ function About() {
         </p>
         <p className="mt-4 text-base leading-relaxed text-foreground/80">
           We believe great service should be seen and rewarded. Whether you go
-          the extra mile on a delivery or any other service, SelfeConnect turns a
+          the extra mile — on any job, in any trade — SelfeConnect turns a
           happy customer into real feedback and real earnings — paid straight to
           your account.
         </p>

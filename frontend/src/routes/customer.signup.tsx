@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Loader2, User, Building2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
-import authSide from "@/assets/auth-side.jpg";
+import authSide from "@/assets/pro-tradesman.jpg";
 import { customerSignup } from "@/lib/customer-auth";
 import { ApiError } from "@/lib/api";
 

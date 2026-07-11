@@ -85,7 +85,7 @@ function AdminTransactions() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `tipvan-transactions-${start}-to-${end}.csv`;
+    a.download = `selfeconnect-transactions-${start}-to-${end}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

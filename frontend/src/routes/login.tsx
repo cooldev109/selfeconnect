@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
-import authSide from "@/assets/auth-side.jpg";
+import authSide from "@/assets/pro-tradesman.jpg";
 import { login as loginRequest } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
@@ -59,7 +59,7 @@ function LoginPage() {
       <aside className="relative hidden overflow-hidden lg:block">
         <img
           src={authSide}
-          alt="A SelfeConnect driver smiling next to his white van at golden hour, holding a phone with a payment confirmation"
+          alt="A self-employed tradesman sharing his SelfeConnect QR code with a customer"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/20 to-primary/80" />

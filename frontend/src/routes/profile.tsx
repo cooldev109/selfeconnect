@@ -17,13 +17,13 @@ import { updateMe, uploadPhoto } from "@/lib/driver";
 import { ApiError } from "@/lib/api";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import flyerDriver from "@/assets/flyer-driver.png";
-import scanQr from "@/assets/scan-qr.jpg";
+import scanQr from "@/assets/pro-tradesman.jpg";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Profile — SelfeConnect" },
-      { name: "description", content: "Your public driver profile and QR Code." },
+      { name: "description", content: "Your public professional profile and QR code." },
     ],
   }),
   component: ProfilePage,
@@ -57,7 +57,7 @@ function ProfilePage() {
 
   const tipPath = `/tip/${driver?.id ?? ""}`;
   const tipUrl = useMemo(() => {
-    if (typeof window === "undefined") return `https://tipvan.app${tipPath}`;
+    if (typeof window === "undefined") return `https://selfeconnect.com${tipPath}`;
     return `${window.location.origin}${tipPath}`;
   }, [tipPath]);
 
@@ -102,8 +102,8 @@ function ProfilePage() {
         img { width: 70%; margin: 12px auto; display: block; }
         .id { font-weight: 800; letter-spacing: 0.15em; font-size: 22px; color: #0F172A; }
       </style></head><body>
-      <h1>Tip your driver</h1>
-      <p>Scan to leave a tip — 100% goes to the driver.</p>
+      <h1>Rate &amp; tip your professional</h1>
+      <p>Scan to leave a review — tipping is optional, and 100% goes to them.</p>
       <img src="${dataUrl}" alt="QR" />
       <div class="id">${driver.id}</div>
       <p>${tipUrl}</p>
@@ -198,9 +198,9 @@ function ProfilePage() {
 
           <div class="hero">
             <div class="copy">
-              <span class="eyebrow">${I.heartFill} A note from your driver</span>
-              <h1>Enjoying your <span class="t">delivery?</span></h1>
-              <p>Your driver helped make it happen — and got your order safely to your door.</p>
+              <span class="eyebrow">${I.heartFill} A note from your professional</span>
+              <h1>Happy with the <span class="t">work?</span></h1>
+              <p>${driver.name.split(" ")[0]} would really appreciate a quick review — it takes seconds and helps enormously.</p>
             </div>
             <div class="ill"><img src="${origin}${flyerDriver}" alt="" /></div>
           </div>
@@ -209,20 +209,20 @@ function ProfilePage() {
             <div class="copy">
               <div class="kicker">WANT TO SAY THANKS?</div>
               <h2>Leave a tip in seconds</h2>
-              <p>Point your phone camera at the code to leave a quick review and tip — <b style="color:#fff">100% goes to your driver.</b></p>
+              <p>Point your phone camera at the code to leave a quick review. Tipping is optional — and <b style="color:#fff">100% goes to your professional.</b></p>
             </div>
             <div class="qrwrap"><img src="${qr}" alt="QR code"/><div class="id">ID&nbsp;·&nbsp;${driver.id}</div></div>
           </div>
 
           <div class="trust">
             <div class="c"><div class="ic">${I.shield}</div><div class="t">100% Secure</div><div class="s">Powered by Stripe</div></div>
-            <div class="c"><div class="ic">${I.pound}</div><div class="t">Goes directly</div><div class="s">to your driver</div></div>
+            <div class="c"><div class="ic">${I.pound}</div><div class="t">Goes directly</div><div class="s">to your professional</div></div>
             <div class="c"><div class="ic">${I.heart}</div><div class="t">Any amount</div><div class="s">is appreciated</div></div>
           </div>
 
           <div class="review">
             <div class="ic">${I.people}</div>
-            <div><div class="rt">About this review</div><div class="rb">This review is for the professional driver only and for the SelfeConnect community.</div><div class="rn">We are an independent review company.</div></div>
+            <div><div class="rt">About this review</div><div class="rb">This review is for the professional only, and for the SelfeConnect community.</div><div class="rn">We are an independent review company.</div></div>
           </div>
 
           <div class="foot"><b>Official feedback still matters.</b> Reviews and reports should still be made through the company's official channels.<br>Learn more at <span class="site">www.selfeconnect.com</span></div>
@@ -283,13 +283,14 @@ function ProfilePage() {
             </Badge>
             <h2 className="mt-3 text-xl font-bold text-foreground">{name}</h2>
             <p className="mt-4 text-sm text-muted-foreground">
-              Your exclusive driver ID:
+              Your unique professional ID:
             </p>
             <div className="mt-2 rounded-full bg-foreground px-6 py-2 text-2xl font-extrabold tracking-[0.25em] text-background">
               {driver.id}
             </div>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              This QR Code is yours. Print it once and attach to all packages.
+              This QR code is yours. Print it once and share it with every
+              customer you work for.
             </p>
           </CardContent>
         </Card>
@@ -362,7 +363,7 @@ function ProfilePage() {
               />
               <img
                 src={scanQr}
-                alt="Customer scanning a QR code with their phone"
+                alt="A tradesman handing his SelfeConnect QR code to a customer"
                 loading="lazy"
                 className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
               />
