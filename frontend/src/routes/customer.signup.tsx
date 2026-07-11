@@ -9,6 +9,13 @@ import { customerSignup } from "@/lib/customer-auth";
 import { ApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/customer/signup")({
+  // Carries a search started from the homepage hero through sign-up.
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { category?: string; postcode?: string } => ({
+    category: typeof s.category === "string" ? s.category : undefined,
+    postcode: typeof s.postcode === "string" ? s.postcode : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Create a customer account — SelfeConnect" },
@@ -56,6 +63,8 @@ type Errors = Partial<Record<keyof FormState, string>>;
 
 function CustomerSignupPage() {
   const navigate = useNavigate();
+  const intent = Route.useSearch();
+  const hasIntent = !!(intent.category || intent.postcode);
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
@@ -98,7 +107,11 @@ function CustomerSignupPage() {
         companyName:
           parsed.data.type === "business" ? parsed.data.companyName : undefined,
       });
-      navigate({ to: "/customer" });
+      if (hasIntent) {
+        navigate({ to: "/customer/search", search: intent });
+      } else {
+        navigate({ to: "/customer" });
+      }
     } catch (err) {
       setFormError(
         err instanceof ApiError && err.status === 409
@@ -179,7 +192,9 @@ function CustomerSignupPage() {
               Create your account
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Post jobs and hire professionals — it's free.
+              {hasIntent
+                ? "Create a free account to see your search results."
+                : "Post jobs and hire professionals — it's free."}
             </p>
           </div>
 
@@ -316,6 +331,7 @@ function CustomerSignupPage() {
             Already have an account?{" "}
             <Link
               to="/customer/login"
+              search={intent}
               className="font-semibold text-primary hover:underline"
             >
               Log in

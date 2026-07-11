@@ -10,6 +10,14 @@ import { browsePros } from "@/lib/pros";
 import { ApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/customer/search")({
+  // A search started from the homepage hero arrives here as URL params, so the
+  // visitor's intent survives the sign-in step.
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { category?: string; postcode?: string } => ({
+    category: typeof s.category === "string" ? s.category : undefined,
+    postcode: typeof s.postcode === "string" ? s.postcode : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Find a professional — SelfeConnect" },
@@ -22,14 +30,19 @@ export const Route = createFileRoute("/customer/search")({
 const RADII = [5, 10, 25, 50, 100];
 
 function SearchPage() {
-  const [category, setCategory] = useState("");
-  const [postcode, setPostcode] = useState("");
+  const initial = Route.useSearch();
+  const [category, setCategory] = useState(initial.category ?? "");
+  const [postcode, setPostcode] = useState(initial.postcode ?? "");
   const [radius, setRadius] = useState(25);
   const [applied, setApplied] = useState<{
     category?: string;
     postcode?: string;
     radius?: number;
-  }>({});
+  }>({
+    category: initial.category || undefined,
+    postcode: initial.postcode || undefined,
+    radius: initial.postcode ? 25 : undefined,
+  });
 
   const prosQ = useQuery({
     queryKey: ["pros", applied],

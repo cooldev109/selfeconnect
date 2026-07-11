@@ -8,6 +8,13 @@ import authSide from "@/assets/pro-tradesman.jpg";
 import { customerLogin } from "@/lib/customer-auth";
 
 export const Route = createFileRoute("/customer/login")({
+  // Carries a search started from the homepage hero through sign-in.
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { category?: string; postcode?: string } => ({
+    category: typeof s.category === "string" ? s.category : undefined,
+    postcode: typeof s.postcode === "string" ? s.postcode : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Customer log in — SelfeConnect" },
@@ -27,6 +34,8 @@ const schema = z.object({
 
 function CustomerLoginPage() {
   const navigate = useNavigate();
+  const intent = Route.useSearch();
+  const hasIntent = !!(intent.category || intent.postcode);
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
@@ -51,7 +60,11 @@ function CustomerLoginPage() {
     setSubmitting(true);
     try {
       await customerLogin(parsed.data);
-      navigate({ to: "/customer" });
+      if (hasIntent) {
+        navigate({ to: "/customer/search", search: intent });
+      } else {
+        navigate({ to: "/customer" });
+      }
     } catch {
       setFormError("Invalid email or password.");
       setSubmitting(false);
@@ -186,6 +199,7 @@ function CustomerLoginPage() {
             Need an account?{" "}
             <Link
               to="/customer/signup"
+              search={intent}
               className="font-semibold text-primary hover:underline"
             >
               Sign up free

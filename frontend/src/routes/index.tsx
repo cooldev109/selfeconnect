@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   ShieldCheck,
   Sparkles,
@@ -17,8 +18,11 @@ import {
   CardTitle,
   Input,
 } from "@/components/shared";
+import { CategorySelect } from "@/components/CategoryPicker";
 import { api } from "@/lib/api";
+import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
+import proTradesman from "@/assets/pro-tradesman.jpg";
 import proGardener from "@/assets/pro-gardener.jpg";
 import proStylist from "@/assets/pro-stylist.jpg";
 import dashboardEmpty from "@/assets/dashboard-empty.jpg";
@@ -66,7 +70,30 @@ function Home() {
   const [proId, setProId] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [heroService, setHeroService] = useState("");
+  const [heroPostcode, setHeroPostcode] = useState("");
   const navigate = useNavigate();
+
+  // Is there already a customer session? Decides whether a hero search goes
+  // straight to results or via a free sign-up (which then lands on results).
+  const customerQ = useQuery({
+    queryKey: ["customer-me"],
+    queryFn: customerMe,
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const handleHeroSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const search = {
+      category: heroService || undefined,
+      postcode: heroPostcode.trim() || undefined,
+    };
+    navigate({
+      to: customerQ.data?.customer ? "/customer/search" : "/customer/signup",
+      search,
+    });
+  };
 
   const handleTipSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,16 +143,96 @@ function Home() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6">
-        {/* Dual-path chooser — the primary entry point */}
-        <section className="pt-12 pb-6 text-center animate-fade-up">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Trusted local professionals, reviewed &amp; recommended
-          </span>
-          <h1 className="mx-auto mt-5 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground font-display sm:text-5xl">
+        {/* HERO — leads with the job the visitor came to do: find someone.
+            The professional path stays visible, but secondary. */}
+        <section className="relative grid items-center gap-10 pb-4 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:pt-16 animate-fade-up">
+          <div className="absolute -left-24 -top-16 -z-10 h-80 w-80 rounded-full bg-mesh opacity-70 blur-3xl" />
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              Reviewed &amp; recommended by real customers
+            </span>
+            <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-foreground font-display sm:text-[3.25rem]">
+              Find a trusted{" "}
+              <span className="text-primary">professional</span> near you.
+            </h1>
+            <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
+              Plumbers, electricians, cleaners, gardeners and 50+ more — search
+              by service and postcode, see real reviews, and get in touch
+              directly.
+            </p>
+
+            {/* In-hero search — the primary action on the page */}
+            <form
+              onSubmit={handleHeroSearch}
+              className="mt-7 rounded-2xl border border-border/70 bg-card p-3 shadow-elevated"
+            >
+              <div className="grid gap-2 sm:grid-cols-[1.2fr_1fr_auto]">
+                <CategorySelect
+                  value={heroService}
+                  onChange={setHeroService}
+                  placeholder="What do you need?"
+                />
+                <Input
+                  value={heroPostcode}
+                  onChange={(e) => setHeroPostcode(e.target.value)}
+                  placeholder="Your postcode"
+                  aria-label="Your postcode"
+                  maxLength={12}
+                  className="h-11 rounded-xl"
+                />
+                <Button
+                  type="submit"
+                  className="h-11 rounded-xl px-6 text-sm font-semibold"
+                >
+                  <Search className="mr-1.5 h-4 w-4" /> Search
+                </Button>
+              </div>
+            </form>
+            <p className="mt-2.5 text-xs text-muted-foreground">
+              Free to search · free to post a job · no commission
+            </p>
+
+            <p className="mt-6 text-sm text-muted-foreground">
+              Are you a professional?{" "}
+              <Link
+                to="/signup"
+                className="font-semibold text-primary hover:underline"
+              >
+                Join and find work near you →
+              </Link>
+            </p>
+          </div>
+
+          {/* Trade imagery — four different trades, so the breadth is obvious
+              before a word is read. */}
+          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+            <div className="overflow-hidden rounded-3xl border border-border/60 shadow-elevated">
+              <img
+                src={professionalsFlyer}
+                alt="Four self-employed professionals — a cleaner, a tradesman, a gardener and a hair stylist — sharing their SelfeConnect QR code with happy customers"
+                width={1448}
+                height={1086}
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-6 -left-8 hidden rounded-2xl bg-background/95 px-4 py-3 shadow-elevated ring-1 ring-border/60 backdrop-blur lg:block">
+              <p className="text-xs font-medium text-muted-foreground">
+                New review today
+              </p>
+              <p className="font-display text-xl font-bold text-primary">
+                ★★★★★ + £4.00 tip
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Two ways in — kept, but now below the hero. */}
+        <section className="pt-10 pb-6 text-center animate-fade-up">
+          <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-foreground font-display">
             One platform. <span className="text-primary">Two ways in.</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
             Whether you offer a service or need one, SelfeConnect connects
             trusted local professionals with the people who need them.
           </p>
@@ -272,16 +379,17 @@ function Home() {
             <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-mesh opacity-70 blur-2xl" />
             <div className="overflow-hidden rounded-3xl border border-border/60 shadow-elevated">
               <img
-                src={professionalsFlyer}
-                alt="Four self-employed professionals — a cleaner, a tradesman, a gardener and a hair stylist — sharing their SelfeConnect QR code with happy customers"
-                width={1448}
-                height={1086}
+                src={proTradesman}
+                alt="A self-employed tradesman sharing his SelfeConnect QR code with a customer beside his van"
+                width={724}
+                height={543}
+                loading="lazy"
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
             <div className="absolute -bottom-5 -left-4 hidden rounded-2xl bg-background/95 px-4 py-3 shadow-elevated ring-1 ring-border/60 backdrop-blur sm:block">
-              <p className="text-xs font-medium text-muted-foreground">New review today</p>
-              <p className="font-display text-xl font-bold text-primary">★★★★★ + £4.00 tip</p>
+              <p className="text-xs font-medium text-muted-foreground">Job won today</p>
+              <p className="font-display text-xl font-bold text-primary">Boiler repair · 2.1 mi</p>
             </div>
           </div>
         </section>
