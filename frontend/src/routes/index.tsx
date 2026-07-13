@@ -46,22 +46,24 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// The dozen services shown as tiles. The rest of the (API-provided) list is
-// revealed on demand, so the page can never claim a service we don't have.
-const FEATURED_SLUGS = [
-  "plumber",
-  "electrician",
-  "cleaner",
-  "gardener",
-  "carpenter",
-  "painter-decorator",
-  "handyman",
-  "roofer",
-  "removals",
-  "mechanic",
-  "hairdresser",
-  "personal-trainer",
+// The dozen services shown as tiles. Names are inlined so the grid renders in
+// the server HTML (first paint + crawlers) rather than waiting on JS; the API
+// then supplies the true total and the remaining services.
+const FEATURED: { slug: string; name: string }[] = [
+  { slug: "plumber", name: "Plumber" },
+  { slug: "electrician", name: "Electrician" },
+  { slug: "cleaner", name: "Cleaner" },
+  { slug: "gardener", name: "Gardener" },
+  { slug: "carpenter", name: "Carpenter & Joiner" },
+  { slug: "painter-decorator", name: "Painter & Decorator" },
+  { slug: "handyman", name: "Handyman" },
+  { slug: "roofer", name: "Roofer" },
+  { slug: "removals", name: "Removals" },
+  { slug: "mechanic", name: "Mechanic" },
+  { slug: "hairdresser", name: "Hairdresser" },
+  { slug: "personal-trainer", name: "Personal Trainer" },
 ];
+const FEATURED_SLUGS = FEATURED.map((f) => f.slug);
 
 const SERVICE_ICONS: Record<string, typeof Wrench> = {
   plumber: Wrench,
@@ -120,9 +122,12 @@ function Home() {
   const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const allServices = categoriesQ.data ?? [];
   const totalServices = allServices.length;
-  const featured = FEATURED_SLUGS.map((s) =>
-    allServices.find((c) => c.slug === s),
-  ).filter((c): c is (typeof allServices)[number] => !!c);
+  // Tiles render from the inlined list straight away; once the API answers we
+  // prefer its names so they can't drift from what's really in the catalogue.
+  const featured = FEATURED.map((f) => {
+    const live = allServices.find((c) => c.slug === f.slug);
+    return live ? { slug: live.slug, name: live.name } : f;
+  });
   const rest = allServices.filter((c) => !FEATURED_SLUGS.includes(c.slug));
   const [showAllServices, setShowAllServices] = useState(false);
 
@@ -297,7 +302,7 @@ function Home() {
             <p className="mx-auto mt-3 text-base text-muted-foreground">
               {totalServices > 0
                 ? `${totalServices} services, one platform. Pick one to see who's near you.`
-                : "One platform. Pick a service to see who's near you."}
+                : "Over 50 services, one platform. Pick one to see who's near you."}
             </p>
           </div>
 
