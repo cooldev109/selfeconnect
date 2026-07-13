@@ -137,7 +137,7 @@ export function JobForm({
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-foreground">
-            Postcode
+            Job postcode
           </span>
           <Input
             value={postcode}
@@ -145,8 +145,12 @@ export function JobForm({
             placeholder="e.g. M1 1AE"
             maxLength={12}
           />
-          {errors.postcode && (
+          {errors.postcode ? (
             <p className="mt-1 text-xs text-destructive">{errors.postcode}</p>
+          ) : (
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Where the work is — this is how nearby professionals find it.
+            </span>
           )}
         </label>
         <label className="block">

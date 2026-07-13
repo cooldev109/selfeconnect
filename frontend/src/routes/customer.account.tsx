@@ -186,7 +186,7 @@ function CustomerAccountPage() {
                 />
               </Labeled>
 
-              <Labeled label="Postcode (optional)" error={errors.postcode}>
+              <Labeled label="Your postcode (optional)" error={errors.postcode}>
                 <Input
                   value={postcode}
                   onChange={(e) => setPostcode(e.target.value)}

@@ -468,7 +468,7 @@ function ProfilePage() {
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-foreground">
-                  Postcode
+                  Your postcode
                 </span>
                 <Input
                   value={postcode}

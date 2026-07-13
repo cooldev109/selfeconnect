@@ -87,12 +87,13 @@ function SearchPage() {
             </div>
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Postcode
+                Your postcode
               </span>
               <Input
                 value={postcode}
                 onChange={(e) => setPostcode(e.target.value)}
                 placeholder="e.g. M1 1AE"
+                aria-describedby="postcode-help"
                 maxLength={12}
               />
             </label>
@@ -119,9 +120,14 @@ function SearchPage() {
               <SearchIcon className="mr-2 h-4 w-4" /> Search
             </Button>
           </form>
-          {badPostcode && (
+          {badPostcode ? (
             <p className="mt-2 text-xs text-destructive">
               Enter a valid UK postcode.
+            </p>
+          ) : (
+            <p id="postcode-help" className="mt-2 text-xs text-muted-foreground">
+              Enter where <em>you</em> are — we'll show professionals near you,
+              nearest first.
             </p>
           )}
         </CardContent>
