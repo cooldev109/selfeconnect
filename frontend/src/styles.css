@@ -182,6 +182,15 @@
     radial-gradient(at 50% 100%, oklch(0.965 0.04 168 / 0.55) 0px, transparent 60%);
 }
 
+/* Horizontal card rails: scroll with the wheel/trackpad, no ugly scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility shadow-soft {
   box-shadow: var(--shadow-soft);
 }

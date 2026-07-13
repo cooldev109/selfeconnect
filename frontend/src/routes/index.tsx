@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,6 +13,8 @@ import {
   BadgeCheck,
   Lock,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Wrench,
   Zap,
   Leaf,
@@ -39,6 +41,10 @@ import { api } from "@/lib/api";
 import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import proTradesman from "@/assets/pro-tradesman.jpg";
+import proCleaner from "@/assets/pro-cleaner.jpg";
+import proGardener from "@/assets/pro-gardener.jpg";
+import proStylist from "@/assets/pro-stylist.jpg";
+import vanQr from "@/assets/van-qr.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -64,6 +70,17 @@ const FEATURED: { slug: string; name: string }[] = [
   { slug: "personal-trainer", name: "Personal Trainer" },
 ];
 const FEATURED_SLUGS = FEATURED.map((f) => f.slug);
+
+// Real photography, used only where it genuinely depicts that trade. Services
+// without a photo get a branded tile rather than a recycled one — add a file
+// here and that card becomes a photo card, no other change needed.
+const SERVICE_PHOTOS: Record<string, string> = {
+  electrician: proTradesman,
+  cleaner: proCleaner,
+  gardener: proGardener,
+  hairdresser: proStylist,
+  removals: vanQr,
+};
 
 const SERVICE_ICONS: Record<string, typeof Wrench> = {
   plumber: Wrench,
@@ -143,8 +160,17 @@ function Home() {
     runSearch(heroService, heroPostcode.trim());
   };
 
-  // Every service tile is a live control, not decoration.
+  // Every service card is a live control, not decoration.
   const goToService = (slug: string) => runSearch(slug);
+
+  // The service rail flows left/right. Scroll by whatever is actually visible
+  // rather than a hardcoded card width, so it behaves at any breakpoint.
+  const railRef = useRef<HTMLDivElement>(null);
+  const scrollRail = (dir: 1 | -1) => {
+    const el = railRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(240, el.clientWidth * 0.8), behavior: "smooth" });
+  };
 
   const handleTipSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,25 +332,66 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {featured.map((c) => {
-              const Icon = SERVICE_ICONS[c.slug] ?? Wrench;
-              return (
-                <button
-                  key={c.slug}
-                  type="button"
-                  onClick={() => goToService(c.slug)}
-                  className="group flex flex-col items-center gap-2.5 rounded-2xl border border-border/70 bg-card p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-elevated"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="text-xs font-semibold leading-tight text-foreground">
-                    {c.name}
-                  </span>
-                </button>
-              );
-            })}
+          {/* A single rail of image cards that flows left and right. */}
+          <div className="relative mt-10">
+            <button
+              type="button"
+              aria-label="Scroll services left"
+              onClick={() => scrollRail(-1)}
+              className="absolute -left-4 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-elevated transition hover:border-primary hover:text-primary sm:flex"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll services right"
+              onClick={() => scrollRail(1)}
+              className="absolute -right-4 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-elevated transition hover:border-primary hover:text-primary sm:flex"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div
+              ref={railRef}
+              className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2"
+            >
+              {featured.map((c) => {
+                const Icon = SERVICE_ICONS[c.slug] ?? Wrench;
+                const photo = SERVICE_PHOTOS[c.slug];
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => goToService(c.slug)}
+                    className="group relative aspect-[3/4] w-40 shrink-0 snap-start overflow-hidden rounded-2xl border border-border/60 bg-ink shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-elevated sm:w-44"
+                  >
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt=""
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/25 blur-2xl" />
+                        <Icon className="relative h-12 w-12 text-primary" strokeWidth={1.5} />
+                      </span>
+                    )}
+                    {/* One dark foot on every card — photo or not — so the rail
+                        reads as one set rather than two. */}
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/85 to-transparent p-3 pt-10 text-left">
+                      <span className="block text-sm font-bold leading-tight text-ink-foreground">
+                        {c.name}
+                      </span>
+                      <span className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-primary opacity-0 transition group-hover:opacity-100">
+                        Find one near you <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {rest.length > 0 && (
