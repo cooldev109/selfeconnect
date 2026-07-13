@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { User, Building2, CheckCircle2, KeyRound } from "lucide-react";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import { useRequireCustomer } from "@/lib/useRequireCustomer";
 import { customerUpdateMe } from "@/lib/customer-auth";
 import { ApiError } from "@/lib/api";
@@ -187,11 +188,10 @@ function CustomerAccountPage() {
               </Labeled>
 
               <Labeled label="Your postcode (optional)" error={errors.postcode}>
-                <Input
+                <PostcodeInput
                   value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="e.g. M1 1AE"
-                  maxLength={12}
+                  onChange={setPostcode}
+                  ariaLabel="Your postcode"
                 />
               </Labeled>
 

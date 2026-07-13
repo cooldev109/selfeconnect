@@ -44,6 +44,60 @@ export class GeoService {
     }
   }
 
+  // Type-ahead suggestions for a partial postcode. This is what makes the
+  // "Enter a valid UK postcode" error impossible — you can only pick a real one.
+  async autocomplete(query: string, limit = 8): Promise<string[]> {
+    const q = (query || '').trim();
+    if (q.length < 2) return [];
+    try {
+      const res = await fetch(
+        `https://api.postcodes.io/postcodes/${encodeURIComponent(q)}/autocomplete?limit=${limit}`,
+      );
+      if (!res.ok) return [];
+      const data = (await res.json()) as { result?: string[] | null };
+      return Array.isArray(data?.result) ? data.result.slice(0, limit) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Turn a device's coordinates into the nearest postcode, so "use my location"
+  // needs no typing at all.
+  async reverse(
+    latitude: number,
+    longitude: number,
+  ): Promise<{ postcode: string; latitude: number; longitude: number } | null> {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    try {
+      const res = await fetch(
+        `https://api.postcodes.io/postcodes?lat=${latitude}&lon=${longitude}&limit=1&radius=2000`,
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        result?: {
+          postcode?: string;
+          latitude?: number;
+          longitude?: number;
+        }[] | null;
+      };
+      const r = data?.result?.[0];
+      if (
+        !r?.postcode ||
+        typeof r.latitude !== 'number' ||
+        typeof r.longitude !== 'number'
+      ) {
+        return null;
+      }
+      return {
+        postcode: r.postcode,
+        latitude: r.latitude,
+        longitude: r.longitude,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // Great-circle (haversine) distance in miles between two points.
   distanceMiles(a: GeoPoint, b: GeoPoint): number {
     const R = 3958.7613; // Earth radius in miles

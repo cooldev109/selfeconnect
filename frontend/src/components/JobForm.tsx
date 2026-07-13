@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import { WEEK_DAYS, type JobInput } from "@/lib/jobs";
 import { ApiError } from "@/lib/api";
 
@@ -139,11 +140,10 @@ export function JobForm({
           <span className="mb-1.5 block text-sm font-medium text-foreground">
             Job postcode
           </span>
-          <Input
+          <PostcodeInput
             value={postcode}
-            onChange={(e) => setPostcode(e.target.value)}
-            placeholder="e.g. M1 1AE"
-            maxLength={12}
+            onChange={setPostcode}
+            ariaLabel="Job postcode"
           />
           {errors.postcode ? (
             <p className="mt-1 text-xs text-destructive">{errors.postcode}</p>

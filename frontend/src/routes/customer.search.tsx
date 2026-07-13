@@ -5,6 +5,7 @@ import { Loader2, MapPin, Search as SearchIcon } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { BrowseShell } from "@/components/BrowseShell";
 import { CategorySelect } from "@/components/CategoryPicker";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import { StarRow } from "@/components/Reviews";
 import { browsePros } from "@/lib/pros";
 import { useCustomer } from "@/lib/useCustomer";
@@ -89,12 +90,10 @@ function SearchPage() {
               <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Your postcode
               </span>
-              <Input
+              <PostcodeInput
                 value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
-                placeholder="e.g. M1 1AE"
-                aria-describedby="postcode-help"
-                maxLength={12}
+                onChange={setPostcode}
+                ariaLabel="Your postcode"
               />
             </label>
             <label className="block">

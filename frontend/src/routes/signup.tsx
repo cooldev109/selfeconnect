@@ -5,6 +5,7 @@ import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import authSide from "@/assets/pro-tradesman.jpg";
 import { signup as signupRequest } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/driver";
@@ -298,12 +299,10 @@ function SignupPage() {
                 label="Your postcode"
                 error={errors.postcode}
                 input={
-                  <Input
+                  <PostcodeInput
                     value={form.postcode}
-                    onChange={(e) => update("postcode", e.target.value)}
-                    placeholder="e.g. M1 1AE"
-                    autoComplete="postal-code"
-                    maxLength={12}
+                    onChange={(pc) => update("postcode", pc)}
+                    ariaLabel="Your postcode"
                   />
                 }
               />

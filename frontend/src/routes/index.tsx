@@ -35,6 +35,7 @@ import {
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
@@ -374,12 +375,11 @@ function Home() {
                   onChange={setHeroService}
                   placeholder="What do you need?"
                 />
-                <Input
+                <PostcodeInput
                   value={heroPostcode}
-                  onChange={(e) => setHeroPostcode(e.target.value)}
+                  onChange={setHeroPostcode}
                   placeholder="Your postcode"
-                  aria-label="Your postcode"
-                  maxLength={12}
+                  ariaLabel="Your postcode"
                   className="h-11 rounded-xl"
                 />
                 <Button type="submit" className="h-11 rounded-xl px-6 text-sm font-semibold">

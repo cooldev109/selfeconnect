@@ -11,6 +11,7 @@ import {
 } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
+import { PostcodeInput } from "@/components/PostcodeInput";
 import { useMe } from "@/hooks/useDriver";
 import { LOGO_MARK_SVG } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
@@ -470,11 +471,10 @@ function ProfilePage() {
                 <span className="mb-1.5 block text-sm font-medium text-foreground">
                   Your postcode
                 </span>
-                <Input
+                <PostcodeInput
                   value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="e.g. M1 1AE"
-                  maxLength={12}
+                  onChange={setPostcode}
+                  ariaLabel="Your postcode"
                 />
                 <span className="mt-1 block text-xs text-muted-foreground">
                   Used to match you with nearby jobs and customers.
