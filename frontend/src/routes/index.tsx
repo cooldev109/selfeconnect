@@ -41,10 +41,19 @@ import { api } from "@/lib/api";
 import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import proTradesman from "@/assets/pro-tradesman.jpg";
-import proCleaner from "@/assets/pro-cleaner.jpg";
-import proGardener from "@/assets/pro-gardener.jpg";
-import proStylist from "@/assets/pro-stylist.jpg";
-import vanQr from "@/assets/van-qr.jpg";
+// Browse-by-service photography (Pexels licence: commercial use, no attribution)
+import svcPlumber from "@/assets/svc-plumber.jpg";
+import svcElectrician from "@/assets/svc-electrician.jpg";
+import svcCleaner from "@/assets/svc-cleaner.jpg";
+import svcGardener from "@/assets/svc-gardener.jpg";
+import svcCarpenter from "@/assets/svc-carpenter.jpg";
+import svcPainter from "@/assets/svc-painter-decorator.jpg";
+import svcHandyman from "@/assets/svc-handyman.jpg";
+import svcRoofer from "@/assets/svc-roofer.jpg";
+import svcRemovals from "@/assets/svc-removals.jpg";
+import svcMechanic from "@/assets/svc-mechanic.jpg";
+import svcHairdresser from "@/assets/svc-hairdresser.jpg";
+import svcTrainer from "@/assets/svc-personal-trainer.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -71,15 +80,23 @@ const FEATURED: { slug: string; name: string }[] = [
 ];
 const FEATURED_SLUGS = FEATURED.map((f) => f.slug);
 
-// Real photography, used only where it genuinely depicts that trade. Services
-// without a photo get a branded tile rather than a recycled one — add a file
-// here and that card becomes a photo card, no other change needed.
+// One photo per trade, each showing that trade actually at work — which is what
+// a browse-by-service card should show, rather than the QR handoff used
+// elsewhere. Sourced from Pexels (free for commercial use, no attribution) and
+// normalised to a single 3:4 crop and grade so they read as one set.
 const SERVICE_PHOTOS: Record<string, string> = {
-  electrician: proTradesman,
-  cleaner: proCleaner,
-  gardener: proGardener,
-  hairdresser: proStylist,
-  removals: vanQr,
+  plumber: svcPlumber,
+  electrician: svcElectrician,
+  cleaner: svcCleaner,
+  gardener: svcGardener,
+  carpenter: svcCarpenter,
+  "painter-decorator": svcPainter,
+  handyman: svcHandyman,
+  roofer: svcRoofer,
+  removals: svcRemovals,
+  mechanic: svcMechanic,
+  hairdresser: svcHairdresser,
+  "personal-trainer": svcTrainer,
 };
 
 const SERVICE_ICONS: Record<string, typeof Wrench> = {
