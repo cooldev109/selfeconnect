@@ -12,11 +12,29 @@ import {
   Star,
   BadgeCheck,
   Lock,
+  ChevronDown,
+  Wrench,
+  Zap,
+  Leaf,
+  Hammer,
+  Paintbrush,
+  Home as HomeIcon,
+  Truck,
+  Car,
+  Scissors,
+  Dumbbell,
+  Camera,
+  GraduationCap,
+  KeyRound,
+  HardHat,
+  Bug,
+  Dog,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
+import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
 import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
@@ -28,24 +46,43 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// A representative slice of the 50+ service categories — enough to make the
-// breadth obvious at a glance without becoming a directory.
-const TRADES = [
-  "Plumber",
-  "Electrician",
-  "Cleaner",
-  "Gardener",
-  "Carpenter",
-  "Painter & Decorator",
-  "Roofer",
-  "Handyman",
-  "Removals",
-  "Mechanic",
-  "Dog Walker",
-  "Personal Trainer",
-  "Photographer",
-  "Tutor",
+// The dozen services shown as tiles. The rest of the (API-provided) list is
+// revealed on demand, so the page can never claim a service we don't have.
+const FEATURED_SLUGS = [
+  "plumber",
+  "electrician",
+  "cleaner",
+  "gardener",
+  "carpenter",
+  "painter-decorator",
+  "handyman",
+  "roofer",
+  "removals",
+  "mechanic",
+  "hairdresser",
+  "personal-trainer",
 ];
+
+const SERVICE_ICONS: Record<string, typeof Wrench> = {
+  plumber: Wrench,
+  electrician: Zap,
+  cleaner: Sparkles,
+  gardener: Leaf,
+  carpenter: Hammer,
+  "painter-decorator": Paintbrush,
+  handyman: Hammer,
+  roofer: HomeIcon,
+  removals: Truck,
+  mechanic: Car,
+  hairdresser: Scissors,
+  "personal-trainer": Dumbbell,
+  photographer: Camera,
+  tutor: GraduationCap,
+  locksmith: KeyRound,
+  builder: HardHat,
+  "pest-control": Bug,
+  "dog-walker": Dog,
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,16 +115,31 @@ function Home() {
     staleTime: 60_000,
   });
 
-  const handleHeroSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  // The real service list — so the page can never advertise a service we
+  // don't actually offer.
+  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const allServices = categoriesQ.data ?? [];
+  const totalServices = allServices.length;
+  const featured = FEATURED_SLUGS.map((s) =>
+    allServices.find((c) => c.slug === s),
+  ).filter((c): c is (typeof allServices)[number] => !!c);
+  const rest = allServices.filter((c) => !FEATURED_SLUGS.includes(c.slug));
+  const [showAllServices, setShowAllServices] = useState(false);
+
+  const runSearch = (category?: string, postcode?: string) => {
     navigate({
       to: customerQ.data?.customer ? "/customer/search" : "/customer/signup",
-      search: {
-        category: heroService || undefined,
-        postcode: heroPostcode.trim() || undefined,
-      },
+      search: { category: category || undefined, postcode: postcode || undefined },
     });
   };
+
+  const handleHeroSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    runSearch(heroService, heroPostcode.trim());
+  };
+
+  // Every service tile is a live control, not decoration.
+  const goToService = (slug: string) => runSearch(slug);
 
   const handleTipSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,25 +284,80 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Trades ─────────────────────────────────────────────── */}
+      {/* ── Browse by service ──────────────────────────────────────
+          Every service is a live control: clicking one runs the search.
+          The list comes from the API, so it can never drift from reality. */}
       <section className="border-y border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <p className="eyebrow text-center text-muted-foreground">
-            Over 50 services · one platform
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {TRADES.map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground/75"
-              >
-                {t}
-              </span>
-            ))}
-            <span className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-ink-foreground">
-              + 40 more
-            </span>
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+          <div className="text-center">
+            <p className="eyebrow text-primary">Browse by service</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
+              Whatever you need doing.
+            </h2>
+            <p className="mx-auto mt-3 text-base text-muted-foreground">
+              {totalServices > 0
+                ? `${totalServices} services, one platform. Pick one to see who's near you.`
+                : "One platform. Pick a service to see who's near you."}
+            </p>
           </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {featured.map((c) => {
+              const Icon = SERVICE_ICONS[c.slug] ?? Wrench;
+              return (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => goToService(c.slug)}
+                  className="group flex flex-col items-center gap-2.5 rounded-2xl border border-border/70 bg-card p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-elevated"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-xs font-semibold leading-tight text-foreground">
+                    {c.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {rest.length > 0 && (
+            <div className="mt-8 text-center">
+              {!showAllServices ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAllServices(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition hover:opacity-90"
+                >
+                  Show all {totalServices} services
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              ) : (
+                <div className="animate-fade-up">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {rest.map((c) => (
+                      <button
+                        key={c.slug}
+                        type="button"
+                        onClick={() => goToService(c.slug)}
+                        className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground/75 transition hover:border-primary hover:text-primary"
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllServices(false)}
+                    className="mt-6 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    Show fewer
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
