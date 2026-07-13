@@ -1,10 +1,15 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { ProsService } from './pros.service';
-import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
+import { OptionalCustomerGuard } from '../customer-auth/optional-customer.guard';
+import type { CustomerUser } from '../customer-auth/current-customer.decorator';
 
-// Customer-facing professional search. Requires a customer session.
+// Public professional search + profiles. Anyone may browse and read reviews —
+// that is the top of the funnel, and it lets profiles be indexed. Contact
+// details are the thing worth an account, so they are only returned to a
+// signed-in customer.
 @Controller('pros')
-@UseGuards(CustomerAuthGuard)
+@UseGuards(OptionalCustomerGuard)
 export class ProsController {
   constructor(private readonly pros: ProsService) {}
 
@@ -19,6 +24,7 @@ export class ProsController {
       const n = parseInt(radius, 10);
       if (!Number.isNaN(n)) radiusMiles = Math.min(Math.max(n, 1), 100);
     }
+    // Browse results never carried contact details, so they are safe as-is.
     return this.pros.browse({
       categorySlug: category || undefined,
       postcode: postcode || undefined,
@@ -27,7 +33,8 @@ export class ProsController {
   }
 
   @Get(':publicId')
-  profile(@Param('publicId') publicId: string) {
-    return this.pros.profile(publicId);
+  profile(@Param('publicId') publicId: string, @Req() req: Request) {
+    const customer = (req as Request & { customer?: CustomerUser }).customer;
+    return this.pros.profile(publicId, { includeContact: !!customer });
   }
 }

@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MapPin, Search as SearchIcon } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
-import { CustomerShell } from "@/components/CustomerShell";
+import { BrowseShell } from "@/components/BrowseShell";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { StarRow } from "@/components/Reviews";
 import { browsePros } from "@/lib/pros";
+import { useCustomer } from "@/lib/useCustomer";
 import { ApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/customer/search")({
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/customer/search")({
 const RADII = [5, 10, 25, 50, 100];
 
 function SearchPage() {
+  const { customer } = useCustomer();
   const initial = Route.useSearch();
   const [category, setCategory] = useState(initial.category ?? "");
   const [postcode, setPostcode] = useState(initial.postcode ?? "");
@@ -63,9 +65,9 @@ function SearchPage() {
   const pros = prosQ.data ?? [];
 
   return (
-    <CustomerShell
+    <BrowseShell
       title="Find a professional"
-      subtitle="Search reviewed professionals by service and location."
+      subtitle="Search reviewed professionals by service and location. Free — no account needed to look."
     >
       <Card className="rounded-2xl">
         <CardContent className="p-5">
@@ -181,8 +183,28 @@ function SearchPage() {
               </CardContent>
             </Card>
           ))}
+
+          {/* Look all you like. The account is only asked for at the point it
+              actually buys you something. */}
+          {!customer && pros.length > 0 && (
+            <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-[#E1F5EE] p-6 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                Ready to get in touch?
+              </p>
+              <p className="max-w-md text-sm text-muted-foreground">
+                Create a free account to see their phone number and email, post a
+                job, and leave a review. It takes a minute and costs nothing.
+              </p>
+              <Button
+                asChild
+                className="mt-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Link to="/customer/signup">Sign up free</Link>
+              </Button>
+            </div>
+          )}
         </div>
       )}
-    </CustomerShell>
+    </BrowseShell>
   );
 }

@@ -229,8 +229,10 @@ export class ProsService {
     return rows;
   }
 
-  // A single professional's public profile with reviews and contact details.
-  async profile(publicId: string) {
+  // A professional's public profile. Anyone may read it — the reviews and the
+  // rating are the point of a public profile. Contact details are the one thing
+  // held back until the visitor has a (free) customer account.
+  async profile(publicId: string, opts: { includeContact: boolean }) {
     const d = await this.prisma.driver.findFirst({
       where: { publicId, role: 'driver', isActive: true },
       include: { categories: { select: { name: true, slug: true } } },
@@ -253,7 +255,12 @@ export class ProsService {
       avgRating: summary.avgRating,
       reviewCount: summary.reviewCount,
       breakdown: summary.breakdown,
-      contact: { phone: d.phone ?? null, email: d.email },
+      // Never serialise the email/phone for an anonymous visitor — hiding it in
+      // the UI alone would still ship it in the JSON.
+      contact: opts.includeContact
+        ? { phone: d.phone ?? null, email: d.email }
+        : null,
+      contactLocked: !opts.includeContact,
       reviews,
     };
   }

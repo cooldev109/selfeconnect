@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
-import { CustomerShell } from "@/components/CustomerShell";
+import { BrowseShell } from "@/components/BrowseShell";
+import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
 import { getProProfile } from "@/lib/pros";
 import { createReview } from "@/lib/reviews";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/customer/pros/$publicId")({
 });
 
 function ProProfilePage() {
+  const { customer } = useCustomer();
   const { publicId } = useParams({ from: "/customer/pros/$publicId" });
   const search = Route.useSearch();
   const q = useQuery({
@@ -32,18 +34,18 @@ function ProProfilePage() {
 
   if (q.isLoading) {
     return (
-      <CustomerShell>
+      <BrowseShell>
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      </CustomerShell>
+      </BrowseShell>
     );
   }
 
   const p = q.data;
 
   return (
-    <CustomerShell>
+    <BrowseShell>
       <Link
         to="/customer/search"
         className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -106,40 +108,70 @@ function ProProfilePage() {
                     ))}
                   </div>
                 </div>
-                <Button
-                  className="shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                  onClick={() => setReviewing((r) => !r)}
-                >
-                  <Star className="mr-2 h-4 w-4" /> Write a review
-                </Button>
+                {customer && (
+                  <Button
+                    className="shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => setReviewing((r) => !r)}
+                  >
+                    <Star className="mr-2 h-4 w-4" /> Write a review
+                  </Button>
+                )}
               </div>
             </div>
 
-            {/* Bio + how to reach them */}
+            {/* Bio, then the one thing worth an account: how to reach them. */}
             <div className="bg-card p-6">
               {p.bio && (
                 <p className="max-w-prose text-sm leading-relaxed text-foreground/90">
                   {p.bio}
                 </p>
               )}
-              <div
-                className={`flex flex-wrap gap-3 ${p.bio ? "mt-5 border-t border-border pt-5" : ""}`}
-              >
-                {p.contact.phone && (
-                  <a
-                    href={`tel:${p.contact.phone}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Phone className="h-4 w-4" /> {p.contact.phone}
-                  </a>
-                )}
-                <a
-                  href={`mailto:${p.contact.email}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+
+              {p.contact ? (
+                <div
+                  className={`flex flex-wrap gap-3 ${p.bio ? "mt-5 border-t border-border pt-5" : ""}`}
                 >
-                  <Mail className="h-4 w-4" /> {p.contact.email}
-                </a>
-              </div>
+                  {p.contact.phone && (
+                    <a
+                      href={`tel:${p.contact.phone}`}
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Phone className="h-4 w-4" /> {p.contact.phone}
+                    </a>
+                  )}
+                  <a
+                    href={`mailto:${p.contact.email}`}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                  >
+                    <Mail className="h-4 w-4" /> {p.contact.email}
+                  </a>
+                </div>
+              ) : (
+                <div
+                  className={`rounded-xl border border-primary/30 bg-[#E1F5EE] p-5 ${p.bio ? "mt-5" : ""}`}
+                >
+                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Lock className="h-4 w-4 text-primary" />
+                    Contact details are free — just not public
+                  </p>
+                  <p className="mt-1.5 text-sm text-muted-foreground">
+                    Create a free account to see {p.name.split(" ")[0]}'s phone
+                    number and email, and to leave a review afterwards. No fees, no
+                    commission.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      asChild
+                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Link to="/customer/signup">Sign up free to contact</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="rounded-xl">
+                      <Link to="/customer/login">Log in</Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -179,7 +211,7 @@ function ProProfilePage() {
           </div>
         </div>
       )}
-    </CustomerShell>
+    </BrowseShell>
   );
 }
 

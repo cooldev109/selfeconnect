@@ -38,7 +38,6 @@ import { CategorySelect } from "@/components/CategoryPicker";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
-import { customerMe } from "@/lib/customer-auth";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import proTradesman from "@/assets/pro-tradesman.jpg";
 // Browse-by-service photography (Pexels licence: commercial use, no attribution)
@@ -142,15 +141,6 @@ function Home() {
   const [heroPostcode, setHeroPostcode] = useState("");
   const navigate = useNavigate();
 
-  // Is there already a customer session? Decides whether a hero search goes
-  // straight to results or via a free sign-up (which then lands on results).
-  const customerQ = useQuery({
-    queryKey: ["customer-me"],
-    queryFn: customerMe,
-    retry: false,
-    staleTime: 60_000,
-  });
-
   // The real service list — so the page can never advertise a service we
   // don't actually offer.
   const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: getCategories });
@@ -165,9 +155,11 @@ function Home() {
   const rest = allServices.filter((c) => !FEATURED_SLUGS.includes(c.slug));
   const [showAllServices, setShowAllServices] = useState(false);
 
+  // Anyone may search — no account, no wall. The sign-up is asked for later,
+  // at the point it actually buys something (seeing contact details).
   const runSearch = (category?: string, postcode?: string) => {
     navigate({
-      to: customerQ.data?.customer ? "/customer/search" : "/customer/signup",
+      to: "/customer/search",
       search: { category: category || undefined, postcode: postcode || undefined },
     });
   };

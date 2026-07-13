@@ -24,7 +24,9 @@ export interface ProProfile {
   avgRating: number;
   reviewCount: number;
   breakdown: RatingBreakdown;
-  contact: { phone: string | null; email: string };
+  /** null for anonymous visitors — an account is required to see it. */
+  contact: { phone: string | null; email: string } | null;
+  contactLocked: boolean;
   reviews: ReviewItem[];
 }
 
