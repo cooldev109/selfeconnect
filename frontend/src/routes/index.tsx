@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -180,13 +180,125 @@ function Home() {
   // Every service card is a live control, not decoration.
   const goToService = (slug: string) => runSearch(slug);
 
-  // The service rail flows left/right. Scroll by whatever is actually visible
-  // rather than a hardcoded card width, so it behaves at any breakpoint.
+  // ── The service rail ──────────────────────────────────────────────
+  // Drifts right-to-left on its own, but stays a normal scroll container so
+  // touch, trackpad and drag all still work in both directions. The cards are
+  // rendered twice and the scroll position wraps at the width of one set, so
+  // the loop is seamless in either direction.
   const railRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const wrapRef = useRef(0);
+  const dragRef = useRef({ active: false, startX: 0, startScroll: 0, moved: false });
+
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+
+    // One "set" is the distance from the first card to its duplicate.
+    const measure = () => {
+      const kids = el.children;
+      const n = featured.length;
+      if (kids.length >= n + 1) {
+        wrapRef.current =
+          (kids[n] as HTMLElement).offsetLeft - (kids[0] as HTMLElement).offsetLeft;
+      }
+    };
+    measure();
+    el.scrollLeft = 1; // off zero, so a leftward wrap is detectable
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+
+    // Someone who asked for less motion shouldn't get a moving carousel.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let raf = 0;
+    let last = performance.now();
+    const SPEED = 22; // px/sec — a slow drift, not a conveyor belt
+
+    const wrap = () => {
+      const w = wrapRef.current;
+      if (w <= 0) return;
+      if (el.scrollLeft >= w) el.scrollLeft -= w;
+      else if (el.scrollLeft <= 0) el.scrollLeft = w - 1;
+    };
+
+    // scrollLeft is rounded to whole pixels, so a sub-pixel increment per frame
+    // would round straight back and the rail would never move. Carry the
+    // fraction across frames and only ever apply whole pixels.
+    let carry = 0;
+    const step = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      const idle = !pausedRef.current && !dragRef.current.active && !reduce.matches;
+      if (idle) {
+        carry += SPEED * dt;
+        const px = Math.floor(carry);
+        if (px > 0) {
+          carry -= px;
+          el.scrollLeft += px;
+        }
+      } else {
+        carry = 0;
+      }
+      wrap();
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [featured.length]);
+
+  const pause = () => { pausedRef.current = true; };
+  const resume = () => { pausedRef.current = false; };
+
+  // Drag-to-scroll for mice; touch devices already pan natively.
+  //
+  // Capture is taken only once the pointer has actually travelled. Capturing on
+  // pointerdown would retarget the click to the rail and a plain card click
+  // would do nothing at all.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    const el = railRef.current;
+    if (!el) return;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+    };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = dragRef.current;
+    const el = railRef.current;
+    if (!d.active || !el) return;
+    const dx = e.clientX - d.startX;
+    if (!d.moved && Math.abs(dx) > 4) {
+      d.moved = true;
+      // Now it's a drag — keep receiving events even if the cursor leaves.
+      el.setPointerCapture(e.pointerId);
+    }
+    if (d.moved) el.scrollLeft = d.startScroll - dx;
+  };
+  const endDrag = (e: React.PointerEvent) => {
+    const el = railRef.current;
+    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    dragRef.current.active = false;
+    // `moved` only needs to survive long enough to swallow the click this very
+    // drag is about to emit. Clearing it after that keeps the next real click
+    // from being eaten.
+    window.setTimeout(() => {
+      dragRef.current.moved = false;
+    }, 0);
+  };
+
   const scrollRail = (dir: 1 | -1) => {
     const el = railRef.current;
     if (!el) return;
+    pause();
     el.scrollBy({ left: dir * Math.max(240, el.clientWidth * 0.8), behavior: "smooth" });
+    window.setTimeout(resume, 900);
   };
 
   const handleTipSubmit = async (e: React.FormEvent) => {
@@ -370,24 +482,49 @@ function Home() {
 
             <div
               ref={railRef}
-              className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2"
+              onMouseEnter={pause}
+              onMouseLeave={() => {
+                dragRef.current.active = false;
+                resume();
+              }}
+              // Keyboard users get the same courtesy as mouse users: a card you
+              // have tabbed to should hold still.
+              onFocusCapture={pause}
+              onBlurCapture={resume}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+              onTouchStart={pause}
+              onTouchEnd={resume}
+              className="no-scrollbar flex cursor-grab gap-4 overflow-x-auto pb-2 active:cursor-grabbing"
+              style={{ touchAction: "pan-x" }}
             >
-              {featured.map((c) => {
+              {/* Rendered twice: the second set is what the loop wraps onto. */}
+              {[...featured, ...featured].map((c, i) => {
                 const Icon = SERVICE_ICONS[c.slug] ?? Wrench;
                 const photo = SERVICE_PHOTOS[c.slug];
+                const dupe = i >= featured.length;
                 return (
                   <button
-                    key={c.slug}
+                    key={`${c.slug}-${i}`}
                     type="button"
-                    onClick={() => goToService(c.slug)}
-                    className="group relative aspect-[3/4] w-40 shrink-0 snap-start overflow-hidden rounded-2xl border border-border/60 bg-ink shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-elevated sm:w-44"
+                    tabIndex={dupe ? -1 : 0}
+                    aria-hidden={dupe || undefined}
+                    onClick={() => {
+                      // Swallow the click that a drag emits on release.
+                      if (dragRef.current.moved) return;
+                      goToService(c.slug);
+                    }}
+                    className="group relative aspect-[3/4] w-40 shrink-0 select-none overflow-hidden rounded-2xl border border-border/60 bg-ink shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-elevated sm:w-44"
                   >
                     {photo ? (
                       <img
                         src={photo}
                         alt=""
                         loading="lazy"
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        draggable={false}
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <span className="absolute inset-0 flex items-center justify-center">
