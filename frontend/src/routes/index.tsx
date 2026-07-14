@@ -10,7 +10,6 @@ import {
   ArrowRight,
   QrCode,
   Star,
-  BadgeCheck,
   Lock,
   ChevronDown,
   ChevronLeft,
@@ -417,8 +416,9 @@ function Home() {
               src={heroImg}
               alt="SelfeConnect connects people with reviewed local professionals — plumbers, electricians, gardeners, cleaners and painters — through one app, matched by service and postcode."
               width={1122}
-              height={1402}
-              className="w-full"
+              height={1206}
+              className="h-auto w-full select-none"
+              draggable={false}
             />
           </div>
         </div>
