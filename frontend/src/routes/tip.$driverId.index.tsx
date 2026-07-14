@@ -100,8 +100,15 @@ function TipPage() {
         comment: message.trim() || undefined,
         authorName: name.trim() || undefined,
       });
-    } catch {
-      setError("We couldn't post your review. Please try again.");
+    } catch (err) {
+      const status = err instanceof ApiError ? err.status : 0;
+      setError(
+        status === 429
+          ? "You've already reviewed this professional in the last 24 hours."
+          : status === 403
+            ? "You can't review your own profile."
+            : "We couldn't post your review. Please try again.",
+      );
       setSubmitting(false);
       return;
     }

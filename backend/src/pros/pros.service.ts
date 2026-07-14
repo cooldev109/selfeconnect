@@ -249,7 +249,14 @@ export class ProsService {
     const summary = summaries.get(d.id)!;
     const reviews = await this.reviewsForDriver(d.id);
 
+    // How many of these came from someone with a real account — so a reader can
+    // weigh a stranger's rating against a customer who actually hired them.
+    const verifiedCount = await this.prisma.review.count({
+      where: { driverId: d.id, customerId: { not: null } },
+    });
+
     return {
+      verifiedCount,
       publicId: d.publicId,
       name: d.name,
       company: d.company ?? null,

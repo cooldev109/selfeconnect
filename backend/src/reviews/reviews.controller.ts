@@ -1,6 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import type { Request } from 'express';
 import { ReviewsService } from './reviews.service';
 import { ProsService } from '../pros/pros.service';
+import { SESSION_COOKIE } from '../auth/auth.guard';
 import {
   CreateReviewDto,
   CreateAnonymousReviewDto,
@@ -17,6 +20,7 @@ export class ReviewsController {
   constructor(
     private readonly reviews: ReviewsService,
     private readonly pros: ProsService,
+    private readonly jwt: JwtService,
   ) {}
 
   // Customer posts a rating + review for a professional they used.
@@ -27,12 +31,36 @@ export class ReviewsController {
   }
 
   // Public: a review left by scanning the QR code. No account, no payment.
+  // Rate-limited per submitter, because "no account" also means "anyone".
   @Post('drivers/:publicId/reviews')
   createAnonymous(
     @Param('publicId') publicId: string,
     @Body() dto: CreateAnonymousReviewDto,
+    @Req() req: Request,
   ) {
-    return this.reviews.createAnonymous(publicId, dto);
+    // nginx overwrites X-Real-IP with the true peer address, so a client cannot
+    // spoof it. (X-Forwarded-For is client-appendable, so it is not trusted
+    // here.) Falls back to the socket address when running without a proxy.
+    const ip =
+      (req.headers['x-real-ip'] as string | undefined)?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown';
+
+    // If a professional is signed in, note who — so they can't review themselves.
+    let driverIdFromSession: string | undefined;
+    const token = req.cookies?.[SESSION_COOKIE] as string | undefined;
+    if (token) {
+      try {
+        driverIdFromSession = this.jwt.verify<{ sub: string }>(token)?.sub;
+      } catch {
+        /* an invalid session simply means "not signed in" */
+      }
+    }
+
+    return this.reviews.createAnonymous(publicId, dto, {
+      ip,
+      driverIdFromSession,
+    });
   }
 
   // The signed-in professional's own received reviews + rating breakdown.

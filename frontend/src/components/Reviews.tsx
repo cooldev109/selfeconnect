@@ -1,4 +1,4 @@
-import { Star, BadgeCheck } from "lucide-react";
+import { Star, BadgeCheck, ShieldQuestion } from "lucide-react";
 import type { ReviewItem, RatingBreakdown } from "@/lib/reviews";
 
 export function StarRow({
@@ -32,10 +32,13 @@ export function RatingSummary({
   avgRating,
   reviewCount,
   breakdown,
+  verifiedCount,
 }: {
   avgRating: number;
   reviewCount: number;
   breakdown: RatingBreakdown;
+  /** How many came from a real account — shown so the number can be weighed. */
+  verifiedCount?: number;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-6">
@@ -49,6 +52,11 @@ export function RatingSummary({
         <div className="mt-1 text-xs text-muted-foreground">
           {reviewCount} review{reviewCount === 1 ? "" : "s"}
         </div>
+        {typeof verifiedCount === "number" && verifiedCount > 0 && (
+          <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+            <BadgeCheck className="h-3.5 w-3.5" /> {verifiedCount} verified
+          </div>
+        )}
       </div>
       <div className="min-w-[180px] flex-1 space-y-1.5">
         {([5, 4, 3, 2, 1] as const).map((star) => {
@@ -87,14 +95,23 @@ export function ReviewCard({ review }: { review: ReviewItem }) {
             <span className="text-sm font-semibold text-foreground">
               {review.author}
             </span>
-            {review.hired && (
+            {review.hired ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
                 <BadgeCheck className="h-3.5 w-3.5" /> Hired on SelfeConnect
               </span>
-            )}
-            {!review.hired && review.verified && (
+            ) : review.verified ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary/80">
                 <BadgeCheck className="h-3.5 w-3.5" /> Verified customer
+              </span>
+            ) : (
+              // Say so plainly. A reader deserves to know a QR review came from
+              // someone we can't vouch for — that's what makes "verified" worth
+              // anything.
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground"
+                title="Left by scanning a QR code — not linked to a SelfeConnect account"
+              >
+                <ShieldQuestion className="h-3.5 w-3.5" /> Unverified
               </span>
             )}
           </div>

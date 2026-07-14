@@ -193,6 +193,7 @@ function ProProfilePage() {
                   avgRating={p.avgRating}
                   reviewCount={p.reviewCount}
                   breakdown={p.breakdown}
+                  verifiedCount={p.verifiedCount}
                 />
               </CardContent>
             </Card>

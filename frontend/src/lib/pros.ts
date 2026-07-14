@@ -23,6 +23,8 @@ export interface ProProfile {
   categories: string[];
   avgRating: number;
   reviewCount: number;
+  /** How many reviews came from a real SelfeConnect account. */
+  verifiedCount: number;
   breakdown: RatingBreakdown;
   /** null for anonymous visitors — an account is required to see it. */
   contact: { phone: string | null; email: string } | null;

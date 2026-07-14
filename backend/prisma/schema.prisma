@@ -214,6 +214,10 @@ model Review {
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   // What an anonymous reviewer chose to call themselves, if anything.
   authorName String?
+  // A salted hash of the reviewer's IP — never the address itself. Used only to
+  // stop one person spraying a professional with reviews (or a professional
+  // farming their own). Nothing here identifies a person.
+  authorIpHash String?
 
   // Optional link to the job the customer hired for — makes the review
   // "verified — hired on SelfeConnect".
@@ -230,6 +234,7 @@ model Review {
   // distinct, so anonymous QR reviews are not limited by this.
   @@unique([driverId, customerId])
   @@index([driverId])
+  @@index([driverId, authorIpHash])
 }
 
 // Records when a professional unlocked a job's contact details (analytics +

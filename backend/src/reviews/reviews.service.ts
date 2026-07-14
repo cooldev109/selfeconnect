@@ -1,31 +1,80 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateReviewDto,
   CreateAnonymousReviewDto,
 } from './dto/create-review.dto';
 
+// One anonymous review per person, per professional, per day. Enough to stop a
+// competitor burying someone in 1-stars or a professional farming their own
+// 5-stars, without putting a wall in front of a genuine customer with a QR code.
+const ANON_REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 @Injectable()
 export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Never store the address itself — only a salted hash, which is enough to
+  // recognise a repeat submitter and useless for identifying a person.
+  private hashIp(ip: string): string {
+    const salt = process.env.JWT_SECRET ?? 'selfeconnect';
+    return createHash('sha256').update(`${salt}:${ip}`).digest('hex');
+  }
 
   // Someone scanned the QR code. They have no account and are paying nothing —
   // that is exactly what the flyer promises, so nothing here may require either.
   // Notably this is NOT gated on Stripe onboarding: a review involves no money,
   // so blocking it behind payment setup (as the tip endpoint does) would be
   // absurd.
-  async createAnonymous(publicId: string, dto: CreateAnonymousReviewDto) {
+  //
+  // But "no account" also means "anyone", so the abuse guards live here.
+  async createAnonymous(
+    publicId: string,
+    dto: CreateAnonymousReviewDto,
+    ctx: { ip: string; driverIdFromSession?: string },
+  ) {
     const driver = await this.prisma.driver.findFirst({
       where: { publicId: publicId.trim().toUpperCase(), role: 'driver' },
       select: { id: true },
     });
     if (!driver) throw new NotFoundException('professional_not_found');
 
+    // A professional cannot review themselves while signed in as themselves.
+    // (Not a complete defence on its own — the rate limit does the heavy
+    // lifting — but it closes the laziest version of the attack.)
+    if (ctx.driverIdFromSession && ctx.driverIdFromSession === driver.id) {
+      throw new ForbiddenException('cannot_review_yourself');
+    }
+
+    const ipHash = this.hashIp(ctx.ip);
+    const recent = await this.prisma.review.findFirst({
+      where: {
+        driverId: driver.id,
+        authorIpHash: ipHash,
+        createdAt: { gte: new Date(Date.now() - ANON_REVIEW_WINDOW_MS) },
+      },
+      select: { id: true },
+    });
+    if (recent) {
+      throw new HttpException(
+        'already_reviewed_recently',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const review = await this.prisma.review.create({
       data: {
         driverId: driver.id,
         customerId: null,
         authorName: dto.authorName?.trim() || null,
+        authorIpHash: ipHash,
         rating: dto.rating,
         comment: dto.comment?.trim() || null,
       },
