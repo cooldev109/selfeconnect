@@ -39,7 +39,6 @@ import { PostcodeInput } from "@/components/PostcodeInput";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
-import professionalsFlyer from "@/assets/professionals-flyer.png";
 import proTradesman from "@/assets/pro-tradesman.jpg";
 // Browse-by-service photography (Pexels licence: commercial use, no attribution)
 import svcPlumber from "@/assets/svc-plumber.jpg";
@@ -349,9 +348,9 @@ function Home() {
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-mesh opacity-60" />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_1fr] lg:py-24">
-          <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:items-stretch lg:py-20">
+          <div className="animate-fade-up lg:flex lg:flex-col lg:justify-center">
+            <span className="inline-flex w-fit items-center gap-1.5 self-start rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Reviewed &amp; recommended by real customers
             </span>
@@ -408,17 +407,20 @@ function Home() {
             </p>
           </div>
 
-          <div className="relative mx-auto w-full max-w-md animate-fade-up lg:max-w-none">
-            <div className="overflow-hidden rounded-[1.75rem] border border-border/60 shadow-elevated">
+          {/* One confident image — a local professional and a happy customer —
+              rather than the old 2x2 stock grid. Tall, so it fills the column
+              and the two sides share a baseline. */}
+          <div className="relative mx-auto w-full max-w-sm animate-fade-up lg:max-w-none">
+            <div className="relative h-full min-h-[26rem] overflow-hidden rounded-[2rem] border border-border/60 shadow-elevated">
               <img
-                src={professionalsFlyer}
-                alt="Four self-employed professionals — a cleaner, a tradesman, a gardener and a hair stylist — sharing their SelfeConnect QR code with happy customers"
-                width={1448}
-                height={1086}
-                className="aspect-[4/3] w-full object-cover"
+                src={proTradesman}
+                alt="A local professional greeting a happy customer at their door"
+                className="absolute inset-0 h-full w-full object-cover object-center"
               />
+              {/* A soft foot so the floating card always reads cleanly. */}
+              <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/55 to-transparent" />
             </div>
-            <div className="absolute -bottom-6 -left-8 hidden rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-elevated lg:block">
+            <div className="absolute -bottom-5 -left-5 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-elevated">
               <p className="eyebrow text-muted-foreground">Verified review</p>
               <div className="mt-1.5 flex items-center gap-2">
                 <span className="inline-flex text-amber-400">
