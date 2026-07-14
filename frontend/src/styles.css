@@ -47,6 +47,8 @@
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-scale-in: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-pop: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* The typing caret in the phone demo. */
+  --animate-caret: caret 1s steps(2, jump-none) infinite;
 }
 
 :root {
@@ -172,6 +174,10 @@
   0% { opacity: 0; transform: scale(0.6); }
   60% { opacity: 1; transform: scale(1.08); }
   100% { transform: scale(1); }
+}
+@keyframes caret {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Soft brand wash: teal-mint meeting a warm sand, never a hard gradient. */

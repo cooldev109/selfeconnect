@@ -35,6 +35,7 @@ import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
+import { ChooseProDemo } from "@/components/ChooseProDemo";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
@@ -649,12 +650,7 @@ function Home() {
               />
             </ol>
 
-            <div>
-              <SearchPreview />
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Example search — this is the real SelfeConnect layout.
-              </p>
-            </div>
+            <ChooseProDemo />
           </div>
         </div>
       </section>
@@ -1032,56 +1028,6 @@ function Home() {
 // ── Product previews ──────────────────────────────────────────────
 // The marketplace is the half of the product a QR photo can't show. These
 // render the real UI so it's visible, and are labelled as examples.
-
-function SearchPreview() {
-  const results = [
-    { name: "Sam Rivers", trades: "Plumber · Electrician", rating: 4.9, count: 38, miles: "2.1" },
-    { name: "Aisha Bello", trades: "Plumber", rating: 4.8, count: 21, miles: "3.4" },
-    { name: "Tom Whyte", trades: "Heating & Gas", rating: 4.7, count: 12, miles: "5.0" },
-  ];
-  return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-elevated">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-secondary/50 p-4">
-        <span className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground">
-          Plumber
-        </span>
-        <span className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground">
-          M1 1AE
-        </span>
-        <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground">
-          <Search className="h-3.5 w-3.5" /> Search
-        </span>
-      </div>
-      <div className="divide-y divide-border/60">
-        {results.map((r) => (
-          <div key={r.name} className="flex items-center gap-3 p-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-              {r.name.split(" ").map((w) => w[0]).join("")}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-semibold text-foreground">{r.name}</p>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                  {r.miles} mi
-                </span>
-              </div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <StarRow value={r.rating} className="h-3 w-3" />
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {r.rating.toFixed(1)} ({r.count})
-                </span>
-              </div>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.trades}</p>
-            </div>
-            <span className="hidden shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:inline">
-              View profile
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function JobBoardPreview() {
   return (
