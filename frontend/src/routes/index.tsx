@@ -39,6 +39,7 @@ import { PostcodeInput } from "@/components/PostcodeInput";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
+import heroImg from "@/assets/hero.jpg";
 import proTradesman from "@/assets/pro-tradesman.jpg";
 // Browse-by-service photography (Pexels licence: commercial use, no attribution)
 import svcPlumber from "@/assets/svc-plumber.jpg";
@@ -407,33 +408,18 @@ function Home() {
             </p>
           </div>
 
-          {/* One confident image — a local professional and a happy customer —
-              rather than the old 2x2 stock grid. Tall, so it fills the column
-              and the two sides share a baseline. */}
-          <div className="relative mx-auto w-full max-w-sm animate-fade-up lg:max-w-none">
-            <div className="relative h-full min-h-[26rem] overflow-hidden rounded-[2rem] border border-border/60 shadow-elevated">
-              <img
-                src={proTradesman}
-                alt="A local professional greeting a happy customer at their door"
-                className="absolute inset-0 h-full w-full object-cover object-center"
-              />
-              {/* A soft foot so the floating card always reads cleanly. */}
-              <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/55 to-transparent" />
-            </div>
-            <div className="absolute -bottom-5 -left-5 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-elevated">
-              <p className="eyebrow text-muted-foreground">Verified review</p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <span className="inline-flex text-amber-400">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <Star key={i} className="h-4 w-4 fill-amber-400" />
-                  ))}
-                </span>
-                <span className="text-sm font-semibold text-foreground">5.0</span>
-              </div>
-              <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                <BadgeCheck className="h-3.5 w-3.5" /> Hired on SelfeConnect
-              </p>
-            </div>
+          {/* A single illustration of the whole product: local professionals of
+              every trade, matched to customers through the app, with ratings and
+              a verified badge. It already contains its own review card, so no
+              overlay is layered on it. */}
+          <div className="mx-auto w-full max-w-md animate-fade-up lg:max-w-none lg:self-center">
+            <img
+              src={heroImg}
+              alt="SelfeConnect connects people with reviewed local professionals — plumbers, electricians, gardeners, cleaners and painters — through one app, matched by service and postcode."
+              width={1122}
+              height={1402}
+              className="w-full"
+            />
           </div>
         </div>
       </section>
