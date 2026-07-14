@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, MapPin, Phone, Search, Star } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
+import avatarSam from "@/assets/avatar-sam.jpg";
+import avatarAisha from "@/assets/avatar-aisha.jpg";
+import avatarTom from "@/assets/avatar-tom.jpg";
 
 /**
  * A phone that demonstrates choosing a professional, start to finish: the search
@@ -18,10 +21,12 @@ import { LogoMark } from "@/components/Logo";
 const SERVICE = "Plumber";
 const POSTCODE = "M1 1AE";
 
+// Real search results lead with the professional's photo, so the demo does too —
+// initials are the fallback for someone who hasn't uploaded one, not the norm.
 const RESULTS = [
-  { name: "Sam Rivers", trades: "Plumber · Electrician", rating: 4.9, count: 38, miles: "2.1" },
-  { name: "Aisha Bello", trades: "Plumber", rating: 4.8, count: 21, miles: "3.4" },
-  { name: "Tom Whyte", trades: "Heating & Gas", rating: 4.7, count: 12, miles: "5.0" },
+  { name: "Sam Rivers", trades: "Plumber · Electrician", rating: 4.9, count: 38, miles: "2.1", photo: avatarSam },
+  { name: "Aisha Bello", trades: "Plumber", rating: 4.8, count: 21, miles: "3.4", photo: avatarAisha },
+  { name: "Tom Whyte", trades: "Heating & Gas", rating: 4.7, count: 12, miles: "5.0", photo: avatarTom },
 ];
 const CHOSEN = RESULTS[0];
 
@@ -230,9 +235,7 @@ export function ChooseProDemo() {
                           : "border-border/60"
                       }`}
                     >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[9px] font-bold text-primary">
-                        {initials(r.name)}
-                      </span>
+                      <Avatar name={r.name} photo={r.photo} className="h-7 w-7 text-[9px]" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1">
                           <p className="truncate text-[10px] font-semibold text-foreground">
@@ -267,9 +270,11 @@ export function ChooseProDemo() {
               >
                 <div className="mx-auto mb-2 h-0.5 w-8 rounded-full bg-border" />
                 <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[11px] font-bold text-primary">
-                    {initials(CHOSEN.name)}
-                  </span>
+                  <Avatar
+                    name={CHOSEN.name}
+                    photo={CHOSEN.photo}
+                    className="h-9 w-9 text-[11px]"
+                  />
                   <div className="min-w-0">
                     <p className="truncate font-display text-[12px] font-bold text-foreground">
                       {CHOSEN.name}
@@ -354,6 +359,33 @@ export function ChooseProDemo() {
         and their phone number, which you call directly with no commission.
       </p>
     </div>
+  );
+}
+
+function Avatar({
+  name,
+  photo,
+  className,
+}: {
+  name: string;
+  photo?: string;
+  className: string;
+}) {
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt=""
+        className={`shrink-0 rounded-full object-cover ring-1 ring-border/60 ${className}`}
+      />
+    );
+  }
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary ${className}`}
+    >
+      {initials(name)}
+    </span>
   );
 }
 
