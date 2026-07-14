@@ -21,6 +21,11 @@ import avatarTom from "@/assets/avatar-tom.jpg";
 const SERVICE = "Plumber";
 const POSTCODE = "M1 1AE";
 
+// It demonstrates, then gets out of the way: two runs through the flow each time
+// the section is scrolled into view, after which it rests on the finished frame.
+// An endlessly looping phone competes with the copy beside it for attention.
+const PLAYS = 2;
+
 // Real search results lead with the professional's photo, so the demo does too —
 // initials are the fallback for someone who hasn't uploaded one, not the norm.
 const RESULTS = [
@@ -65,6 +70,8 @@ export function ChooseProDemo() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [service, setService] = useState("");
   const [postcode, setPostcode] = useState("");
+  // Both runs are finished — hold the last frame instead of looping.
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -89,6 +96,9 @@ export function ChooseProDemo() {
   useEffect(() => {
     if (!onScreen || reduced) return;
     let dead = false;
+    // Scrolling away and back plays it again — someone returning to the section
+    // is asking to see it, not to stare at a frozen last frame.
+    setDone(false);
     const wait = (ms: number) =>
       new Promise<void>((r) => setTimeout(r, ms));
 
@@ -101,7 +111,7 @@ export function ChooseProDemo() {
     };
 
     (async () => {
-      while (!dead) {
+      for (let run = 0; run < PLAYS && !dead; run++) {
         setPhase("idle");
         setService("");
         setPostcode("");
@@ -131,6 +141,9 @@ export function ChooseProDemo() {
         setPhase("profile");
         await wait(3200);
       }
+      // Settle on the finished frame. It renders identically to the last phase,
+      // so the animation simply stops rather than snapping to a new picture.
+      if (!dead) setDone(true);
     })();
 
     return () => {
@@ -138,8 +151,9 @@ export function ChooseProDemo() {
     };
   }, [onScreen, reduced]);
 
-  // A still, complete frame for reduced motion: the result of the whole flow.
-  const still = reduced;
+  // The still, complete frame — shown once both runs are done, and to anyone who
+  // asked for reduced motion.
+  const still = reduced || done;
   const showResults =
     still || ["results", "pick", "tap", "profile"].includes(phase);
   const showProfile = still || phase === "profile";
