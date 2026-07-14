@@ -127,9 +127,15 @@ export class ProsService {
       ...reviews.map((r) => ({
         rating: r.rating,
         comment: r.comment ?? null,
-        author: r.customer.companyName || r.customer.name || 'Customer',
+        // A QR review has no customer — fall back to whatever name they gave.
+        author:
+          r.customer?.companyName ||
+          r.customer?.name ||
+          r.authorName ||
+          'Anonymous',
         date: r.createdAt.toISOString(),
-        verified: true,
+        // Only a review tied to a real account counts as verified.
+        verified: r.customerId != null,
         hired: r.jobId != null,
       })),
       ...tips.map((t) => ({

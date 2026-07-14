@@ -31,5 +31,16 @@ export const createReview = (input: {
     body: JSON.stringify(input),
   });
 
+// A review left by scanning the QR code: no account, no payment, no Stripe
+// setup on the professional's side. This is what the flyer actually promises.
+export const createAnonymousReview = (
+  publicId: string,
+  input: { rating: number; comment?: string; authorName?: string },
+) =>
+  api<{ ok: true; id: string }>(`/drivers/${publicId}/reviews`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
 // The signed-in professional's own received reviews + rating breakdown.
 export const getMyReviews = () => api<MyReviews>("/me/reviews");

@@ -1,10 +1,37 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateReviewDto } from './dto/create-review.dto';
+import {
+  CreateReviewDto,
+  CreateAnonymousReviewDto,
+} from './dto/create-review.dto';
 
 @Injectable()
 export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Someone scanned the QR code. They have no account and are paying nothing —
+  // that is exactly what the flyer promises, so nothing here may require either.
+  // Notably this is NOT gated on Stripe onboarding: a review involves no money,
+  // so blocking it behind payment setup (as the tip endpoint does) would be
+  // absurd.
+  async createAnonymous(publicId: string, dto: CreateAnonymousReviewDto) {
+    const driver = await this.prisma.driver.findFirst({
+      where: { publicId: publicId.trim().toUpperCase(), role: 'driver' },
+      select: { id: true },
+    });
+    if (!driver) throw new NotFoundException('professional_not_found');
+
+    const review = await this.prisma.review.create({
+      data: {
+        driverId: driver.id,
+        customerId: null,
+        authorName: dto.authorName?.trim() || null,
+        rating: dto.rating,
+        comment: dto.comment?.trim() || null,
+      },
+    });
+    return { ok: true as const, id: review.id };
+  }
 
   // A customer leaves (or updates) a rating + written review for a professional.
   // No payment involved — tipping is a separate, optional action.

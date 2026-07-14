@@ -164,10 +164,12 @@ function ProProfilePage() {
                       asChild
                       className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                     >
-                      <Link to="/customer/signup">Sign up free to contact</Link>
+                      <Link to="/customer/signup" search={{ pro: publicId }}>
+                        Sign up free to contact
+                      </Link>
                     </Button>
                     <Button asChild variant="outline" className="rounded-xl">
-                      <Link to="/customer/login">Log in</Link>
+                      <Link to="/customer/login" search={{ pro: publicId }}>Log in</Link>
                     </Button>
                   </div>
                 </div>

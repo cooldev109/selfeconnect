@@ -5,8 +5,8 @@ import { ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/tip/$driverId/success")({
   head: () => ({
     meta: [
-      { title: "Thanks for your tip! — SelfeConnect" },
-      { name: "description", content: "Your tip was sent successfully." },
+      { title: "Thanks for your review! — SelfeConnect" },
+      { name: "description", content: "Your review has been posted." },
     ],
   }),
   component: TipSuccess,
@@ -17,9 +17,13 @@ function TipSuccess() {
   const state = (location.state as unknown as Record<string, unknown> | undefined) ?? {};
   const amount =
     typeof state.amount === "number" ? state.amount.toFixed(2) : "0.00";
-  const driverName = typeof state.driverName === "string" ? state.driverName : "Driver";
+  const proName =
+    typeof state.driverName === "string" && state.driverName
+      ? state.driverName
+      : "your professional";
+  const tipped = Number(state.amount) > 0;
 
-  const transactionId = `tv_${Math.random().toString(36).slice(2, 10).toUpperCase()}_${Date.now().toString(36).slice(-4).toUpperCase()}`;
+  const transactionId = `sc_${Math.random().toString(36).slice(2, 10).toUpperCase()}_${Date.now().toString(36).slice(-4).toUpperCase()}`;
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
@@ -47,18 +51,26 @@ function TipSuccess() {
         <h1 className="mt-8 text-3xl font-bold text-foreground font-display">Thank you!</h1>
 
         <p className="mt-3 text-base text-muted-foreground">
-          Your tip of{" "}
-          <span className="font-semibold text-foreground">£{amount}</span> was
-          sent to{" "}
-          <span className="font-semibold text-foreground">{driverName}</span>.
+          Your review of{" "}
+          <span className="font-semibold text-foreground">{proName}</span> has
+          been posted
+          {tipped ? (
+            <>
+              , along with a tip of{" "}
+              <span className="font-semibold text-foreground">£{amount}</span>
+            </>
+          ) : null}
+          . It helps the next customer choose.
         </p>
 
-        <div className="mt-7 rounded-2xl border border-border/70 bg-muted/60 px-5 py-4 text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Transaction ID
-          </p>
-          <p className="mt-1 font-mono text-sm text-foreground">{transactionId}</p>
-        </div>
+        {tipped && (
+          <div className="mt-7 rounded-2xl border border-border/70 bg-muted/60 px-5 py-4 text-left">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Transaction ID
+            </p>
+            <p className="mt-1 font-mono text-sm text-foreground">{transactionId}</p>
+          </div>
+        )}
 
         <Link to="/">
           <Button
@@ -72,7 +84,7 @@ function TipSuccess() {
 
       <p className="mt-12 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-primary" />
-        Secure payment via Stripe
+        {tipped ? "Secure payment via Stripe" : "Reviews are always free"}
       </p>
     </main>
   );

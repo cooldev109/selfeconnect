@@ -11,9 +11,11 @@ export const Route = createFileRoute("/customer/login")({
   // Carries a search started from the homepage hero through sign-in.
   validateSearch: (
     s: Record<string, unknown>,
-  ): { category?: string; postcode?: string } => ({
+  ): { category?: string; postcode?: string; pro?: string } => ({
     category: typeof s.category === "string" ? s.category : undefined,
     postcode: typeof s.postcode === "string" ? s.postcode : undefined,
+    // Came from a professional's locked contact panel — send them back there.
+    pro: typeof s.pro === "string" ? s.pro : undefined,
   }),
   head: () => ({
     meta: [
@@ -36,6 +38,20 @@ function CustomerLoginPage() {
   const navigate = useNavigate();
   const intent = Route.useSearch();
   const hasIntent = !!(intent.category || intent.postcode);
+
+  // Land people back where they were trying to get to.
+  const goAfterAuth = () => {
+    if (intent.pro) {
+      navigate({ to: "/customer/pros/$publicId", params: { publicId: intent.pro } });
+    } else if (hasIntent) {
+      navigate({
+        to: "/customer/search",
+        search: { category: intent.category, postcode: intent.postcode },
+      });
+    } else {
+      navigate({ to: "/customer" });
+    }
+  };
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
@@ -60,11 +76,7 @@ function CustomerLoginPage() {
     setSubmitting(true);
     try {
       await customerLogin(parsed.data);
-      if (hasIntent) {
-        navigate({ to: "/customer/search", search: intent });
-      } else {
-        navigate({ to: "/customer" });
-      }
+      goAfterAuth();
     } catch {
       setFormError("Invalid email or password.");
       setSubmitting(false);

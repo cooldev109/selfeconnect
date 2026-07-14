@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { ProsService } from '../pros/pros.service';
-import { CreateReviewDto } from './dto/create-review.dto';
+import {
+  CreateReviewDto,
+  CreateAnonymousReviewDto,
+} from './dto/create-review.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
 import type { CustomerUser } from '../customer-auth/current-customer.decorator';
@@ -21,6 +24,15 @@ export class ReviewsController {
   @UseGuards(CustomerAuthGuard)
   create(@CurrentCustomer() c: CustomerUser, @Body() dto: CreateReviewDto) {
     return this.reviews.create(c.id, dto);
+  }
+
+  // Public: a review left by scanning the QR code. No account, no payment.
+  @Post('drivers/:publicId/reviews')
+  createAnonymous(
+    @Param('publicId') publicId: string,
+    @Body() dto: CreateAnonymousReviewDto,
+  ) {
+    return this.reviews.createAnonymous(publicId, dto);
   }
 
   // The signed-in professional's own received reviews + rating breakdown.

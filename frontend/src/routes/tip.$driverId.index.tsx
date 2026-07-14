@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BadgeCheck,
   ChevronDown,
+  Heart,
   Loader2,
   Lock,
   Sparkles,
@@ -17,16 +18,18 @@ import {
 } from "@/components/shared";
 import { useDriverPublic } from "@/hooks/useDriver";
 import { api, ApiError } from "@/lib/api";
+import { createAnonymousReview } from "@/lib/reviews";
 import { cn } from "@/lib/utils";
 import { TipPaymentModal } from "@/components/TipPaymentModal";
 
 export const Route = createFileRoute("/tip/$driverId/")({
   head: () => ({
     meta: [
-      { title: "Leave a tip — SelfeConnect" },
+      { title: "Leave a review — SelfeConnect" },
       {
         name: "description",
-        content: "Say thanks to your delivery driver in seconds.",
+        content:
+          "Rate the professional who did your job — free, in seconds. Tipping is optional.",
       },
     ],
   }),
@@ -34,91 +37,31 @@ export const Route = createFileRoute("/tip/$driverId/")({
 });
 
 const PRESETS = [
-  { value: 1, label: "£1", caption: "A coffee" },
-  { value: 2, label: "£2", caption: "Most popular" },
-  { value: 5, label: "£5", caption: "Generous" },
+  { value: 2, label: "£2" },
+  { value: 5, label: "£5" },
+  { value: 10, label: "£10" },
 ] as const;
-
-const COPY = {
-  EN: {
-    demo: "DEMO — no real payment is processed",
-    verified: "Verified driver",
-    deliveries: "deliveries",
-    rated: "rating",
-    title: (n: string) => `Say thanks to ${n}`,
-    subtitle: "Drivers keep 100% of every tip.",
-    choose: "Choose an amount",
-    most: "Most popular",
-    custom: "Other amount",
-    customPh: "e.g. 3.50",
-    rating: "How was your delivery?",
-    addPersonal: "Add a personal touch (optional)",
-    name: "Your name",
-    namePh: "e.g. Jane",
-    address: "Your address",
-    addressPh: "10 Downing Street",
-    message: "Message",
-    messagePh: "Thanks for the great delivery!",
-    cta: (n: string) => `Send tip · £${n}`,
-    ctaEmpty: "Choose an amount",
-    secure: "Secured by Stripe",
-    noFees: "No fees",
-    fast: "Takes 10 seconds",
-    payTitle: "Complete your tip",
-    payCta: "Pay",
-    payFail: "Payment failed. Please try again.",
-  },
-  PT: {
-    demo: "DEMO — nenhum pagamento real é processado",
-    verified: "Estafeta verificado",
-    deliveries: "entregas",
-    rated: "avaliação",
-    title: (n: string) => `Agradecer ao ${n}`,
-    subtitle: "Os estafetas ficam com 100% da gorjeta.",
-    choose: "Escolha um valor",
-    most: "Mais popular",
-    custom: "Outro valor",
-    customPh: "ex. 3,50",
-    rating: "Como foi a entrega?",
-    addPersonal: "Mensagem pessoal (opcional)",
-    name: "O seu nome",
-    namePh: "ex. Maria",
-    address: "A sua morada",
-    addressPh: "Rua Augusta 100",
-    message: "Mensagem",
-    messagePh: "Obrigado pela entrega!",
-    cta: (n: string) => `Enviar gorjeta · £${n}`,
-    ctaEmpty: "Escolha um valor",
-    secure: "Seguro com Stripe",
-    noFees: "Sem taxas",
-    fast: "Leva 10 segundos",
-    payTitle: "Concluir a gorjeta",
-    payCta: "Pagar",
-    payFail: "Pagamento falhou. Tente novamente.",
-  },
-};
 
 function TipPage() {
   const { driverId } = Route.useParams();
   const navigate = useNavigate();
   const { data: driver, isError } = useDriverPublic(driverId);
 
-  const [lang] = useState<"EN" | "PT">("EN");
-  const [preset, setPreset] = useState<number | null>(2);
-  const [custom, setCustom] = useState("");
-  const [rating, setRating] = useState(5);
+  // The review is the point. The tip is an extra, and starts at nothing.
+  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [preset, setPreset] = useState<number | null>(null);
+  const [custom, setCustom] = useState("");
   const [showPersonal, setShowPersonal] = useState(false);
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
-  const [payError, setPayError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [showPay, setShowPay] = useState(false);
 
-  const t = COPY[lang];
-  // Real Stripe is active when a publishable key is configured at build time.
   const LIVE = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
   const amount = useMemo(() => {
@@ -127,23 +70,48 @@ function TipPage() {
     if (preset) return preset;
     return 0;
   }, [preset, custom]);
-
   const amountLabel = amount.toFixed(2);
 
-  const goSuccess = () => {
-    if (!driver) return;
+  const goSuccess = (tipped: boolean) => {
     navigate({
       to: "/tip/$driverId/success",
       params: { driverId },
-      state: { amount, driverName: driver.name } as Record<string, unknown>,
+      state: {
+        amount: tipped ? amount : 0,
+        driverName: driver?.name ?? "",
+        reviewed: true,
+      } as Record<string, unknown>,
     });
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (amount <= 0 || !driver || submitting) return;
+  const onSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (rating < 1 || submitting) return;
     setSubmitting(true);
-    setPayError(null);
+    setError(null);
+    setNotice(null);
+
+    try {
+      // The review always goes first, and never depends on a payment. If the
+      // tip fails afterwards, the review still stands — which is the entire
+      // promise on the flyer.
+      await createAnonymousReview(driverId, {
+        rating,
+        comment: message.trim() || undefined,
+        authorName: name.trim() || undefined,
+      });
+    } catch {
+      setError("We couldn't post your review. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (amount <= 0) {
+      goSuccess(false);
+      return;
+    }
+
+    // They chose to tip as well.
     try {
       const res = await api<{ mock: boolean; clientSecret: string }>(
         `/drivers/${driverId}/tips`,
@@ -151,31 +119,25 @@ function TipPage() {
           method: "POST",
           body: JSON.stringify({
             amount: Math.round(amount * 100), // pence
-            rating,
             customerName: name.trim() || undefined,
-            customerAddress: address.trim() || undefined,
-            message: message.trim() || undefined,
           }),
         },
       );
       if (res.mock) {
-        goSuccess();
+        goSuccess(true);
         return;
       }
-      // Real Stripe: collect the card via the Payment Element.
       setClientSecret(res.clientSecret);
       setShowPay(true);
       setSubmitting(false);
     } catch (err) {
       const status = err instanceof ApiError ? err.status : 0;
-      setPayError(
+      // The professional hasn't finished payment setup — but the review is
+      // already saved, so say so rather than pretending the whole thing failed.
+      setNotice(
         status === 409
-          ? lang === "PT"
-            ? "Este estafeta ainda não está a aceitar gorjetas."
-            : "This driver isn't accepting tips yet."
-          : lang === "PT"
-            ? "Algo correu mal. Tente novamente."
-            : "Something went wrong. Please try again.",
+          ? "Your review is posted. This professional isn't set up to receive tips yet."
+          : "Your review is posted, but the tip couldn't be taken. Please try again.",
       );
       setSubmitting(false);
     }
@@ -184,14 +146,15 @@ function TipPage() {
   if (isError) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background p-6 text-center">
-        <h1 className="text-xl font-bold text-foreground font-display">
-          {lang === "PT" ? "Estafeta não encontrado" : "Driver not found"}
+        <h1 className="font-display text-xl font-bold text-foreground">
+          Professional not found
         </h1>
         <p className="text-sm text-muted-foreground">
-          {lang === "PT"
-            ? "Verifique o ID e tente novamente."
-            : "Please check the ID and try again."}
+          Please check the code and try again.
         </p>
+        <Link to="/" className="mt-2 text-sm font-semibold text-primary hover:underline">
+          Go to SelfeConnect
+        </Link>
       </main>
     );
   }
@@ -199,25 +162,18 @@ function TipPage() {
 
   return (
     <main className="min-h-screen bg-background pb-32">
-      {/* Demo banner */}
       <div
         className={cn(
-          "flex items-center justify-between gap-3 px-4 py-2 text-[11px] font-medium",
+          "px-4 py-2 text-center text-[11px] font-medium",
           LIVE ? "bg-muted/60 text-muted-foreground" : "bg-amber-100/90 text-amber-900",
         )}
       >
-        <span className="truncate">{LIVE ? t.secure : t.demo}</span>
+        {LIVE ? "Secured by Stripe" : "DEMO — no real payment is processed"}
       </div>
 
-      {/* Driver hero */}
-      <header className="relative overflow-hidden pb-20">
-        <div
-          className="absolute inset-0 scale-110 bg-cover bg-center"
-          style={{ backgroundImage: `url('${driver.vanPhotoUrl}')` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/65 to-foreground/95" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,oklch(0.63_0.115_168_/_0.35),transparent_60%)]" />
-
+      {/* Professional hero */}
+      <header className="relative overflow-hidden bg-ink pb-20">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-primary/25 blur-3xl" />
         <div className="relative flex flex-col items-center px-6 pt-10 text-center animate-fade-up">
           <div className="relative">
             <div className="absolute -inset-2 rounded-full bg-primary/30 blur-xl" />
@@ -232,116 +188,41 @@ function TipPage() {
               </span>
             )}
           </div>
-          <h1 className="mt-4 text-2xl font-bold text-white font-display">
+          <h1 className="mt-4 font-display text-2xl font-bold text-white">
             {driver.name}
           </h1>
-          <p className="mt-0.5 text-sm text-white/85">
-            {driver.company} · {driver.city}
-          </p>
-
-          <div className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 ring-1 ring-white/15 backdrop-blur-md">
-            <span className="flex items-center gap-1">
+          {(driver.company || driver.categoryNames?.length) && (
+            <p className="mt-0.5 text-sm text-white/85">
+              {driver.company || driver.categoryNames?.join(" · ")}
+            </p>
+          )}
+          {driver.ratingsCount > 0 && (
+            <div className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 ring-1 ring-white/15 backdrop-blur-md">
               <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
               {driver.rating.toFixed(1)}
               <span className="text-white/60">({driver.ratingsCount})</span>
-            </span>
-          </div>
-
-          <p className="mt-4 max-w-[280px] text-sm italic leading-relaxed text-white/85">
-            “{driver.tagline}”
-          </p>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Tip card (pulled up onto hero) */}
       <div className="relative z-10 mx-auto -mt-12 max-w-md px-4 animate-fade-up">
         <Card className="overflow-hidden rounded-3xl border-border/70 shadow-elevated">
           <CardContent className="p-6">
             <div className="text-center">
-              <h2 className="text-xl font-bold text-foreground font-display">
-                {t.title(driver.firstName)}
+              <h2 className="font-display text-xl font-bold text-foreground">
+                How was {driver.firstName}'s work?
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">{t.subtitle}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your review is free and takes seconds. No account needed.
+              </p>
             </div>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-6">
-              {/* Amount presets */}
+              {/* 1. The rating — the actual point of the page */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  {t.choose}
-                </label>
-                <div className="mt-3 grid grid-cols-3 gap-2.5">
-                  {PRESETS.map((p) => {
-                    const active = preset === p.value && !custom;
-                    return (
-                      <button
-                        key={p.value}
-                        type="button"
-                        onClick={() => {
-                          setPreset(p.value);
-                          setCustom("");
-                        }}
-                        className={cn(
-                          "group relative flex flex-col items-center justify-center rounded-2xl border-2 py-4 transition-all duration-150 active:scale-[0.97]",
-                          active
-                            ? "border-primary bg-primary text-primary-foreground shadow-elevated -translate-y-0.5"
-                            : "border-border bg-background text-foreground hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-soft",
-                        )}
-                      >
-                        <span className="text-xl font-bold font-display">
-                          {p.label}
-                        </span>
-                        <span
-                          className={cn(
-                            "mt-0.5 text-[10px] font-medium uppercase tracking-wider",
-                            active ? "text-primary-foreground/80" : "text-muted-foreground",
-                          )}
-                        >
-                          {p.caption}
-                        </span>
-                        {p.value === 2 && !active && (
-                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground shadow-soft">
-                            ★
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom amount */}
-                <div className="relative mt-3">
-                  <span
-                    className={cn(
-                      "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-semibold transition-colors",
-                      custom ? "text-foreground" : "text-muted-foreground/60",
-                    )}
-                  >
-                    £
-                  </span>
-                  <Input
-                    inputMode="decimal"
-                    placeholder={t.customPh}
-                    value={custom}
-                    onChange={(e) => {
-                      setCustom(e.target.value);
-                      setPreset(null);
-                    }}
-                    className={cn(
-                      "h-12 rounded-xl pl-8 text-base font-medium transition-colors",
-                      custom && "border-primary ring-2 ring-primary/20",
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Rating */}
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  {t.rating}
-                </label>
                 <div
-                  className="mt-2 flex items-center gap-1"
+                  className="flex items-center justify-center gap-1"
                   onMouseLeave={() => setHoverRating(0)}
                 >
                   {[1, 2, 3, 4, 5].map((s) => {
@@ -352,12 +233,12 @@ function TipPage() {
                         type="button"
                         onClick={() => setRating(s)}
                         onMouseEnter={() => setHoverRating(s)}
-                        aria-label={`${s} stars`}
+                        aria-label={`${s} star${s > 1 ? "s" : ""}`}
                         className="p-1 transition-transform active:scale-90"
                       >
                         <Star
                           className={cn(
-                            "h-8 w-8 transition-all duration-150",
+                            "h-10 w-10 transition-all duration-150",
                             filled
                               ? "fill-amber-400 text-amber-400 drop-shadow-[0_2px_6px_rgb(251_191_36_/_0.4)]"
                               : "text-muted-foreground/30",
@@ -369,7 +250,7 @@ function TipPage() {
                 </div>
               </div>
 
-              {/* Personal touch — collapsible to reduce friction */}
+              {/* 2. Optional words */}
               <div className="rounded-2xl bg-muted/50">
                 <button
                   type="button"
@@ -378,7 +259,7 @@ function TipPage() {
                 >
                   <span className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    {t.addPersonal}
+                    Add a few words (optional)
                   </span>
                   <ChevronDown
                     className={cn(
@@ -390,45 +271,104 @@ function TipPage() {
                 {showPersonal && (
                   <div className="space-y-3 px-4 pb-4 animate-fade-in">
                     <Input
-                      placeholder={t.namePh}
-                      aria-label={t.name}
+                      placeholder="Your name (e.g. Jane)"
+                      aria-label="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="h-11 rounded-xl bg-background"
-                    />
-                    <Input
-                      placeholder={t.addressPh}
-                      aria-label={t.address}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="h-11 rounded-xl bg-background"
+                      maxLength={120}
                     />
                     <Textarea
-                      placeholder={t.messagePh}
-                      aria-label={t.message}
+                      placeholder="What did they do, and how did it go?"
+                      aria-label="Your review"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       className="min-h-[80px] rounded-xl bg-background"
+                      maxLength={1000}
                     />
                   </div>
                 )}
+              </div>
+
+              {/* 3. The tip — genuinely optional, and off by default */}
+              <div className="rounded-2xl border border-border/70 p-4">
+                <div className="flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">
+                    Add a tip? <span className="font-normal text-muted-foreground">Optional</span>
+                  </p>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  100% goes to {driver.firstName}. Your review posts either way.
+                </p>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreset(null);
+                      setCustom("");
+                    }}
+                    className={cn(
+                      "rounded-xl border-2 py-2.5 text-sm font-bold transition",
+                      amount === 0
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/50",
+                    )}
+                  >
+                    No tip
+                  </button>
+                  {PRESETS.map((p) => {
+                    const active = preset === p.value && !custom;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => {
+                          setPreset(p.value);
+                          setCustom("");
+                        }}
+                        className={cn(
+                          "rounded-xl border-2 py-2.5 text-sm font-bold transition",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/50",
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="relative mt-2">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground/60">
+                    £
+                  </span>
+                  <Input
+                    inputMode="decimal"
+                    placeholder="Other amount"
+                    value={custom}
+                    onChange={(e) => {
+                      setCustom(e.target.value);
+                      setPreset(null);
+                    }}
+                    className={cn(
+                      "h-11 rounded-xl pl-7 text-sm",
+                      custom && "border-primary ring-2 ring-primary/20",
+                    )}
+                  />
+                </div>
               </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* Trust strip */}
         <div className="mt-4 flex items-center justify-center gap-4 text-[11px] font-medium text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <Lock className="h-3 w-3" />
-            {t.secure}
+            <Lock className="h-3 w-3" /> Secured by Stripe
           </span>
           <span className="h-1 w-1 rounded-full bg-border" />
-          <span>{t.noFees}</span>
-          <span className="h-1 w-1 rounded-full bg-border" />
-          <span>{t.fast}</span>
+          <span>Reviews are always free</span>
         </div>
-
         <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
           <Link to="/terms" className="underline hover:text-foreground">Terms</Link>
           <span className="h-1 w-1 rounded-full bg-border" />
@@ -436,35 +376,36 @@ function TipPage() {
         </div>
       </div>
 
-      {/* Sticky pay bar */}
+      {/* Sticky action */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/90 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto max-w-md">
-          {payError && (
+          {error && (
             <p className="mb-2 text-center text-xs font-medium text-destructive" role="alert">
-              {payError}
+              {error}
+            </p>
+          )}
+          {notice && (
+            <p className="mb-2 text-center text-xs font-medium text-primary" role="status">
+              {notice}
             </p>
           )}
           <Button
-            onClick={onSubmit}
-            disabled={amount <= 0 || submitting}
-            className={cn(
-              "h-13 w-full rounded-2xl text-base font-semibold shadow-elevated transition-all",
-              "bg-primary text-primary-foreground hover:bg-primary-hover",
-              "h-13 py-4 disabled:opacity-50",
-              amount > 0 && "hover:scale-[1.01]",
-            )}
+            onClick={() => onSubmit()}
+            disabled={rating < 1 || submitting}
+            className="h-13 w-full rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-elevated transition-all hover:bg-primary-hover disabled:opacity-50"
           >
             {submitting ? (
               <span className="inline-flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> …
+                <Loader2 className="h-4 w-4 animate-spin" /> Posting…
               </span>
+            ) : rating < 1 ? (
+              "Tap a star to rate"
             ) : amount > 0 ? (
-              <span key={amountLabel} className="inline-flex items-center gap-2 animate-fade-in">
-                <Lock className="h-4 w-4" />
-                {t.cta(amountLabel)}
+              <span className="inline-flex items-center gap-2">
+                <Lock className="h-4 w-4" /> Post review &amp; tip £{amountLabel}
               </span>
             ) : (
-              t.ctaEmpty
+              "Post review"
             )}
           </Button>
         </div>
@@ -474,9 +415,9 @@ function TipPage() {
         open={showPay}
         clientSecret={clientSecret}
         amountLabel={amountLabel}
-        title={t.payTitle}
-        payLabel={t.payCta}
-        errorLabel={t.payFail}
+        title="Complete your tip"
+        payLabel="Pay"
+        errorLabel="Payment failed. Your review is already posted."
         returnUrl={
           typeof window !== "undefined"
             ? `${window.location.origin}/tip/${driverId}/success`
@@ -486,7 +427,7 @@ function TipPage() {
           setShowPay(false);
           setSubmitting(false);
         }}
-        onPaid={goSuccess}
+        onPaid={() => goSuccess(true)}
       />
     </main>
   );

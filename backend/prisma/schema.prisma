@@ -203,11 +203,18 @@ model Job {
 // a customer can rate and review without paying (tip is a separate, optional
 // action). One review per customer per professional (re-submitting updates it).
 model Review {
-  id         String   @id @default(uuid())
-  driverId   String
-  driver     Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  // Null for a review left by scanning the QR code, where the customer has no
+  // account — which is the whole point of the QR: no app, no sign-up, seconds.
+  // A review with a customer attached is the one we can call "verified".
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  // What an anonymous reviewer chose to call themselves, if anything.
+  authorName String?
+
   // Optional link to the job the customer hired for — makes the review
   // "verified — hired on SelfeConnect".
   jobId String?
@@ -219,6 +226,8 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // One review per customer per professional. Postgres treats NULLs as
+  // distinct, so anonymous QR reviews are not limited by this.
   @@unique([driverId, customerId])
   @@index([driverId])
 }
