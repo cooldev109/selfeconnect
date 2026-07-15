@@ -104,9 +104,9 @@ export class DriversService {
       if (pc) {
         const g = await this.geo.geocode(pc);
         if (!g) throw new BadRequestException('invalid_postcode');
-        // Same launch-region rule as registration — a pro can't move their
+        // Same launch-radius rule as registration — a pro can't move their
         // location outside the area we serve.
-        if (!this.geo.isInServiceArea(g.districtCode)) {
+        if (!this.geo.isInServiceArea(g)) {
           throw new BadRequestException('outside_service_area');
         }
         data.postcode = pc;

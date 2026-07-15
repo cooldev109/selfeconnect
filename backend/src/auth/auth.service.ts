@@ -56,10 +56,10 @@ export class AuthService {
     const geo = await this.geo.geocode(postcode);
     if (!geo) throw new BadRequestException('invalid_postcode');
 
-    // We're launching in Berkshire first. A professional outside it can't be
-    // matched to any local work, so they're turned away here rather than paying
-    // for a dead area — the UI shows "we'll be expanding to your area soon".
-    if (!this.geo.isInServiceArea(geo.districtCode)) {
+    // Only professionals inside the launch radius can be matched to local work,
+    // so one outside it is turned away here rather than paying for a dead area —
+    // the UI shows "we'll be expanding to your area soon".
+    if (!this.geo.isInServiceArea(geo)) {
       throw new BadRequestException('outside_service_area');
     }
 
