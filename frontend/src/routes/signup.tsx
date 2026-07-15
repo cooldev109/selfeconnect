@@ -141,11 +141,10 @@ function SignupPage() {
       if (err instanceof ApiError && err.status === 409) {
         setErrors((e) => ({ ...e, email: "That email is already registered." }));
       } else if (msg === "outside_service_area") {
-        // We're launching in Berkshire first — turn them away gently.
+        // Outside the launch region — turn them away gently.
         setErrors((e) => ({
           ...e,
-          postcode:
-            "We're launching in Berkshire first — we'll be expanding to your area soon.",
+          postcode: "We'll be expanding to your area soon.",
         }));
       } else if (err instanceof ApiError && err.status === 400 && msg.includes("postcode")) {
         setErrors((e) => ({ ...e, postcode: "Enter a valid UK postcode." }));
