@@ -188,6 +188,15 @@ model Job {
   workingHours String? // e.g. "After 5:00 PM, 3 hours/day"
   budget       String? // free-text, e.g. "£15/hr"
 
+  // How many professionals may unlock this job's contact details. Null = no
+  // limit. Once the number of unlocks reaches it, the job reads "Quotes full"
+  // to other pros; the customer can raise it by editing the job.
+  maxContacts Int?
+
+  // The customer confirmed, when posting, that SelfeConnect may share their
+  // contact details with relevant professionals. Recorded for the audit trail.
+  contactConsentAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

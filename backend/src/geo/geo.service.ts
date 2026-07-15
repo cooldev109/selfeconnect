@@ -5,13 +5,26 @@ export interface GeoPoint {
   longitude: number;
 }
 
+// The launch service area. Berkshire has no county council (abolished 1998), so
+// it can't be matched on county — it is these six unitary authorities, matched
+// by their stable ONS codes rather than names (names get re-spelled; codes never
+// change). Expanding to a new county later is just adding its codes here.
+const SERVICE_AREA_DISTRICT_CODES = new Set<string>([
+  'E06000036', // Bracknell Forest
+  'E06000037', // West Berkshire
+  'E06000038', // Reading
+  'E06000039', // Slough
+  'E06000040', // Windsor and Maidenhead
+  'E06000041', // Wokingham
+]);
+
 @Injectable()
 export class GeoService {
   // Normalize a UK postcode and geocode it via the free postcodes.io service.
   // Returns null for empty/invalid postcodes so callers can decide how to react.
   async geocode(
     postcode: string,
-  ): Promise<(GeoPoint & { district?: string }) | null> {
+  ): Promise<(GeoPoint & { district?: string; districtCode?: string }) | null> {
     const pc = (postcode || '').toUpperCase().replace(/\s+/g, '');
     if (!pc) return null;
     try {
@@ -24,6 +37,7 @@ export class GeoService {
           latitude?: number;
           longitude?: number;
           admin_district?: string;
+          codes?: { admin_district?: string };
         };
       };
       const r = data?.result;
@@ -38,10 +52,17 @@ export class GeoService {
         latitude: r.latitude,
         longitude: r.longitude,
         district: r.admin_district,
+        districtCode: r.codes?.admin_district,
       };
     } catch {
       return null;
     }
+  }
+
+  // Is this council area one we've launched in? Used to gate professional
+  // registration to the launch region.
+  isInServiceArea(districtCode?: string): boolean {
+    return !!districtCode && SERVICE_AREA_DISTRICT_CODES.has(districtCode);
   }
 
   // Type-ahead suggestions for a partial postcode. This is what makes the

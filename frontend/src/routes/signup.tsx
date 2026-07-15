@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
@@ -134,15 +134,20 @@ function SignupPage() {
       if (file) await uploadPhoto(file).catch(() => undefined);
       navigate({ to: "/jobs" });
     } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? String((err.body as { message?: string })?.message ?? "")
+          : "";
       if (err instanceof ApiError && err.status === 409) {
         setErrors((e) => ({ ...e, email: "That email is already registered." }));
-      } else if (
-        err instanceof ApiError &&
-        err.status === 400 &&
-        String((err.body as { message?: string })?.message ?? "").includes(
-          "postcode",
-        )
-      ) {
+      } else if (msg === "outside_service_area") {
+        // We're launching in Berkshire first — turn them away gently.
+        setErrors((e) => ({
+          ...e,
+          postcode:
+            "We're launching in Berkshire first — we'll be expanding to your area soon.",
+        }));
+      } else if (err instanceof ApiError && err.status === 400 && msg.includes("postcode")) {
         setErrors((e) => ({ ...e, postcode: "Enter a valid UK postcode." }));
       } else {
         setFormError("Something went wrong. Please try again.");
@@ -180,6 +185,9 @@ function SignupPage() {
 
       <section className="bg-background px-6 py-10">
         <div className="mx-auto max-w-md">
+          <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Link>
           <h1 className="text-2xl font-bold text-foreground font-display">Create your account</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Start collecting reviews &amp; tips today.

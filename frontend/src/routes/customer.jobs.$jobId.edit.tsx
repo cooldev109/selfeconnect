@@ -35,6 +35,7 @@ function EditJobPage() {
             ) : job ? (
               <JobForm
                 submitLabel="Save changes"
+                showConsent={false}
                 initial={{
                   categorySlug: job.categorySlug,
                   title: job.title,
@@ -44,6 +45,7 @@ function EditJobPage() {
                   workingDays: job.workingDays,
                   workingHours: job.workingHours ?? undefined,
                   budget: job.budget ?? undefined,
+                  maxContacts: job.maxContacts,
                 }}
                 onSubmit={async (input) => {
                   await updateJob(jobId, input);

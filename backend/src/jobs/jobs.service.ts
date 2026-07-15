@@ -13,6 +13,7 @@ import { UpdateJobDto } from './dto/update-job.dto';
 const jobInclude = {
   category: true,
   hiredDriver: { select: { publicId: true, name: true, company: true } },
+  _count: { select: { unlocks: true } },
 } satisfies Prisma.JobInclude;
 type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
@@ -57,11 +58,18 @@ export class JobsService {
       hiredDriverName: j.hiredDriver
         ? j.hiredDriver.company || j.hiredDriver.name
         : null,
+      // Quote cap, and how much of it is used, so the customer sees "3 of 10".
+      maxContacts: j.maxContacts ?? null,
+      contactCount: j._count.unlocks,
       createdAt: j.createdAt.toISOString(),
     };
   }
 
   async create(customerId: string, dto: CreateJobDto) {
+    // Posting requires the customer to authorise sharing their contact details.
+    if (dto.contactConsent !== true) {
+      throw new BadRequestException('consent_required');
+    }
     const categoryId = await this.resolveCategoryId(dto.categorySlug);
     const geo = await this.geocodeOrThrow(dto.postcode.trim());
     const job = await this.prisma.job.create({
@@ -77,6 +85,8 @@ export class JobsService {
         workingDays: dto.workingDays ?? [],
         workingHours: dto.workingHours?.trim(),
         budget: dto.budget?.trim(),
+        maxContacts: dto.maxContacts ?? null,
+        contactConsentAt: new Date(),
       },
       include: jobInclude,
     });
@@ -123,6 +133,7 @@ export class JobsService {
     if (dto.workingDays !== undefined) data.workingDays = dto.workingDays;
     if (dto.workingHours !== undefined) data.workingHours = dto.workingHours?.trim();
     if (dto.budget !== undefined) data.budget = dto.budget?.trim();
+    if (dto.maxContacts !== undefined) data.maxContacts = dto.maxContacts;
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.hiredDriverPublicId !== undefined) {
       if (dto.hiredDriverPublicId) {
@@ -196,11 +207,15 @@ export class JobsService {
 
   private shapePro(
     j: Prisma.JobGetPayload<{
-      include: { category: true; customer: true };
+      include: { category: true; customer: true; _count: { select: { unlocks: true } } };
     }>,
     distanceMiles: number | null,
     unlocked: boolean,
   ) {
+    // "Full" only matters to a pro who hasn't already unlocked it — someone who
+    // reached out earlier keeps their access even after the cap is reached.
+    const quotesFull =
+      !unlocked && j.maxContacts != null && j._count.unlocks >= j.maxContacts;
     return {
       id: j.id,
       title: j.title,
@@ -214,6 +229,7 @@ export class JobsService {
       budget: j.budget ?? null,
       createdAt: j.createdAt.toISOString(),
       unlocked,
+      quotesFull,
       // Contact is only ever populated once the pro has unlocked it.
       contact: unlocked
         ? {
@@ -251,6 +267,7 @@ export class JobsService {
         category: true,
         customer: true,
         unlocks: { where: { driverId }, select: { id: true } },
+        _count: { select: { unlocks: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -288,13 +305,29 @@ export class JobsService {
 
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { category: true, customer: true },
+      include: {
+        category: true,
+        customer: true,
+        _count: { select: { unlocks: true } },
+        unlocks: { where: { driverId }, select: { id: true } },
+      },
     });
     // Only jobs in the pro's categories are visible/unlockable.
     if (!job || !driver.categories.some((c) => c.id === job.categoryId)) {
       throw new NotFoundException('job_not_found');
     }
     if (!driver.isActive) throw new ForbiddenException('subscription_required');
+
+    // Respect the customer's quote cap — but never block a pro who already
+    // unlocked this job (their upsert below is a no-op, so let them through).
+    const alreadyUnlocked = job.unlocks.length > 0;
+    if (
+      !alreadyUnlocked &&
+      job.maxContacts != null &&
+      job._count.unlocks >= job.maxContacts
+    ) {
+      throw new ForbiddenException('quotes_full');
+    }
 
     await this.prisma.jobContactUnlock.upsert({
       where: { jobId_driverId: { jobId, driverId } },

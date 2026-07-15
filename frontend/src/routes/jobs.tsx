@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, MapPin, Lock, Mail, Phone, Sparkles } from "lucide-react";
+import { Loader2, MapPin, Lock, Mail, Phone, Sparkles, Clock } from "lucide-react";
+import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategorySelect } from "@/components/CategoryPicker";
@@ -173,6 +174,9 @@ function JobCard({
           </span>
           {job.budget && <span>{job.budget}</span>}
           {job.workingHours && <span>{job.workingHours}</span>}
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
+          </span>
         </div>
 
         {job.unlocked && job.contact ? (
@@ -197,6 +201,12 @@ function JobCard({
             {job.contact.addressLine && (
               <p className="mt-1 text-muted-foreground">{job.contact.addressLine}</p>
             )}
+          </div>
+        ) : job.quotesFull ? (
+          // The customer capped how many pros can reach them, and it's reached.
+          <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-sm font-medium text-muted-foreground">
+            <Lock className="h-4 w-4" /> Quotes full — this customer has enough
+            responses
           </div>
         ) : isActive ? (
           <Button

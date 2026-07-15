@@ -10,7 +10,10 @@ import {
   Check,
   BadgeCheck,
   Star,
+  Clock,
+  Users,
 } from "lucide-react";
+import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
 import {
@@ -125,6 +128,34 @@ function JobMeta({ job }: { job: Job }) {
         <MapPin className="h-3.5 w-3.5" /> {job.postcode}
       </span>
       {job.budget && <span>{job.budget}</span>}
+      <span className="inline-flex items-center gap-1">
+        <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
+      </span>
+    </div>
+  );
+}
+
+// "3 of 10 professionals have been in touch" — so the customer knows how much of
+// their quote limit is used, and whether to raise it.
+function QuoteUsage({ job }: { job: Job }) {
+  const limit = job.maxContacts;
+  return (
+    <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-secondary/60 px-2.5 py-1 text-xs text-muted-foreground">
+      <Users className="h-3.5 w-3.5 text-primary" />
+      {limit == null ? (
+        <span>
+          <span className="font-semibold text-foreground">{job.contactCount}</span>{" "}
+          professional{job.contactCount === 1 ? "" : "s"} in touch · no limit
+        </span>
+      ) : (
+        <span>
+          <span className="font-semibold text-foreground">
+            {job.contactCount} of {limit}
+          </span>{" "}
+          professionals in touch
+          {job.contactCount >= limit && " · limit reached"}
+        </span>
+      )}
     </div>
   );
 }
@@ -169,6 +200,7 @@ function OpenJobCard({ job }: { job: Job }) {
               {job.description}
             </p>
             <JobMeta job={job} />
+            <QuoteUsage job={job} />
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button

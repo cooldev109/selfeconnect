@@ -18,20 +18,25 @@ export function CategoryMultiSelect({
   value,
   onChange,
   error,
+  max = 3,
 }: {
   value: string[];
   onChange: (slugs: string[]) => void;
   error?: string;
+  /** Most trades a professional may list. */
+  max?: number;
 }) {
   const cats = useCategoryList();
   const [query, setQuery] = useState("");
 
-  const toggle = (slug: string) =>
-    onChange(
-      value.includes(slug)
-        ? value.filter((s) => s !== slug)
-        : [...value, slug],
-    );
+  const atMax = value.length >= max;
+  const toggle = (slug: string) => {
+    if (value.includes(slug)) {
+      onChange(value.filter((s) => s !== slug));
+    } else if (!atMax) {
+      onChange([...value, slug]);
+    }
+  };
 
   const selected = cats.filter((c) => value.includes(c.slug));
   const filtered = useMemo(
@@ -67,7 +72,13 @@ export function CategoryMultiSelect({
         />
       </div>
 
-      <div className="mt-2 flex max-h-44 flex-wrap gap-2 overflow-y-auto rounded-xl border border-border/60 bg-secondary/30 p-2.5">
+      {/* Once the cap is reached the list dims and stops accepting picks —
+          clearer than letting someone tap and silently get nothing. */}
+      <div
+        className={`mt-2 flex max-h-44 flex-wrap gap-2 overflow-y-auto rounded-xl border border-border/60 bg-secondary/30 p-2.5 ${
+          atMax ? "pointer-events-none opacity-50" : ""
+        }`}
+      >
         {filtered.length === 0 ? (
           <p className="px-1 py-2 text-xs text-muted-foreground">
             {query ? "No services match that search." : "All services selected."}
@@ -86,7 +97,20 @@ export function CategoryMultiSelect({
         )}
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        {value.length} selected
+        {value.length} of {max} selected
+        {atMax && " — that's the maximum"}
+      </p>
+
+      {/* #5 — a way out when their trade isn't in the catalogue. */}
+      <p className="mt-1 text-xs text-muted-foreground">
+        Can't find your trade?{" "}
+        <a
+          href="mailto:support@selfeconnect.com?subject=Please%20add%20my%20trade"
+          className="font-medium text-primary hover:underline"
+        >
+          Let us know
+        </a>{" "}
+        and we'll add it.
       </p>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>

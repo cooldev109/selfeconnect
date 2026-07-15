@@ -43,9 +43,10 @@ export class UpdateDriverDto {
   @MaxLength(12)
   postcode?: string;
 
+  // Up to three trades per professional — see SignupDto for the reasoning.
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(20)
+  @ArrayMaxSize(3)
   @IsString({ each: true })
   categorySlugs?: string[];
 }

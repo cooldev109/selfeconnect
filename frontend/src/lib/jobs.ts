@@ -16,6 +16,10 @@ export interface Job {
   budget: string | null;
   hiredDriverPublicId: string | null;
   hiredDriverName: string | null;
+  /** How many professionals may unlock contact. null = no limit. */
+  maxContacts: number | null;
+  /** How many have unlocked so far — the "X" in "X of 10". */
+  contactCount: number;
   createdAt: string;
 }
 
@@ -35,6 +39,10 @@ export interface JobInput {
   workingDays?: string[];
   workingHours?: string;
   budget?: string;
+  /** null = no limit on how many professionals may contact them. */
+  maxContacts?: number | null;
+  /** Required true on create — authorises sharing contact with professionals. */
+  contactConsent?: boolean;
 }
 
 export const createJob = (b: JobInput) =>
@@ -49,6 +57,7 @@ export const updateJob = (
   b: Partial<JobInput> & {
     status?: "open" | "closed";
     hiredDriverPublicId?: string | null;
+    maxContacts?: number | null;
   },
 ) => api<Job>(`/jobs/${id}`, { method: "PATCH", body: JSON.stringify(b) });
 
@@ -78,6 +87,8 @@ export interface ProJob {
   budget: string | null;
   createdAt: string;
   unlocked: boolean;
+  /** True when the customer's quote limit is reached and this pro hasn't unlocked. */
+  quotesFull: boolean;
   contact: ProJobContact | null;
 }
 

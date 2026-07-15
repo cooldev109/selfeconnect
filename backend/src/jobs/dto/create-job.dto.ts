@@ -1,11 +1,15 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
+  IsInt,
   IsOptional,
-  IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
+  IsString,
 } from 'class-validator';
 
 export const WEEK_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -49,4 +53,19 @@ export class CreateJobDto {
   @IsString()
   @MaxLength(60)
   budget?: string;
+
+  // How many professionals may unlock the customer's contact details. Omitted
+  // or null = no limit. Capped at 50 so a "limit" can't be a de-facto free-for-all.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  maxContacts?: number | null;
+
+  // The customer must tick this to post — it authorises sharing their contact
+  // details with relevant professionals. Enforced in the service, not just here,
+  // so a missing value gives a clear message rather than a generic 400.
+  @IsOptional()
+  @IsBoolean()
+  contactConsent?: boolean;
 }

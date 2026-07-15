@@ -36,9 +36,12 @@ export class SignupDto {
   @MaxLength(12)
   postcode?: string;
 
+  // A professional may list up to three trades — enough to cover related work
+  // (e.g. Cleaner + Handyman + Man & Van) without turning a profile into a
+  // catch-all that means nothing to a customer.
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(20)
+  @ArrayMaxSize(3)
   @IsString({ each: true })
   categorySlugs?: string[];
 }

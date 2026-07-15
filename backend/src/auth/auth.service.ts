@@ -48,12 +48,19 @@ export class AuthService {
     if (existing) throw new ConflictException('email_taken');
 
     // Geocode the postcode up front so an invalid one is rejected before we
-    // create the account (the pro can then fix it).
+    // create the account (the pro can then fix it). A professional must give a
+    // postcode: it's how customers find them, and it's what the launch-region
+    // check reads.
     const postcode = dto.postcode?.trim();
-    let geo: { latitude: number; longitude: number } | null = null;
-    if (postcode) {
-      geo = await this.geo.geocode(postcode);
-      if (!geo) throw new BadRequestException('invalid_postcode');
+    if (!postcode) throw new BadRequestException('postcode_required');
+    const geo = await this.geo.geocode(postcode);
+    if (!geo) throw new BadRequestException('invalid_postcode');
+
+    // We're launching in Berkshire first. A professional outside it can't be
+    // matched to any local work, so they're turned away here rather than paying
+    // for a dead area — the UI shows "we'll be expanding to your area soon".
+    if (!this.geo.isInServiceArea(geo.districtCode)) {
+      throw new BadRequestException('outside_service_area');
     }
 
     // Resolve occupation slugs -> category ids; reject any unknown/inactive.

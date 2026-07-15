@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Search } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/pro-tradesman.jpg";
@@ -116,6 +116,9 @@ function CustomerLoginPage() {
       <section className="relative flex items-center justify-center overflow-hidden bg-background px-6 py-12">
         <div className="absolute inset-0 -z-10 bg-mesh opacity-70" />
         <div className="w-full max-w-md animate-fade-up">
+          <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Link>
           <Link
             to="/"
             className="mx-auto mb-7 flex w-fit items-center gap-2 lg:hidden"

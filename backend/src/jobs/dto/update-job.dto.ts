@@ -2,10 +2,13 @@ import {
   ArrayMaxSize,
   IsArray,
   IsIn,
+  IsInt,
   IsOptional,
-  IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
+  IsString,
 } from 'class-validator';
 import { WEEK_DAYS } from './create-job.dto';
 
@@ -52,6 +55,13 @@ export class UpdateJobDto {
   @IsString()
   @MaxLength(60)
   budget?: string;
+
+  // Raise (or lower) the quote limit on an existing job. Null clears the limit.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  maxContacts?: number | null;
 
   @IsOptional()
   @IsIn(['open', 'closed'])

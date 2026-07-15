@@ -28,14 +28,25 @@ type FieldErrors = Partial<
   >
 >;
 
+// How many professionals may contact the customer. null = no limit.
+const QUOTE_OPTIONS: { value: number | null; label: string }[] = [
+  { value: 5, label: "Up to 5 quotes" },
+  { value: 10, label: "Up to 10 quotes" },
+  { value: 20, label: "Up to 20 quotes" },
+  { value: null, label: "No limit" },
+];
+
 export function JobForm({
   initial,
   submitLabel,
   onSubmit,
+  showConsent = true,
 }: {
   initial?: Partial<JobInput>;
   submitLabel: string;
   onSubmit: (input: JobInput) => Promise<void>;
+  /** Consent is asked at creation; on edit it's already been given, so hide it. */
+  showConsent?: boolean;
 }) {
   const [categorySlug, setCategorySlug] = useState(initial?.categorySlug ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -47,6 +58,12 @@ export function JobForm({
   );
   const [workingHours, setWorkingHours] = useState(initial?.workingHours ?? "");
   const [budget, setBudget] = useState(initial?.budget ?? "");
+  // Default to 10 — Raul's suggestion, enough choice without a flood of quotes.
+  const [maxContacts, setMaxContacts] = useState<number | null>(
+    initial?.maxContacts !== undefined ? initial.maxContacts : 10,
+  );
+  const [consent, setConsent] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -76,11 +93,21 @@ export function JobForm({
       setErrors(fe);
       return;
     }
+    if (showConsent && !consent) {
+      setConsentError(true);
+      return;
+    }
     setErrors({});
+    setConsentError(false);
     setFormError(null);
     setBusy(true);
     try {
-      await onSubmit({ ...parsed.data, workingDays });
+      await onSubmit({
+        ...parsed.data,
+        workingDays,
+        maxContacts,
+        ...(showConsent ? { contactConsent: true } : {}),
+      });
     } catch (err) {
       if (
         err instanceof ApiError &&
@@ -105,6 +132,16 @@ export function JobForm({
         {errors.categorySlug && (
           <p className="mt-1 text-xs text-destructive">{errors.categorySlug}</p>
         )}
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Can't find the service you need?{" "}
+          <a
+            href="mailto:support@selfeconnect.com?subject=Please%20add%20a%20service"
+            className="font-medium text-primary hover:underline"
+          >
+            Let us know
+          </a>
+          .
+        </p>
       </div>
 
       <label className="block">
@@ -215,6 +252,55 @@ export function JobForm({
           maxLength={120}
         />
       </label>
+
+      {/* #6 — how many professionals may get in touch. */}
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium text-foreground">
+          How many professionals may contact you?
+        </span>
+        <select
+          value={maxContacts === null ? "none" : String(maxContacts)}
+          onChange={(e) =>
+            setMaxContacts(e.target.value === "none" ? null : Number(e.target.value))
+          }
+          className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-primary"
+        >
+          {QUOTE_OPTIONS.map((o) => (
+            <option key={o.label} value={o.value === null ? "none" : o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-muted-foreground">
+          Once this many have been in touch, no more can see your details. You can
+          raise it any time by editing the job.
+        </span>
+      </label>
+
+      {/* #7 — consent to share contact details (create only). */}
+      {showConsent && (
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border/70 bg-secondary/30 p-3">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => {
+              setConsent(e.target.checked);
+              if (e.target.checked) setConsentError(false);
+            }}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+          />
+          <span className="text-xs leading-relaxed text-foreground/90">
+            I authorise SelfeConnect to share my contact details (name, phone and
+            email) with the professionals I've chosen to allow, so they can quote
+            for this job.
+            {consentError && (
+              <span className="mt-1 block font-medium text-destructive">
+                Please tick this to post your job.
+              </span>
+            )}
+          </span>
+        </label>
+      )}
 
       {formError && (
         <p className="text-sm text-destructive" role="alert">
