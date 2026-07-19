@@ -30,6 +30,14 @@ enum TipStatus {
   refunded
 }
 
+// A QR transaction is either a gratuity (tip) or a direct payment for work. Same
+// rails — 100% to the professional — but tracked apart so their earnings can
+// show the two separately.
+enum TipType {
+  tip
+  payment
+}
+
 enum JobStatus {
   open
   closed
@@ -96,7 +104,8 @@ model Tip {
 
   amount   Int // pence
   currency String    @default("gbp")
-  rating   Int? // 1..5
+  type     TipType   @default(tip)
+  rating   Int? // 1..5 — only meaningful for a tip; a payment carries no review
   status   TipStatus @default(pending)
 
   customerName    String?

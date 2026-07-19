@@ -16,6 +16,13 @@ export interface DayBucket {
   total: number;
 }
 
+export interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+  customerName?: string;
+}
+
 export interface TipsSummary {
   tips: Tip[];
   total: number;
@@ -24,6 +31,10 @@ export interface TipsSummary {
   perDay: DayBucket[];
   bestDay: DayBucket;
   fiveStarStreak: number;
+  // Direct payments (money for work), kept separate from tips.
+  payments: Payment[];
+  paymentTotal: number;
+  paymentCount: number;
 }
 
 // Safe defaults so the dashboard renders (flat chart, zeroed stats) while the
@@ -36,6 +47,9 @@ const EMPTY: TipsSummary = {
   perDay: Array.from({ length: 14 }, () => ({ day: "", total: 0 })),
   bestDay: { day: "", total: 0 },
   fiveStarStreak: 0,
+  payments: [],
+  paymentTotal: 0,
+  paymentCount: 0,
 };
 
 // Real dashboard data for the signed-in driver (GET /me/tips). Amounts arrive

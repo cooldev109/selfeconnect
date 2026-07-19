@@ -1,10 +1,24 @@
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateTipDto {
   @IsInt()
   @Min(50) // £0.50
-  @Max(50000) // £500
+  @Max(200000) // £2,000 — covers job payments, not just tips
   amount!: number; // pence
+
+  // 'tip' (default) or 'payment'. A payment is money for work done; a tip is a
+  // gratuity. Same money movement, tracked separately.
+  @IsOptional()
+  @IsIn(['tip', 'payment'])
+  type?: 'tip' | 'payment';
 
   @IsOptional()
   @IsInt()

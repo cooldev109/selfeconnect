@@ -41,13 +41,25 @@ const PRESETS = [
   { value: 5, label: "£5" },
   { value: 10, label: "£10" },
 ] as const;
+// Payments are for work done, so the quick amounts are bigger; the box is the
+// primary way to enter an exact figure.
+const PAY_PRESETS = [
+  { value: 20, label: "£20" },
+  { value: 50, label: "£50" },
+  { value: 100, label: "£100" },
+] as const;
+
+type Mode = "tip" | "payment";
 
 function TipPage() {
   const { driverId } = Route.useParams();
   const navigate = useNavigate();
   const { data: driver, isError } = useDriverPublic(driverId);
 
-  // The review is the point. The tip is an extra, and starts at nothing.
+  // Two things this QR does: leave a review (+ optional tip), or pay the
+  // professional directly. Tip is the default and the original flow.
+  const [mode, setMode] = useState<Mode>("tip");
+  // The review is the point of the tip flow. The tip is an extra, off by default.
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [preset, setPreset] = useState<number | null>(null);
@@ -55,6 +67,17 @@ function TipPage() {
   const [showPersonal, setShowPersonal] = useState(false);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+
+  // Switching tabs clears the amount so a £2 tip preset can't leak into a
+  // payment (and vice-versa).
+  const switchMode = (m: Mode) => {
+    if (m === mode) return;
+    setMode(m);
+    setPreset(null);
+    setCustom("");
+    setError(null);
+    setNotice(null);
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,21 +95,60 @@ function TipPage() {
   }, [preset, custom]);
   const amountLabel = amount.toFixed(2);
 
-  const goSuccess = (tipped: boolean) => {
+  const goSuccess = (paid: boolean, kind: Mode = "tip") => {
     navigate({
       to: "/tip/$driverId/success",
       params: { driverId },
       state: {
-        amount: tipped ? amount : 0,
+        amount: paid ? amount : 0,
         driverName: driver?.name ?? "",
-        reviewed: true,
+        kind,
+        reviewed: kind === "tip",
       } as Record<string, unknown>,
     });
   };
 
+  // Payment flow: no review, just money for work. Straight to Stripe.
+  const onSubmitPayment = async () => {
+    if (amount <= 0 || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await api<{ mock: boolean; clientSecret: string }>(
+        `/drivers/${driverId}/tips`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            amount: Math.round(amount * 100), // pence
+            type: "payment",
+            customerName: name.trim() || undefined,
+          }),
+        },
+      );
+      if (res.mock) {
+        goSuccess(true, "payment");
+        return;
+      }
+      setClientSecret(res.clientSecret);
+      setShowPay(true);
+      setSubmitting(false);
+    } catch (err) {
+      const status = err instanceof ApiError ? err.status : 0;
+      setError(
+        status === 409
+          ? "This professional isn't set up to take payments yet."
+          : "We couldn't start the payment. Please try again.",
+      );
+      setSubmitting(false);
+    }
+  };
+
   const onSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (rating < 1 || submitting) return;
+    if (submitting) return;
+    if (mode === "payment") return onSubmitPayment();
+    if (rating < 1) return;
     setSubmitting(true);
     setError(null);
     setNotice(null);
@@ -216,6 +278,27 @@ function TipPage() {
       <div className="relative z-10 mx-auto -mt-12 max-w-md px-4 animate-fade-up">
         <Card className="overflow-hidden rounded-3xl border-border/70 shadow-elevated">
           <CardContent className="p-6">
+            {/* Tip / Payment — two things this QR can do. */}
+            <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-muted/70 p-1">
+              {(["tip", "payment"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => switchMode(m)}
+                  className={cn(
+                    "rounded-xl py-2.5 text-sm font-semibold capitalize transition",
+                    mode === m
+                      ? "bg-background text-foreground shadow-soft"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+
+            {mode === "tip" && (
+            <>
             <div className="text-center">
               <h2 className="font-display text-xl font-bold text-foreground">
                 How was {driver.firstName}'s work?
@@ -366,6 +449,93 @@ function TipPage() {
                 </div>
               </div>
             </form>
+            </>
+            )}
+
+            {mode === "payment" && (
+            <div className="animate-fade-in">
+              <div className="text-center">
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  Make a payment to {driver.firstName}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Choose the amount you'd like to pay.
+                </p>
+              </div>
+
+              {/* Amount — the box is primary; the chips just fill it quickly. */}
+              <div className="mt-6">
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground/70">
+                    £
+                  </span>
+                  <Input
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    aria-label="Payment amount"
+                    value={custom}
+                    onChange={(e) => {
+                      setCustom(e.target.value);
+                      setPreset(null);
+                    }}
+                    className={cn(
+                      "h-14 rounded-2xl pl-9 text-xl font-bold",
+                      amount > 0 && "border-primary ring-2 ring-primary/20",
+                    )}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {PAY_PRESETS.map((p) => {
+                    const active = preset === p.value && !custom;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => {
+                          setPreset(p.value);
+                          setCustom("");
+                        }}
+                        className={cn(
+                          "rounded-xl border-2 py-2.5 text-sm font-bold transition",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/50",
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Optional: who's paying, so it shows in the pro's records. */}
+              <div className="mt-4">
+                <Input
+                  placeholder="Your name (optional)"
+                  aria-label="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11 rounded-xl bg-background"
+                  maxLength={120}
+                />
+              </div>
+
+              {/* The disclaimer — read right before paying. */}
+              <div className="mt-4 rounded-2xl border border-border/70 bg-muted/50 p-4">
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  You're paying{" "}
+                  <span className="font-semibold text-foreground">
+                    {driver.name}
+                  </span>{" "}
+                  directly. SelfeConnect only provides the tool to process this
+                  payment — we're not a party to your agreement and aren't
+                  responsible for the service, its quality, or any refund. Please
+                  make sure you're happy with what you've agreed before paying.
+                </p>
+              </div>
+            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -374,7 +544,7 @@ function TipPage() {
             <Lock className="h-3 w-3" /> Secured by Stripe
           </span>
           <span className="h-1 w-1 rounded-full bg-border" />
-          <span>Reviews are always free</span>
+          <span>{mode === "payment" ? "100% goes to your professional" : "Reviews are always free"}</span>
         </div>
         <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
           <Link to="/terms" className="underline hover:text-foreground">Terms</Link>
@@ -398,13 +568,22 @@ function TipPage() {
           )}
           <Button
             onClick={() => onSubmit()}
-            disabled={rating < 1 || submitting}
+            disabled={(mode === "payment" ? amount <= 0 : rating < 1) || submitting}
             className="h-13 w-full rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-elevated transition-all hover:bg-primary-hover disabled:opacity-50"
           >
             {submitting ? (
               <span className="inline-flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Posting…
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {mode === "payment" ? "Processing…" : "Posting…"}
               </span>
+            ) : mode === "payment" ? (
+              amount > 0 ? (
+                <span className="inline-flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Pay £{amountLabel}
+                </span>
+              ) : (
+                "Enter an amount"
+              )
             ) : rating < 1 ? (
               "Tap a star to rate"
             ) : amount > 0 ? (
@@ -422,9 +601,13 @@ function TipPage() {
         open={showPay}
         clientSecret={clientSecret}
         amountLabel={amountLabel}
-        title="Complete your tip"
+        title={mode === "payment" ? "Complete your payment" : "Complete your tip"}
         payLabel="Pay"
-        errorLabel="Payment failed. Your review is already posted."
+        errorLabel={
+          mode === "payment"
+            ? "Payment failed. Please try again."
+            : "Payment failed. Your review is already posted."
+        }
         returnUrl={
           typeof window !== "undefined"
             ? `${window.location.origin}/tip/${driverId}/success`
@@ -434,7 +617,7 @@ function TipPage() {
           setShowPay(false);
           setSubmitting(false);
         }}
-        onPaid={() => goSuccess(true)}
+        onPaid={() => goSuccess(true, mode)}
       />
     </main>
   );

@@ -25,11 +25,12 @@ export class TipsService {
       throw new ConflictException('not_accepting');
     }
 
+    const type = dto.type ?? 'tip';
     const intent = await this.stripe.createTipPaymentIntent({
       amount: dto.amount,
       currency: 'gbp',
       destinationAccountId: driver.stripeAccountId,
-      metadata: { driverId: driver.id, publicId },
+      metadata: { driverId: driver.id, publicId, type },
     });
 
     const tip = await this.prisma.tip.create({
@@ -37,7 +38,9 @@ export class TipsService {
         driverId: driver.id,
         amount: dto.amount,
         currency: 'gbp',
-        rating: dto.rating ?? null,
+        type,
+        // A payment carries no review, so never store a rating against one.
+        rating: type === 'payment' ? null : (dto.rating ?? null),
         customerName: dto.customerName ?? null,
         customerAddress: dto.customerAddress ?? null,
         message: dto.message ?? null,
@@ -58,11 +61,25 @@ export class TipsService {
   // Dashboard summary for the signed-in driver. Amounts are returned in pounds
   // (DB stores pence) so the frontend's existing shapes stay unchanged.
   async getSummary(driverId: string) {
-    const rows = await this.prisma.tip.findMany({
+    const all = await this.prisma.tip.findMany({
       where: { driverId, status: 'succeeded' },
       orderBy: { createdAt: 'desc' },
     });
 
+    // Payments are money for work; kept apart from the tips figures below so the
+    // professional sees the two as distinct lines.
+    const paymentRows = all.filter((t) => t.type === 'payment');
+    const paymentTotal = paymentRows.reduce((s, t) => s + t.amount / 100, 0);
+    const payments = paymentRows.map((t) => ({
+      id: t.id,
+      date: t.createdAt.toISOString(),
+      amount: t.amount / 100,
+      customerName: t.customerName ?? undefined,
+    }));
+
+    // Everything else on this dashboard — the chart, averages, streak — is about
+    // tips, so it runs on tip rows only.
+    const rows = all.filter((t) => t.type === 'tip');
     const tips = rows.map((t) => ({
       id: t.id,
       date: t.createdAt.toISOString(),
@@ -113,6 +130,9 @@ export class TipsService {
       perDay,
       bestDay,
       fiveStarStreak,
+      payments,
+      paymentTotal: Math.round(paymentTotal * 100) / 100,
+      paymentCount: payments.length,
     };
   }
 }

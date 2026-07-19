@@ -21,6 +21,7 @@ function TipSuccess() {
     typeof state.driverName === "string" && state.driverName
       ? state.driverName
       : "your professional";
+  const isPayment = state.kind === "payment";
   const tipped = Number(state.amount) > 0;
 
   const transactionId = `sc_${Math.random().toString(36).slice(2, 10).toUpperCase()}_${Date.now().toString(36).slice(-4).toUpperCase()}`;
@@ -50,20 +51,29 @@ function TipSuccess() {
 
         <h1 className="mt-8 text-3xl font-bold text-foreground font-display">Thank you!</h1>
 
-        <p className="mt-3 text-base text-muted-foreground">
-          Your review of{" "}
-          <span className="font-semibold text-foreground">{proName}</span> has
-          been posted
-          {tipped ? (
-            <>
-              , along with a tip of{" "}
-              <span className="font-semibold text-foreground">£{amount}</span>
-            </>
-          ) : null}
-          . It helps the next customer choose.
-        </p>
+        {isPayment ? (
+          <p className="mt-3 text-base text-muted-foreground">
+            Your payment of{" "}
+            <span className="font-semibold text-foreground">£{amount}</span> to{" "}
+            <span className="font-semibold text-foreground">{proName}</span> has
+            been sent.
+          </p>
+        ) : (
+          <p className="mt-3 text-base text-muted-foreground">
+            Your review of{" "}
+            <span className="font-semibold text-foreground">{proName}</span> has
+            been posted
+            {tipped ? (
+              <>
+                , along with a tip of{" "}
+                <span className="font-semibold text-foreground">£{amount}</span>
+              </>
+            ) : null}
+            . It helps the next customer choose.
+          </p>
+        )}
 
-        {tipped && (
+        {(tipped || isPayment) && (
           <div className="mt-7 rounded-2xl border border-border/70 bg-muted/60 px-5 py-4 text-left">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Transaction ID
@@ -84,7 +94,7 @@ function TipSuccess() {
 
       <p className="mt-12 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-primary" />
-        {tipped ? "Secure payment via Stripe" : "Reviews are always free"}
+        {tipped || isPayment ? "Secure payment via Stripe" : "Reviews are always free"}
       </p>
     </main>
   );

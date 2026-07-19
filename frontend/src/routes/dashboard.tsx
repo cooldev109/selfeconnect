@@ -8,6 +8,7 @@ import {
   Flame,
   MapPin,
   Quote,
+  Wallet,
 } from "lucide-react";
 import {
   Area,
@@ -46,7 +47,7 @@ function greeting() {
 function DashboardPage() {
   const { data: driver } = useMe();
   const { data: account } = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
-  const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak } = useTips();
+  const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak, paymentTotal, paymentCount } = useTips();
 
   const weekTotal = perDay.slice(-7).reduce((s, d) => s + d.total, 0);
   const prevWeekTotal = perDay.slice(0, 7).reduce((s, d) => s + d.total, 0);
@@ -131,6 +132,28 @@ function DashboardPage() {
                   accent="amber"
                 />
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Direct payments — money for work, kept separate from tips. */}
+        <section className="animate-fade-up">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-6 py-4 shadow-soft">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Wallet className="h-4 w-4 text-primary" /> Payments received
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Paid to you directly through your QR — separate from tips.
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-display text-2xl font-bold text-foreground">
+                £{paymentTotal.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {paymentCount} payment{paymentCount === 1 ? "" : "s"}
+              </p>
             </div>
           </div>
         </section>
