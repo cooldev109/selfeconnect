@@ -8,7 +8,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Users, BadgeCheck, Wallet, TrendingUp } from "lucide-react";
+import {
+  Users,
+  BadgeCheck,
+  Wallet,
+  TrendingUp,
+  UserRound,
+  Briefcase,
+  Star,
+  CreditCard,
+} from "lucide-react";
 import { Badge, Card, CardContent } from "@/components/shared";
 import { useAdminData } from "@/hooks/useAdminData";
 
@@ -23,8 +32,23 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminIndex() {
-  const { totalDrivers, activeSubs, totalTipsProcessed, platformRevenue, monthly, transactions } =
-    useAdminData();
+  const {
+    totalDrivers,
+    activeSubs,
+    cancellingSubs,
+    onboardedDrivers,
+    totalCustomers,
+    openJobs,
+    totalJobs,
+    totalReviews,
+    totalTipsProcessed,
+    tipCount,
+    totalPaymentsProcessed,
+    paymentCount,
+    platformRevenue,
+    monthly,
+    transactions,
+  } = useAdminData();
 
   const recent = transactions.slice(0, 8);
 
@@ -33,11 +57,49 @@ function AdminIndex() {
       <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
       <p className="mt-1 text-sm text-muted-foreground">Platform overview.</p>
 
+      {/* Both sides of the marketplace, then the money. */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Total drivers" value={String(totalDrivers)} Icon={Users} />
-        <Metric label="Active subscriptions" value={String(activeSubs)} Icon={BadgeCheck} />
-        <Metric label="Total tips processed" value={`£${totalTipsProcessed.toFixed(2)}`} Icon={Wallet} />
-        <Metric label="Platform revenue" value={`£${platformRevenue.toFixed(2)}`} Icon={TrendingUp} />
+        <Metric
+          label="Professionals"
+          value={String(totalDrivers)}
+          hint={`${onboardedDrivers} payout-ready`}
+          Icon={Users}
+        />
+        <Metric label="Customers" value={String(totalCustomers)} Icon={UserRound} />
+        <Metric
+          label="Active subscriptions"
+          value={String(activeSubs)}
+          hint={cancellingSubs > 0 ? `${cancellingSubs} cancelling` : undefined}
+          Icon={BadgeCheck}
+        />
+        <Metric
+          label="Platform revenue"
+          value={`£${platformRevenue.toFixed(2)}`}
+          hint="per month, from subscriptions"
+          Icon={TrendingUp}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric
+          label="Job postings"
+          value={String(totalJobs)}
+          hint={`${openJobs} open`}
+          Icon={Briefcase}
+        />
+        <Metric label="Reviews" value={String(totalReviews)} Icon={Star} />
+        <Metric
+          label="Tips processed"
+          value={`£${totalTipsProcessed.toFixed(2)}`}
+          hint={`${tipCount} tip${tipCount === 1 ? "" : "s"}`}
+          Icon={Wallet}
+        />
+        <Metric
+          label="Payments processed"
+          value={`£${totalPaymentsProcessed.toFixed(2)}`}
+          hint={`${paymentCount} payment${paymentCount === 1 ? "" : "s"}`}
+          Icon={CreditCard}
+        />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -104,21 +166,24 @@ function AdminIndex() {
 function Metric({
   label,
   value,
+  hint,
   Icon,
 }: {
   label: string;
   value: string;
+  hint?: string;
   Icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
     <Card className="rounded-2xl">
       <CardContent className="flex items-center gap-4 p-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E1F5EE] text-primary">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E1F5EE] text-primary">
           <Icon className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
           <p className="mt-1 text-2xl font-extrabold text-foreground">{value}</p>
+          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
         </div>
       </CardContent>
     </Card>

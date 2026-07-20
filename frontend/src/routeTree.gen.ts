@@ -30,7 +30,12 @@ import { Route as CustomerSearchRouteImport } from './routes/customer.search'
 import { Route as CustomerLoginRouteImport } from './routes/customer.login'
 import { Route as CustomerAccountRouteImport } from './routes/customer.account'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
+import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as TipDriverIdIndexRouteImport } from './routes/tip.$driverId.index'
 import { Route as TipDriverIdSuccessRouteImport } from './routes/tip.$driverId.success'
 import { Route as CustomerProsPublicIdRouteImport } from './routes/customer.pros.$publicId'
@@ -142,9 +147,34 @@ const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDriversRoute = AdminDriversRouteImport.update({
   id: '/drivers',
   path: '/drivers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AdminRoute,
 } as any)
 const TipDriverIdIndexRoute = TipDriverIdIndexRouteImport.update({
@@ -187,7 +217,12 @@ export interface FileRoutesByFullPath {
   '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
@@ -215,7 +250,12 @@ export interface FileRoutesByTo {
   '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
@@ -244,7 +284,12 @@ export interface FileRoutesById {
   '/reviews': typeof ReviewsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
@@ -275,7 +320,12 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/signup'
     | '/terms'
+    | '/admin/categories'
+    | '/admin/customers'
     | '/admin/drivers'
+    | '/admin/jobs'
+    | '/admin/reviews'
+    | '/admin/subscriptions'
     | '/admin/transactions'
     | '/customer/account'
     | '/customer/login'
@@ -303,7 +353,12 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/signup'
     | '/terms'
+    | '/admin/categories'
+    | '/admin/customers'
     | '/admin/drivers'
+    | '/admin/jobs'
+    | '/admin/reviews'
+    | '/admin/subscriptions'
     | '/admin/transactions'
     | '/customer/account'
     | '/customer/login'
@@ -331,7 +386,12 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/signup'
     | '/terms'
+    | '/admin/categories'
+    | '/admin/customers'
     | '/admin/drivers'
+    | '/admin/jobs'
+    | '/admin/reviews'
+    | '/admin/subscriptions'
     | '/admin/transactions'
     | '/customer/account'
     | '/customer/login'
@@ -521,11 +581,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTransactionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/drivers': {
       id: '/admin/drivers'
       path: '/drivers'
       fullPath: '/admin/drivers'
       preLoaderRoute: typeof AdminDriversRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/categories': {
+      id: '/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/tip/$driverId/': {
@@ -567,13 +662,23 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDriversRoute: typeof AdminDriversRoute
+  AdminJobsRoute: typeof AdminJobsRoute
+  AdminReviewsRoute: typeof AdminReviewsRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
   AdminDriversRoute: AdminDriversRoute,
+  AdminJobsRoute: AdminJobsRoute,
+  AdminReviewsRoute: AdminReviewsRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

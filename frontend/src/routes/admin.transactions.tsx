@@ -15,7 +15,7 @@ import { useAdminData } from "@/hooks/useAdminData";
 export const Route = createFileRoute("/admin/transactions")({
   head: () => ({
     meta: [
-      { title: "Transactions — SelfeConnect Admin" },
+      { title: "Payments — SelfeConnect Admin" },
       { name: "description", content: "Review all platform transactions." },
     ],
   }),
@@ -68,10 +68,11 @@ function AdminTransactions() {
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const exportCsv = () => {
-    const header = ["id", "driver", "amount", "customer", "rating", "status", "timestamp"];
+    const header = ["id", "professional", "type", "amount", "customer", "rating", "status", "timestamp"];
     const rows = filtered.map((t) => [
       t.id,
       t.driverName,
+      t.type,
       t.amount.toFixed(2),
       t.customerName ?? "",
       t.rating,
@@ -85,7 +86,7 @@ function AdminTransactions() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `selfeconnect-transactions-${start}-to-${end}.csv`;
+    a.download = `selfeconnect-payments-${start}-to-${end}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -94,9 +95,9 @@ function AdminTransactions() {
     <div className="mx-auto max-w-7xl px-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
+          <h1 className="text-2xl font-bold text-foreground">Payments</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tips processed across all drivers.
+            Tips and direct payments processed across all professionals.
           </p>
         </div>
         <Button onClick={exportCsv} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
@@ -131,7 +132,7 @@ function AdminTransactions() {
             />
           </label>
           <label className="md:col-span-2 block">
-            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Driver</span>
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Professional</span>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -140,7 +141,7 @@ function AdminTransactions() {
                   setQ(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search by driver name…"
+                placeholder="Search by professional name…"
                 className="pl-9"
                 maxLength={80}
               />
@@ -175,7 +176,8 @@ function AdminTransactions() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Transaction ID</TableHead>
-                  <TableHead>Driver</TableHead>
+                  <TableHead>Professional</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead className="text-right">Rating</TableHead>
@@ -188,6 +190,15 @@ function AdminTransactions() {
                   <TableRow key={t.id}>
                     <TableCell className="font-mono text-xs text-foreground">{t.id}</TableCell>
                     <TableCell className="text-sm font-medium text-foreground">{t.driverName}</TableCell>
+                    <TableCell>
+                      <Badge className={`rounded-full text-[10px] uppercase tracking-wide ${
+                        t.type === "payment"
+                          ? "bg-blue-100 text-blue-700 hover:bg-blue-100"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary"
+                      }`}>
+                        {t.type}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right font-semibold text-primary">
                       £{t.amount.toFixed(2)}
                     </TableCell>
@@ -212,7 +223,7 @@ function AdminTransactions() {
                 ))}
                 {pageRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                       No transactions in this range.
                     </TableCell>
                   </TableRow>

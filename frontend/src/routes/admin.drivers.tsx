@@ -37,8 +37,8 @@ import { useAdminData, type AdminDriver } from "@/hooks/useAdminData";
 export const Route = createFileRoute("/admin/drivers")({
   head: () => ({
     meta: [
-      { title: "Drivers — SelfeConnect Admin" },
-      { name: "description", content: "Manage all SelfeConnect drivers." },
+      { title: "Professionals — SelfeConnect Admin" },
+      { name: "description", content: "Manage all SelfeConnect professionals." },
     ],
   }),
   component: AdminDrivers,
@@ -79,7 +79,7 @@ function AdminDrivers() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-foreground">Drivers</h1>
+      <h1 className="text-2xl font-bold text-foreground">Professionals</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {filtered.length} of {drivers.length} drivers
       </p>
@@ -188,7 +188,7 @@ function AdminDrivers() {
                 {pageRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                      No drivers match your filters.
+                      No professionals match your filters.
                     </TableCell>
                   </TableRow>
                 )}

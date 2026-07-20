@@ -1,7 +1,17 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, Receipt, Settings, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Receipt,
+  LogOut,
+  UserRound,
+  Briefcase,
+  Star,
+  CreditCard,
+  Tags,
+} from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { me, logout, type AuthDriver } from "@/lib/auth";
 import {
@@ -30,9 +40,13 @@ export const Route = createFileRoute("/admin")({
 
 const ITEMS = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
-  { title: "Drivers", url: "/admin/drivers", icon: Users },
-  { title: "Transactions", url: "/admin/transactions", icon: Receipt },
-  { title: "Settings", url: "/admin", icon: Settings, disabled: true },
+  { title: "Professionals", url: "/admin/drivers", icon: Users },
+  { title: "Customers", url: "/admin/customers", icon: UserRound },
+  { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
+  { title: "Job postings", url: "/admin/jobs", icon: Briefcase },
+  { title: "Reviews", url: "/admin/reviews", icon: Star },
+  { title: "Services", url: "/admin/categories", icon: Tags },
+  { title: "Payments", url: "/admin/transactions", icon: Receipt },
 ] as const;
 
 function AdminLayout() {
