@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsIn,
   IsInt,
   IsOptional,
@@ -30,6 +31,12 @@ export class CreateTipDto {
   @IsString()
   @MaxLength(120)
   customerName?: string;
+
+  // Optional: supply it and we email a receipt.
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  customerEmail?: string;
 
   @IsOptional()
   @IsString()

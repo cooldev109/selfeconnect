@@ -7,6 +7,8 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
+import { MailService } from '../mail/mail.service';
+import { AccountAccessService } from '../mail/account-access.service';
 import { CustomerSignupDto } from './dto/customer-signup.dto';
 import { CustomerLoginDto } from './dto/customer-login.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -26,6 +28,8 @@ export class CustomerAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geo: GeoService,
+    private readonly mail: MailService,
+    private readonly access: AccountAccessService,
   ) {}
 
   private toPublic(c: {
@@ -64,6 +68,20 @@ export class CustomerAuthService {
         companyName: dto.companyName?.trim(),
       },
     });
+
+    // Fire-and-forget: a mail failure must never fail a signup.
+    void this.access.ensureUnsubscribeToken('customer', customer.id);
+    void this.mail.sendCustomerWelcome({
+      email: customer.email,
+      name: customer.name,
+    });
+    void this.mail.sendEmailVerification({
+      kind: 'customer',
+      accountId: customer.id,
+      email: customer.email,
+      name: customer.name,
+    });
+
     return this.toPublic(customer);
   }
 

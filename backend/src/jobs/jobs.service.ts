@@ -2,11 +2,14 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
+import { MailService } from '../mail/mail.service';
+import { AccountAccessService } from '../mail/account-access.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 
@@ -17,11 +20,18 @@ const jobInclude = {
 } satisfies Prisma.JobInclude;
 type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
+// How far a professional will realistically travel for a job alert.
+const NOTIFY_RADIUS_MILES = 30;
+
 @Injectable()
 export class JobsService {
+  private readonly log = new Logger(JobsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly geo: GeoService,
+    private readonly mail: MailService,
+    private readonly access: AccountAccessService,
   ) {}
 
   private async resolveCategoryId(slug: string) {
@@ -90,7 +100,80 @@ export class JobsService {
       },
       include: jobInclude,
     });
+
+    // Tell matching professionals there's work — without this the board only
+    // works for whoever happens to be logged in. Never blocks the response.
+    void this.notifyMatchingPros(job.id);
+
     return this.shape(job);
+  }
+
+  /**
+   * Emails active professionals in the job's trade who are within reach of it.
+   * Deliberately conservative: only subscribed pros who haven't opted out, and
+   * only those with a location we can measure.
+   */
+  private async notifyMatchingPros(jobId: string) {
+    try {
+      const job = await this.prisma.job.findUnique({
+        where: { id: jobId },
+        include: { category: true },
+      });
+      if (!job || job.status !== 'open') return;
+
+      const pros = await this.prisma.driver.findMany({
+        where: {
+          role: 'driver',
+          isActive: true,
+          notifyNewJobs: true,
+          categories: { some: { id: job.categoryId } },
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          unsubscribeToken: true,
+        },
+      });
+
+      for (const pro of pros) {
+        let distanceMiles: number | null = null;
+        if (
+          pro.latitude != null &&
+          pro.longitude != null &&
+          job.latitude != null &&
+          job.longitude != null
+        ) {
+          distanceMiles = this.round1(
+            this.geo.distanceMiles(
+              { latitude: pro.latitude, longitude: pro.longitude },
+              { latitude: job.latitude, longitude: job.longitude },
+            ),
+          );
+          // Out of realistic travelling range — don't email them about it.
+          if (distanceMiles > NOTIFY_RADIUS_MILES) continue;
+        }
+        const token =
+          pro.unsubscribeToken ??
+          (await this.access.ensureUnsubscribeToken('professional', pro.id));
+        await this.mail.sendNewJobAlert({
+          email: pro.email,
+          name: pro.name,
+          unsubscribeToken: token,
+          job: {
+            title: job.title,
+            category: job.category.name,
+            postcode: job.postcode,
+            budget: job.budget,
+            distanceMiles,
+          },
+        });
+      }
+    } catch (err) {
+      this.log.error(`new-job alerts failed for ${jobId}: ${String(err)}`);
+    }
   }
 
   async listMine(customerId: string) {
@@ -334,6 +417,27 @@ export class JobsService {
       update: {},
       create: { jobId, driverId },
     });
+
+    // Let the customer know to expect contact — but only the first time this
+    // pro unlocks, so re-opening the job doesn't re-email them.
+    if (!alreadyUnlocked && job.customer.notifyJobUpdates) {
+      void (async () => {
+        try {
+          const token =
+            job.customer.unsubscribeToken ??
+            (await this.access.ensureUnsubscribeToken('customer', job.customerId));
+          await this.mail.sendInterestAlert({
+            email: job.customer.email,
+            name: job.customer.name,
+            unsubscribeToken: token,
+            professionalName: driver.company || driver.name,
+            jobTitle: job.title,
+          });
+        } catch (err) {
+          this.log.error(`interest alert failed for ${jobId}: ${String(err)}`);
+        }
+      })();
+    }
 
     let distanceMiles: number | null = null;
     if (

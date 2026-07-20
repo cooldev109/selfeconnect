@@ -7,18 +7,20 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { STRIPE_GATEWAY, type StripeGateway } from '../stripe/gateway';
 import { CreateTipDto } from './dto/create-tip.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class TipsService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(STRIPE_GATEWAY) private readonly stripe: StripeGateway,
+    private readonly mail: MailService,
   ) {}
 
   async create(publicId: string, dto: CreateTipDto) {
     const driver = await this.prisma.driver.findUnique({
       where: { publicId: publicId.toUpperCase() },
-      select: { id: true, stripeAccountId: true, stripeOnboarded: true, isActive: true },
+      select: { id: true, name: true, company: true, stripeAccountId: true, stripeOnboarded: true, isActive: true },
     });
     if (!driver) throw new NotFoundException('not_found');
     if (!driver.stripeAccountId || !driver.stripeOnboarded || !driver.isActive) {
@@ -48,6 +50,18 @@ export class TipsService {
         stripePaymentIntentId: intent.paymentIntentId,
       },
     });
+
+    // A receipt only makes sense if they told us who they are; the QR flow is
+    // anonymous, so this is best-effort.
+    if (dto.customerEmail) {
+      void this.mail.sendPaymentReceipt({
+        email: dto.customerEmail,
+        professionalName: driver.company || driver.name,
+        amount: dto.amount,
+        kind: type,
+        reference: tip.id,
+      });
+    }
 
     return {
       tipId: tip.id,

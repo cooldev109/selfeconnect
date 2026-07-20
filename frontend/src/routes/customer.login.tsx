@@ -164,8 +164,15 @@ function CustomerLoginPage() {
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-foreground">
+                  <span className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
                     Password
+                    <Link
+                      to="/forgot-password"
+                      search={{ kind: "customer" }}
+                      className="text-xs font-normal text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
                   </span>
                   <Input
                     type="password"

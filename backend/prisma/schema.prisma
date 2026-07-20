@@ -87,6 +87,12 @@ model Driver {
   subscriptionCancelAtPeriodEnd Boolean   @default(false)
   subscriptionCurrentPeriodEnd  DateTime?
 
+  // Email: verification, and whether they want job alerts. The unsubscribe
+  // token lets a one-click opt-out work without logging in.
+  emailVerifiedAt   DateTime?
+  notifyNewJobs     Boolean @default(true)
+  unsubscribeToken  String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -159,11 +165,44 @@ model Customer {
   latitude  Float?
   longitude Float?
 
+  emailVerifiedAt   DateTime?
+  notifyJobUpdates  Boolean @default(true)
+  unsubscribeToken  String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   jobs    Job[]
   reviews Review[]
+}
+
+// A single-use, short-lived token for resetting a password or confirming an
+// email address. The token itself is never stored — only a SHA-256 hash — so a
+// leaked database can't be used to seize accounts.
+enum TokenPurpose {
+  password_reset
+  email_verify
+}
+
+enum AccountKind {
+  professional
+  customer
+}
+
+model AuthToken {
+  id        String       @id @default(uuid())
+  tokenHash String       @unique
+  purpose   TokenPurpose
+  kind      AccountKind
+  // Points at either a Driver or a Customer, depending on `kind`.
+  accountId String
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([accountId, purpose])
+  @@index([expiresAt])
 }
 
 // A job opportunity posted by a customer, visible to professionals in the

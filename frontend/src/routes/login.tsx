@@ -125,12 +125,13 @@ function LoginPage() {
               <label className="block">
                 <span className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
                   Password
-                  <a
-                    href="mailto:support@selfeconnect.com?subject=Password%20reset%20request"
+                  <Link
+                    to="/forgot-password"
+                    search={{ kind: "professional" }}
                     className="text-xs font-normal text-primary hover:underline"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </span>
                 <Input
                   type="password"
