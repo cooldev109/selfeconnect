@@ -7,6 +7,7 @@ import { BrowseShell } from "@/components/BrowseShell";
 import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
 import { getProProfile } from "@/lib/pros";
+import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
 
 export const Route = createFileRoute("/customer/pros/$publicId")({
@@ -128,23 +129,12 @@ function ProProfilePage() {
               )}
 
               {p.contact ? (
-                <div
-                  className={`flex flex-wrap gap-3 ${p.bio ? "mt-5 border-t border-border pt-5" : ""}`}
-                >
-                  {p.contact.phone && (
-                    <a
-                      href={`tel:${p.contact.phone}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-                    >
-                      <Phone className="h-4 w-4" /> {p.contact.phone}
-                    </a>
-                  )}
-                  <a
-                    href={`mailto:${p.contact.email}`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
-                  >
-                    <Mail className="h-4 w-4" /> {p.contact.email}
-                  </a>
+                <div className={p.bio ? "mt-5 border-t border-border pt-5" : ""}>
+                  <ContactActions
+                    email={p.contact.email}
+                    phone={p.contact.phone}
+                    size="lg"
+                  />
                 </div>
               ) : (
                 <div

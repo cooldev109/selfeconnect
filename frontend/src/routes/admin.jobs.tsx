@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, MapPin, Users } from "lucide-react";
+import { Trash2, MapPin, Users, Eye } from "lucide-react";
 import { Badge, Button, Modal } from "@/components/shared";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { AdminList } from "@/components/AdminList";
@@ -23,6 +23,7 @@ function AdminJobs() {
   const { jobs } = useAdminData();
   const qc = useQueryClient();
   const [toDelete, setToDelete] = useState<AdminJob | null>(null);
+  const [viewing, setViewing] = useState<AdminJob | null>(null);
 
   const remove = useMutation({
     mutationFn: (id: string) => api(`/admin/jobs/${id}`, { method: "DELETE" }),
@@ -73,7 +74,11 @@ function AdminJobs() {
           </TableRow>
         }
         row={(j) => (
-          <TableRow key={j.id}>
+          <TableRow
+            key={j.id}
+            onClick={() => setViewing(j)}
+            className="cursor-pointer"
+          >
             <TableCell className="max-w-[220px]">
               <p className="truncate text-sm font-medium text-foreground">{j.title}</p>
               {j.hiredDriverName && (
@@ -113,18 +118,92 @@ function AdminJobs() {
             <TableCell className="text-xs text-muted-foreground">
               {timeAgo(j.createdAt)}
             </TableCell>
-            <TableCell className="text-right">
-              <Button
-                variant="outline"
-                className="rounded-lg text-destructive hover:bg-destructive/10"
-                onClick={() => setToDelete(j)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-end gap-1.5">
+                <Button
+                  variant="outline"
+                  className="rounded-lg text-xs"
+                  onClick={() => setViewing(j)}
+                >
+                  <Eye className="mr-1 h-3.5 w-3.5" /> View
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-lg text-destructive hover:bg-destructive/10"
+                  onClick={() => setToDelete(j)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         )}
       />
+
+      {/* Full detail — the table truncates, so this is where you actually read a job. */}
+      <Modal
+        open={!!viewing}
+        onOpenChange={(o) => { if (!o) setViewing(null); }}
+        title={viewing?.title ?? ""}
+      >
+        {viewing && (
+          <div className="space-y-4 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="rounded-full bg-secondary text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-secondary">
+                {viewing.category}
+              </Badge>
+              <Badge
+                className={`rounded-full text-[10px] uppercase tracking-wide ${
+                  viewing.status === "open"
+                    ? "bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]"
+                    : "bg-muted text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {viewing.status}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                Posted {timeAgo(viewing.createdAt)}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Description
+              </p>
+              <p className="mt-1 whitespace-pre-wrap leading-relaxed text-foreground/90">
+                {viewing.description}
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Detail label="Customer" value={viewing.customerName} sub={viewing.customerEmail} />
+              <Detail label="Area" value={viewing.postcode} />
+              <Detail label="Budget" value={viewing.budget || "Not given"} />
+              <Detail
+                label="Quotes allowed"
+                value={
+                  viewing.maxContacts == null
+                    ? "No limit"
+                    : `Up to ${viewing.maxContacts}`
+                }
+                sub={`${viewing.contactCount} professional${viewing.contactCount === 1 ? "" : "s"} in touch${
+                  viewing.maxContacts != null && viewing.contactCount >= viewing.maxContacts
+                    ? " · limit reached"
+                    : ""
+                }`}
+              />
+            </div>
+
+            {viewing.hiredDriverName && (
+              <div className="rounded-xl bg-[#E1F5EE] p-3">
+                <p className="text-xs font-semibold text-primary">
+                  Customer hired {viewing.hiredDriverName}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!toDelete} onOpenChange={(o) => { if (!o) setToDelete(null); }} title="Delete job posting?">
         <p className="text-sm text-muted-foreground">
@@ -145,5 +224,17 @@ function AdminJobs() {
         </div>
       </Modal>
     </>
+  );
+}
+
+function Detail({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 text-foreground">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+    </div>
   );
 }

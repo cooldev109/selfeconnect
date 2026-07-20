@@ -58,6 +58,7 @@ export function shell(opts: {
         <tr><td style="padding:26px 30px 26px 30px;">
           <div style="border-top:1px solid ${LINE};padding-top:16px;font:400 12px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:${MUTED};">
             SelfeConnect — find and hire trusted local professionals.<br/>
+            Contact us — <a href="mailto:support@selfeconnect.com" style="color:${TEAL};text-decoration:none;">support@selfeconnect.com</a><br/>
             ${
               unsubscribeUrl
                 ? `<a href="${unsubscribeUrl}" style="color:${MUTED};">Unsubscribe from these emails</a>`

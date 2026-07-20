@@ -47,7 +47,52 @@ function greeting() {
 function DashboardPage() {
   const { data: driver } = useMe();
   const { data: account } = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
-  const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak, paymentTotal, paymentCount } = useTips();
+  const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak, payments, paymentTotal, paymentCount } = useTips();
+
+  // Everything the professional has been paid, in one file for their records
+  // (and their accountant). Tips and payments in one timeline, clearly typed.
+  const downloadReport = () => {
+    const rows = [
+      ...tips.map((t) => ({
+        date: t.date,
+        type: "Tip",
+        amount: t.amount,
+        from: t.customerName ?? "Anonymous",
+        note: t.message ?? "",
+        rating: t.rating || "",
+      })),
+      ...payments.map((p) => ({
+        date: p.date,
+        type: "Payment",
+        amount: p.amount,
+        from: p.customerName ?? "Anonymous",
+        note: "",
+        rating: "",
+      })),
+    ].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+    const header = ["Date", "Type", "Amount (GBP)", "From", "Rating", "Note"];
+    const body = rows.map((r) => [
+      new Date(r.date).toLocaleDateString("en-GB"),
+      r.type,
+      r.amount.toFixed(2),
+      r.from,
+      r.rating,
+      r.note,
+    ]);
+    const grand = rows.reduce((s, r) => s + r.amount, 0);
+    body.push([], ["", "TOTAL", grand.toFixed(2), "", "", ""]);
+
+    const csv = [header, ...body]
+      .map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `selfeconnect-earnings-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const weekTotal = perDay.slice(-7).reduce((s, d) => s + d.total, 0);
   const prevWeekTotal = perDay.slice(0, 7).reduce((s, d) => s + d.total, 0);
@@ -147,13 +192,24 @@ function DashboardPage() {
                 Paid to you directly through your QR — separate from tips.
               </p>
             </div>
-            <div className="text-right">
-              <p className="font-display text-2xl font-bold text-foreground">
-                £{paymentTotal.toFixed(2)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {paymentCount} payment{paymentCount === 1 ? "" : "s"}
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="font-display text-2xl font-bold text-foreground">
+                  £{paymentTotal.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {paymentCount} payment{paymentCount === 1 ? "" : "s"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                onClick={downloadReport}
+                disabled={tips.length + payments.length === 0}
+                title="Download every tip and payment as a spreadsheet"
+              >
+                <Download className="mr-1.5 h-4 w-4" /> Report
+              </Button>
             </div>
           </div>
         </section>

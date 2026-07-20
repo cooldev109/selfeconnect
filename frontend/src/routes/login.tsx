@@ -93,6 +93,9 @@ function LoginPage() {
             <span className="text-lg font-bold tracking-tight text-foreground font-display">SelfeConnect</span>
           </Link>
         <div className="text-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            Professional log in
+          </p>
           <h1 className="text-3xl font-bold text-foreground font-display">Welcome back</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Log in to your dashboard.

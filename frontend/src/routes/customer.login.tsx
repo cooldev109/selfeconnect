@@ -129,6 +129,9 @@ function CustomerLoginPage() {
             </span>
           </Link>
           <div className="text-center">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Customer log in
+            </p>
             <h1 className="text-3xl font-bold text-foreground font-display">
               Welcome back
             </h1>

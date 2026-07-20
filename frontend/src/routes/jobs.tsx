@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, MapPin, Lock, Mail, Phone, Sparkles, Clock } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
+import { ContactActions } from "@/components/ContactActions";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategorySelect } from "@/components/CategoryPicker";
@@ -182,21 +183,11 @@ function JobCard({
         {job.unlocked && job.contact ? (
           <div className="mt-4 rounded-xl border border-primary/20 bg-[#E1F5EE]/50 p-3 text-sm">
             <p className="font-semibold text-foreground">{job.contact.name}</p>
-            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
-              <a
-                href={`mailto:${job.contact.email}`}
-                className="inline-flex items-center gap-1 text-primary hover:underline"
-              >
-                <Mail className="h-3.5 w-3.5" /> {job.contact.email}
-              </a>
-              {job.contact.phone && (
-                <a
-                  href={`tel:${job.contact.phone}`}
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
-                >
-                  <Phone className="h-3.5 w-3.5" /> {job.contact.phone}
-                </a>
-              )}
+            <div className="mt-2">
+              <ContactActions
+                email={job.contact.email}
+                phone={job.contact.phone}
+              />
             </div>
             {job.contact.addressLine && (
               <p className="mt-1 text-muted-foreground">{job.contact.addressLine}</p>
