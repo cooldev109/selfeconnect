@@ -923,6 +923,13 @@ function Home() {
               also leave a tip in just a few seconds — no app download required.
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="tip-required">
+            <AccordionTrigger>Does a customer have to tip to leave a review?</AccordionTrigger>
+            <AccordionContent>
+              No. Rating and reviewing is completely free — tipping is separate and
+              entirely optional. Most reviews cost the customer nothing.
+            </AccordionContent>
+          </AccordionItem>
           <AccordionItem value="how-paid">
             <AccordionTrigger>How do I get paid?</AccordionTrigger>
             <AccordionContent>
@@ -1028,6 +1035,13 @@ function Home() {
                 You keep 100% of every payment and tip, minus only the standard
                 processing fee charged by our payment partner.
               </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="cancel">
+            <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
+            <AccordionContent>
+              Yes — it's monthly, with no contract. Cancel from your account page and
+              you keep full access until the end of the period you've paid for.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
