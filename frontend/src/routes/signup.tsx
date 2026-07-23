@@ -171,12 +171,12 @@ function SignupPage() {
           </Link>
           <div className="max-w-md space-y-5">
             <h2 className="text-3xl font-bold leading-tight font-display">
-              Set up once. Get rated &amp; tipped.
+              Set up once. Start building your reputation and get more jobs.
             </h2>
             <ul className="space-y-2.5 text-sm text-primary-foreground/90">
-              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Your unique 5-character ID & QR code, ready in 60 seconds</li>
-              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Zero commission — you keep 100% of every tip</li>
-              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Weekly payouts straight to your bank</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Find local jobs and build your reputation.</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Get your unique QR code for reviews, payments, and tips.</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Zero commission — you keep 100% of every payment and tip.</li>
             </ul>
           </div>
         </div>
@@ -188,9 +188,6 @@ function SignupPage() {
             <ArrowLeft className="h-4 w-4" /> Back to home
           </Link>
           <h1 className="text-2xl font-bold text-foreground font-display">Create your account</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Start collecting reviews &amp; tips today.
-          </p>
 
         <Card className="mt-6 rounded-2xl">
           <CardContent className="p-6">

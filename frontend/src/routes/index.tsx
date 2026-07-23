@@ -360,8 +360,9 @@ function Home() {
               <span className="text-primary">professional</span> near you.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Plumbers, electricians, cleaners, gardeners and 50+ more. Search by
-              service and postcode, read real reviews, and get in touch directly.
+              Plumbers, electricians, cleaners, man and van and local professionals
+              across many services. Search by service and postcode, read real
+              reviews, and get in touch directly.
             </p>
 
             {/* Primary action */}
@@ -595,10 +596,10 @@ function Home() {
           <PathCard
             icon={Briefcase}
             title="I am a professional"
-            body="Win local jobs, collect reviews from every customer, and keep 100% of your tips."
+            body="Find local jobs, collect reviews from every customer, and keep 100% of your tips and payments."
             points={[
-              "Browse nearby jobs in your trades",
-              "Your own QR code for reviews & tips",
+              "Find local jobs in your trade or let customers find you.",
+              "Your own QR code for reviews, payments, and tips.",
               "£5.49/month — no commission, no lead fees",
             ]}
             cta="Join as a professional"
@@ -798,16 +799,17 @@ function Home() {
                 One flat fee. No commission. No lead fees.
               </h2>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted">
-                Everything for one price — find work, collect reviews, take tips.
-                We never take a percentage of your tips, and we never charge you
-                for a lead that goes nowhere.
+                Everything for one price — find work, collect reviews, build your
+                reputation, receive payments, and accept tips. We never take a
+                percentage of your payments or tips, and we never charge you for a
+                lead that goes nowhere.
               </p>
               <ul className="mt-7 grid gap-3 sm:grid-cols-2">
                 {[
                   "Browse & unlock nearby jobs",
                   "Your own QR code & public profile",
-                  "Unlimited reviews from customers",
-                  "Keep 100% of every tip",
+                  "Unlimited customer reviews",
+                  "Keep 100% of every payment and tip",
                 ].map((f) => (
                   <li
                     key={f}
@@ -907,46 +909,125 @@ function Home() {
             <AccordionTrigger>Who handles payment for the job itself?</AccordionTrigger>
             <AccordionContent>
               You and the professional do — exactly as you would today. SelfeConnect
-              never holds or takes a cut of the money for the work. We only handle
-              optional tips, and the professional's monthly subscription.
+              does not hold, process, or take a percentage of the money for the work.
+              The price and payment arrangements are agreed directly between you and
+              the professional.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="customers-sign-up">
             <AccordionTrigger>Do customers need an account to review me?</AccordionTrigger>
             <AccordionContent>
-              They create a free account to leave a review, which is what makes
-              reviews verified rather than anonymous. Leaving a tip takes seconds
-              and needs no app download.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="tip-required">
-            <AccordionTrigger>Does a customer have to tip to leave a review?</AccordionTrigger>
-            <AccordionContent>
-              No. Rating and reviewing is completely free — tipping is separate and
-              entirely optional. Most reviews cost the customer nothing.
+              Customers create a free account to post a job or search for
+              professionals. Once they've found and hired someone, they can leave a
+              review, making every review verified rather than anonymous. They can
+              also leave a tip in just a few seconds — no app download required.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="how-paid">
             <AccordionTrigger>How do I get paid?</AccordionTrigger>
             <AccordionContent>
-              Tips are paid straight into your linked bank account on a weekly
-              payout, handled securely by Stripe. Payment for the job itself stays
-              between you and your customer — we never touch it.
+              <p>
+                Payment for the job itself stays between you and your customer —
+                SelfeConnect does not take a commission or hold your money.
+              </p>
+              <p className="mt-3">
+                If you choose to use your personal QR code, customers can also send
+                payments, leave reviews, and add tips through your connected payment
+                account.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="qr-what-for">
+            <AccordionTrigger>What is the QR code used for?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                Once you register and activate your subscription, you get access to
+                your own personal QR code. This QR code belongs to you and allows
+                customers to access your profile, leave reviews, send payments, and
+                add tips.
+              </p>
+              <p className="mt-3">
+                You can share your QR code with customers after completing a job,
+                making it easier for them to pay you, leave a review, or add a tip —
+                all in one place.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="qr-how-use">
+            <AccordionTrigger>How do I use my QR code?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                On your profile page, we automatically generate a flyer with your QR
+                code that you can share with customers. You can also create your own
+                materials or use the QR code however you prefer.
+              </p>
+              <p className="mt-3">
+                Customers simply scan your QR code to access your personal payment
+                page, where they can send a payment, leave a review, and add an
+                optional tip.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="receive-payments">
+            <AccordionTrigger>How do I receive payments?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                After activating your subscription, go to your Account page and
+                connect your payouts. This will take you to our payment processing
+                partner, Stripe, where you'll complete a short registration and
+                connect your account.
+              </p>
+              <p className="mt-3">
+                Once connected, payments and tips received through your QR code will
+                go directly to your linked bank account.
+              </p>
+              <p className="mt-3">
+                Stripe typically charges 1.5% + £0.20 per transaction. For full
+                transparency, you can always check the exact processing fees directly
+                in your Stripe account.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="payment-timing">
+            <AccordionTrigger>How long does it take to receive payments?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                Your first payment may take between 7 and 15 days to arrive,
+                depending on Stripe's verification process and your bank.
+              </p>
+              <p className="mt-3">
+                After your first payment is completed, you can configure your payout
+                schedule directly from your Stripe account and choose the payment
+                frequency that works best for you.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="manage-payments">
+            <AccordionTrigger>Does SelfeConnect manage payments?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                No. SelfeConnect does not hold or manage customer payments. We simply
+                connect professionals with customers and make the process easier.
+              </p>
+              <p className="mt-3">
+                Service prices and payment arrangements are agreed and managed
+                entirely between the customer and the professional. The QR code is an
+                optional feature that professionals can choose to use to make
+                receiving payments, reviews, and tips easier.
+              </p>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="commission">
             <AccordionTrigger>Is there really no commission?</AccordionTrigger>
             <AccordionContent>
-              Yes. We charge a flat £5.49/month and never take a percentage of your
-              tips, and never charge per lead. You keep 100% of every tip, less only
-              the standard processing fee charged by our payment partner.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="cancel">
-            <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
-            <AccordionContent>
-              Yes — it's monthly, with no contract. Cancel from your account page and
-              you keep full access until the end of the period you've paid for.
+              <p>
+                Yes. We charge a flat fee of £5.49/month and never take a percentage
+                of your payments or tips. We also never charge per lead.
+              </p>
+              <p className="mt-3">
+                You keep 100% of every payment and tip, minus only the standard
+                processing fee charged by our payment partner.
+              </p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -987,8 +1068,11 @@ function Home() {
             <div>
               <Logo />
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                Reviews and tips for self-employed professionals — and a simple way
-                for customers to find them.
+                Connecting self-employed professionals and small businesses with
+                local customers.
+              </p>
+              <p className="mt-3 max-w-xs text-sm font-medium leading-relaxed text-foreground/80">
+                Simple connections. Fair opportunities. No unnecessary costs.
               </p>
             </div>
             <FooterCol

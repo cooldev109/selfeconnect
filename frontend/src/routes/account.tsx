@@ -237,7 +237,7 @@ function AccountPage() {
                   <Wallet className="h-4 w-4 text-primary" /> Payouts
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Connect your bank to receive tips directly — you keep 100%.
+                  Connect your payout account to receive tips and payments — you keep 100%.
                 </p>
               </div>
               {onboarded ? (

@@ -13,7 +13,7 @@ import type { NavItem } from "@/components/DashboardShell";
 // Professional dashboard — "Find work" leads; tips move to a secondary tab.
 export const PRO_NAV: NavItem[] = [
   { to: "/jobs", label: "Find work", icon: Briefcase },
-  { to: "/dashboard", label: "Tips & earnings", icon: LineChart },
+  { to: "/dashboard", label: "Payments & tips", icon: LineChart },
   { to: "/reviews", label: "My reviews", icon: Star },
   { to: "/profile", label: "Profile & QR", icon: QrCode },
   { to: "/account", label: "Account", icon: CreditCard },

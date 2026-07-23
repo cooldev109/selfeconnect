@@ -31,7 +31,7 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — SelfeConnect" },
-      { name: "description", content: "Your tips, ratings and weekly performance." },
+      { name: "description", content: "Your payments, tips, ratings and weekly performance." },
     ],
   }),
   component: DashboardPage,
@@ -106,8 +106,8 @@ function DashboardPage() {
 
   return (
     <ProShell
-      title="Tips & earnings"
-      subtitle="Your tips, ratings and weekly performance."
+      title="Payments & tips"
+      subtitle="Your payments, tips, ratings and weekly performance."
     >
       <div className="space-y-6">
         {account && (!account.isActive || !account.stripeOnboarded) && (
@@ -118,8 +118,8 @@ function DashboardPage() {
           >
             <span className="font-medium text-foreground">
               {!account.isActive
-                ? "Activate your subscription to go live and start receiving tips."
-                : "Connect your payout account to receive tips."}
+                ? "Activate your subscription to go live and start receiving payments and tips."
+                : "Connect your payout account to receive payments and tips."}
             </span>
             <span className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
               Finish setup →
@@ -140,13 +140,18 @@ function DashboardPage() {
                   {greeting()}, {driver?.firstName}
                 </p>
                 <p className="mt-5 text-sm font-medium text-muted-foreground">
-                  You've earned in tips
+                  You've earned
                 </p>
                 <div className="mt-2 flex items-baseline gap-3">
                   <h1 className="font-display text-6xl font-bold leading-none tracking-tight text-foreground sm:text-7xl">
-                    £{total.toFixed(2)}
+                    £{(total + paymentTotal).toFixed(2)}
                   </h1>
                 </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">£{paymentTotal.toFixed(2)}</span> in payments
+                  {" · "}
+                  <span className="font-semibold text-foreground">£{total.toFixed(2)}</span> in tips
+                </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full border-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
                     <TrendingUp className="mr-1 h-3.5 w-3.5" />
@@ -158,7 +163,7 @@ function DashboardPage() {
                   </Badge>
                 </div>
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  Every tip here is someone choosing to say thank you. Keep doing what you're doing — it's working.
+                  Every payment and tip here is a customer valuing your work. Keep doing what you're doing — it's working.
                 </p>
               </div>
 
@@ -352,7 +357,7 @@ function DashboardPage() {
                 Earn more
               </Badge>
               <div>
-                <h2 className="font-display text-2xl font-bold">More scans, more tips</h2>
+                <h2 className="font-display text-2xl font-bold">More scans, more earnings</h2>
                 <p className="mt-2 max-w-md text-sm leading-relaxed text-primary-foreground/85">
                   Print your QR once, then put it everywhere a customer might see — your invoice, your vehicle, your toolbox, your shop window. The more it's seen, the more it pays.
                 </p>

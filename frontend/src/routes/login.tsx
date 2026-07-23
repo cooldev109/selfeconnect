@@ -76,7 +76,7 @@ function LoginPage() {
               Reviews and tips, made simple.
             </p>
             <p className="mt-4 text-sm text-primary-foreground/85">
-              Collect customer reviews, build trust, and keep 100% of every tip.
+              Connect with customers. Build trust. Grow your business.
             </p>
           </div>
         </div>
