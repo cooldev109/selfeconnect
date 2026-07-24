@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck } from "lucide-react";
+import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck, Sparkles } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { logout, changePassword } from "@/lib/auth";
@@ -15,6 +15,7 @@ import {
   cancelSubscription,
 } from "@/lib/billing";
 import { ApiError } from "@/lib/api";
+import { gbp } from "@/hooks/usePricing";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -167,8 +168,13 @@ function AccountPage() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Current plan</p>
                 <h2 className="mt-1 text-xl font-bold text-foreground">SelfeConnect Professional</h2>
+                {accountQ.data.foundingMember ? (
+                  <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#E1F5EE] px-2.5 py-0.5 text-xs font-semibold text-primary">
+                    <Sparkles className="h-3 w-3" /> Founding member
+                  </p>
+                ) : null}
                 <p className="mt-1 text-sm text-muted-foreground">
-                  £5.49/month
+                  {gbp(accountQ.data.priceGbp)}/month
                   {endsOn
                     ? ` · won't renew · access until ${endsOn}`
                     : active

@@ -16,9 +16,14 @@ module.exports = {
         UPLOAD_DIR: "/root/projects/Blank/backend/uploads",
         // Stripe — leave STRIPE_SECRET_KEY empty to run in mock mode.
         STRIPE_SECRET_KEY: "sk_test_or_sk_live_...",
-        STRIPE_SUBSCRIPTION_PRICE_ID: "price_...",
         STRIPE_WEBHOOK_SECRET: "whsec_...",
-        SUBSCRIPTION_PRICE_GBP: "5.49",
+        // Founding-member pricing: the first FOUNDING_MEMBER_CAP professionals
+        // keep the founding price for as long as they stay subscribed.
+        STRIPE_FOUNDING_PRICE_ID: "price_...", // the existing £5.49 price
+        STRIPE_STANDARD_PRICE_ID: "price_...", // the £9.49 price
+        FOUNDING_MEMBER_CAP: "100",
+        FOUNDING_PRICE_GBP: "5.49",
+        STANDARD_PRICE_GBP: "9.49",
       },
     },
     {

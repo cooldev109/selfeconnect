@@ -32,7 +32,8 @@ const SECTIONS: { title: string; paragraphs: string[] }[] = [
   {
     title: "3. Professional Accounts & Subscription",
     paragraphs: [
-      "Professionals subscribe to SelfeConnect for £5.49 per month. Subscriptions renew automatically until cancelled. Professionals may cancel at any time.",
+      "Professionals subscribe to SelfeConnect on a monthly basis. The first 100 professionals to subscribe pay a founding-member rate of £5.49 per month and keep that rate for as long as their subscription remains active. Professionals subscribing after those places are taken pay £9.49 per month. The price that applies to you is shown before you complete checkout.",
+      "Subscriptions renew automatically until cancelled. Professionals may cancel at any time.",
       "The subscription provides access to the platform only and does not guarantee work, customers, bookings or earnings.",
       "By subscribing, Professionals acknowledge and agree that subscription payments are non-refundable, except where required by law. Access is granted for the duration of the paid billing cycle, approximately 30 days per period.",
     ],
@@ -163,7 +164,7 @@ function Terms() {
           Terms &amp; Conditions
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: 06 July 2026
+          Last updated: 24 July 2026
         </p>
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-foreground/90">

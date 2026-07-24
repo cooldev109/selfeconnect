@@ -86,6 +86,10 @@ model Driver {
   // When set + still active, the sub is cancelled but paid until this date.
   subscriptionCancelAtPeriodEnd Boolean   @default(false)
   subscriptionCurrentPeriodEnd  DateTime?
+  // One of the first N professionals to subscribe — they keep the launch rate
+  // for as long as the subscription stays live. Set when checkout is started;
+  // the spot is only counted as taken once the subscription actually exists.
+  foundingMember Boolean @default(false)
 
   // Email: verification, and whether they want job alerts. The unsubscribe
   // token lets a one-click opt-out work without logging in.

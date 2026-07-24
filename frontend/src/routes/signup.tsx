@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
@@ -10,8 +10,7 @@ import authSide from "@/assets/pro-tradesman.jpg";
 import { signup as signupRequest } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/driver";
 import { ApiError } from "@/lib/api";
-
-const PRICE_PER_MONTH = 5.49;
+import { usePricing, gbp } from "@/hooks/usePricing";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -78,10 +77,8 @@ function SignupPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const priceLabel = useMemo(
-    () => `£${PRICE_PER_MONTH.toFixed(2)}/month`,
-    []
-  );
+  const pricing = usePricing();
+  const priceLabel = `${gbp(pricing.amountGbp)}/month`;
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -350,6 +347,20 @@ function SignupPage() {
                 )}
               </Button>
 
+              {pricing.founding ? (
+                <p className="rounded-xl bg-primary/10 px-4 py-3 text-center text-xs leading-relaxed text-foreground">
+                  <span className="font-semibold text-primary">
+                    You&rsquo;re joining as a founding member.
+                  </span>{" "}
+                  {pricing.spotsLeft !== null
+                    ? `Only ${pricing.spotsLeft} ${pricing.spotsLeft === 1 ? "place is" : "places are"} left. `
+                    : ""}
+                  Our first {pricing.foundingCap} professionals keep{" "}
+                  {gbp(pricing.amountGbp)}/month for as long as they stay
+                  subscribed — it goes up to {gbp(pricing.standardAmountGbp)}/month
+                  after that.
+                </p>
+              ) : null}
               <p className="text-center text-xs text-muted-foreground">
                 Subscription managed securely via Stripe. Cancel anytime.
               </p>

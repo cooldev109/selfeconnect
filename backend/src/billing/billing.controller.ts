@@ -11,6 +11,7 @@ import {
 import type { Response } from 'express';
 import { BillingService } from './billing.service';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { PricingService } from './pricing.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
@@ -23,7 +24,17 @@ const homeAfter = () => `${appUrl()}/dashboard`;
 
 @Controller()
 export class BillingController {
-  constructor(private readonly billing: BillingService) {}
+  constructor(
+    private readonly billing: BillingService,
+    private readonly pricing: PricingService,
+  ) {}
+
+  // Public: drives the price shown on the homepage and the signup page, so the
+  // two can never drift from what checkout actually charges.
+  @Get('pricing')
+  publicPricing() {
+    return this.pricing.publicPricing();
+  }
 
   @Get('me/account')
   @UseGuards(AuthGuard)

@@ -31,6 +31,7 @@ import {
   Bug,
   Dog,
 } from "lucide-react";
+import { usePricing, gbp } from "@/hooks/usePricing";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
@@ -127,7 +128,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Find reviewed local professionals — plumbers, electricians, cleaners, gardeners and 50+ more. Free to search, free to post a job. Professionals: one flat £5.49/month, no commission, no lead fees.",
+          "Find reviewed local professionals — plumbers, electricians, cleaners, gardeners and 50+ more. Free to search, free to post a job. Professionals: one flat monthly fee, no commission, no lead fees.",
       },
     ],
   }),
@@ -135,6 +136,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const pricing = usePricing();
   const [proId, setProId] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
@@ -600,7 +602,7 @@ function Home() {
             points={[
               "Find local jobs in your trade or let customers find you.",
               "Your own QR code for reviews, payments, and tips.",
-              "£5.49/month — no commission, no lead fees",
+              `${gbp(pricing.amountGbp)}/month — no commission, no lead fees`,
             ]}
             cta="Join as a professional"
             to="/signup"
@@ -823,10 +825,25 @@ function Home() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-8 text-center backdrop-blur">
+              {pricing.founding ? (
+                <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                  <Sparkles className="h-3.5 w-3.5" /> Founding member rate
+                </p>
+              ) : null}
               <p className="font-display text-6xl font-extrabold tracking-tight text-ink-foreground tabular-nums">
-                £5.49
+                {gbp(pricing.amountGbp)}
               </p>
               <p className="mt-1 text-sm text-ink-muted">per month · cancel anytime</p>
+              {pricing.founding ? (
+                <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+                  {pricing.spotsLeft !== null
+                    ? `Only ${pricing.spotsLeft} founding ${pricing.spotsLeft === 1 ? "place" : "places"} left. `
+                    : ""}
+                  Our first {pricing.foundingCap} professionals keep this price for as long
+                  as they stay subscribed. After that it&rsquo;s{" "}
+                  {gbp(pricing.standardAmountGbp)}/month.
+                </p>
+              ) : null}
               <Button
                 asChild
                 size="lg"
@@ -1028,8 +1045,9 @@ function Home() {
             <AccordionTrigger>Is there really no commission?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Yes. We charge a flat fee of £5.49/month and never take a percentage
-                of your payments or tips. We also never charge per lead.
+                Yes. We charge a flat fee of {gbp(pricing.amountGbp)}/month and
+                never take a percentage of your payments or tips. We also never
+                charge per lead.
               </p>
               <p className="mt-3">
                 You keep 100% of every payment and tip, minus only the standard

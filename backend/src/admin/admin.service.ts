@@ -4,15 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PricingService } from '../billing/pricing.service';
 
-// Must match the Stripe subscription price. Configurable so a price change
-// only needs an env update (defaults to the current £5.49).
-const MONTHLY_FEE = Number(process.env.SUBSCRIPTION_PRICE_GBP) || 5.49;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pricing: PricingService,
+  ) {}
 
   async getOverview() {
     const [
@@ -62,7 +63,9 @@ export class AdminService {
       tipCount: tipAgg._count,
       totalPaymentsProcessed: round2((paymentAgg._sum.amount ?? 0) / 100),
       paymentCount: paymentAgg._count,
-      platformRevenue: round2(activeSubs * MONTHLY_FEE),
+      // Founding members pay less than everyone who joins after them, so this
+      // is summed per professional rather than headcount x one price.
+      platformRevenue: await this.pricing.monthlyRevenue(),
       monthly: await this.monthlyVolume(),
     };
   }

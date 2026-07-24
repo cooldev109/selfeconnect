@@ -3,31 +3,36 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import type { SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { STRIPE_GATEWAY, type StripeGateway } from '../stripe/gateway';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { PricingService } from './pricing.service';
 
 export function isSubscriptionActive(s: SubscriptionStatus): boolean {
   return s === 'active' || s === 'trialing';
 }
-
-const PRICE_ID = () =>
-  process.env.STRIPE_SUBSCRIPTION_PRICE_ID || 'price_mock_monthly';
 
 @Injectable()
 export class BillingService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(STRIPE_GATEWAY) private readonly stripe: StripeGateway,
+    private readonly pricing: PricingService,
   ) {}
 
   async getAccount(driverId: string) {
     const d = await this.prisma.driver.findUnique({ where: { id: driverId } });
     if (!d) throw new NotFoundException('not_found');
+    const plan = await this.pricing.planForAccount(d);
     return {
       email: d.email,
+      priceGbp: plan.amountGbp,
+      // The badge means "holds a founding place", which is only true once they
+      // have claimed one — distinct from merely being quoted the lower rate.
+      foundingMember: d.foundingMember,
       phone: d.phone ?? '',
       subscriptionStatus: d.subscriptionStatus,
       isActive: d.isActive,
@@ -83,10 +88,32 @@ export class BillingService {
   async startCheckout(driverId: string, urls: { successUrl: string; cancelUrl: string }) {
     const d = await this.prisma.driver.findUnique({ where: { id: driverId } });
     if (!d) throw new NotFoundException('not_found');
+
+    // Someone who already holds a founding spot keeps their rate when they come
+    // back; only a genuinely new subscriber draws from the remaining pool. The
+    // spot is claimed here so the price they are quoted is the price they get,
+    // and released automatically if they never complete checkout.
+    const plan = d.foundingMember
+      ? this.pricing.planFor(d)
+      : await this.pricing.planForNewSubscriber();
+    // A placeholder id against live Stripe would fail deep inside checkout with
+    // an opaque error. Fail loudly here instead — this can only mean the
+    // standard price was never created after the founding places ran out.
+    if (!this.stripe.isMock && plan.priceId.startsWith('price_mock')) {
+      throw new ServiceUnavailableException('price_not_configured');
+    }
+
+    if (plan.founding && !d.foundingMember) {
+      await this.prisma.driver.update({
+        where: { id: driverId },
+        data: { foundingMember: true },
+      });
+    }
+
     const res = await this.stripe.createSubscriptionCheckout({
       customerId: d.stripeCustomerId ?? undefined,
       email: d.email,
-      priceId: PRICE_ID(),
+      priceId: plan.priceId,
       driverId,
       ...urls,
     });

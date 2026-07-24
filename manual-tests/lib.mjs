@@ -4,7 +4,9 @@ import { writeFileSync } from "node:fs";
 import zlib from "node:zlib";
 
 export const BASE = process.env.BASE_URL || "https://luxerontech.com";
-export const API = BASE + "/api/v1";
+// In production nginx proxies /api on the same origin. On a dev box the API is
+// a separate port, so allow it to be pointed at directly.
+export const API = process.env.API_URL || BASE + "/api/v1";
 const DB = process.env.DATABASE_URL || "";
 
 // --- tiny test reporter ---
@@ -95,8 +97,15 @@ export async function signupDriver(ctx, { email, name = "MT Driver", photo }) {
   await p.getByPlaceholder("you@example.com").fill(email);
   await p.getByPlaceholder("+44 7700 900000").fill("+44 7700 900000");
   await p.getByPlaceholder("At least 8 characters").fill("supersecret");
+  // Marketplace signup also requires a postcode inside the service area and at
+  // least one trade. The postcode must geocode, so it is a real one.
+  await p.getByPlaceholder(/M1 1AE/).fill("RG1 8EQ");
+  await p.getByText("Plumber", { exact: true }).first().click();
   await p.getByRole("button", { name: /Create account/i }).click();
-  await p.waitForURL(/\/dashboard$/, { timeout: 20000 });
+  // Signup lands on /jobs since the marketplace launch. Callers still expect
+  // the dashboard, so go there once the account exists.
+  await p.waitForURL(/\/(jobs|dashboard)$/, { timeout: 20000 });
+  await p.goto(BASE + "/dashboard", { waitUntil: "networkidle" });
   return p;
 }
 

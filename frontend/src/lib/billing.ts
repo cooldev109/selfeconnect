@@ -3,6 +3,10 @@ import { api } from "./api";
 export interface AccountInfo {
   email: string;
   phone: string;
+  /** The monthly rate this professional is actually billed. */
+  priceGbp: number;
+  /** True if they hold one of the launch places and keep the lower rate. */
+  foundingMember: boolean;
   subscriptionStatus: string;
   isActive: boolean;
   stripeOnboarded: boolean;
