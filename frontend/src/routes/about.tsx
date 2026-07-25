@@ -6,11 +6,27 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About — SelfeConnect" },
-      { name: "description", content: "About SelfeConnect — reviews and tips for self-employed professionals." },
+      {
+        name: "description",
+        content:
+          "Built for professionals. Powered by community. SelfeConnect is a simple, fair and affordable platform helping independent professionals and local service businesses grow.",
+      },
     ],
   }),
   component: About,
 });
+
+// Body copy supplied by the client. Held as an array so the paragraphs render
+// uniformly and a future revision is a single edit here.
+const STORY: string[] = [
+  "SelfeConnect was created by professionals who understand what it's like to run a small business. We know how challenging it can be to find new customers while dealing with expensive lead fees, high commissions, and platforms that don't always put professionals first.",
+  "We believed there had to be a better way.",
+  "That's why we built SelfeConnect: a simple, fair and affordable platform designed to help independent professionals and local service businesses grow. A place where customers can discover trusted professionals, and where businesses can build their reputation, connect with new opportunities, collect genuine reviews, and accept cashless tips and payments through their own personal QR code.",
+  "But SelfeConnect is about more than just technology.",
+  "Our mission is to build the UK's largest community of self-employed professionals and small service businesses — helping people grow, strengthen their businesses, and connect with customers.",
+  "As our community grows, so will the platform. We'll continue introducing new tools and features designed to help our members save time, win more work and grow their businesses — while keeping SelfeConnect simple, fair and affordable.",
+  "We believe technology should empower small businesses, not profit from their struggles.",
+];
 
 function About() {
   return (
@@ -30,19 +46,20 @@ function About() {
       <article className="mx-auto max-w-3xl px-6 py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">About SelfeConnect</p>
         <h1 className="mt-2 text-3xl font-bold text-foreground font-display sm:text-4xl">
-          Recognition and reward for self-employed professionals
+          Built for professionals. Powered by community.
         </h1>
-        <p className="mt-5 text-base leading-relaxed text-foreground/80">
-          SelfeConnect helps independent, self-employed professionals get
-          recognised for great work. Each professional gets a personal QR code
-          their customers can scan to leave a review and a tip in seconds — no
-          app, no account, and no commission on tips.
-        </p>
-        <p className="mt-4 text-base leading-relaxed text-foreground/80">
-          We believe great service should be seen and rewarded. Whether you go
-          the extra mile — on any job, in any trade — SelfeConnect turns a
-          happy customer into real feedback and real earnings — paid straight to
-          your account.
+
+        <div className="mt-6 space-y-4">
+          {STORY.map((para) => (
+            <p key={para} className="text-base leading-relaxed text-foreground/80">
+              {para}
+            </p>
+          ))}
+        </div>
+
+        <p className="mt-8 text-lg font-semibold text-foreground font-display">
+          Built for professionals. Powered by community. And we're only getting
+          started.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
