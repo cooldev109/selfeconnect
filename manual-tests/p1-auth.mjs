@@ -37,6 +37,10 @@ export async function run(browser) {
     await page.locator('input[type="email"]').fill(email);
     await page.locator('input[type="password"]').fill(password);
     await page.getByRole("button", { name: /Log in/i }).click();
+    // Login lands on /jobs (or /admin) since the marketplace launch; the
+    // dashboard is then reachable from the side nav.
+    await page.waitForURL(/\/(jobs|dashboard|admin)$/, { timeout: 15000 });
+    await page.goto(BASE + "/dashboard", { waitUntil: "networkidle" });
     await page.waitForURL(/\/dashboard$/, { timeout: 15000 });
   });
 

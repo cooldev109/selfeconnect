@@ -7,7 +7,7 @@
 //
 //   node manual-tests/founding-pricing-ui.mjs
 
-import { chromium } from "/root/projects/Blank/manual-tests/node_modules/playwright-core/index.mjs";
+import { chromium } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 
 // Smallest valid PNG — the signup form requires a profile photo.

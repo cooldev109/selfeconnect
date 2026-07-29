@@ -1,7 +1,7 @@
 // P7 — Account polish: contact details edit & persist, client + server reject
 // invalid input, and the subscription card no longer shows a fabricated
 // "Next billing <date>" (now honest "renews monthly").
-import { BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver } from "./lib.mjs";
+import { BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver, activateSubscription } from "./lib.mjs";
 
 export async function run(browser) {
   const R = reporter();
@@ -65,8 +65,7 @@ export async function run(browser) {
   });
 
   await R.step("active plan shows honest renewal copy, no fabricated date", async () => {
-    await page.getByRole("button", { name: /Activate subscription/i }).click();
-    await page.waitForURL(/\/account$/, { timeout: 20000 });
+    await activateSubscription(page);
     await page.getByText(/renews monthly/i).waitFor({ timeout: 8000 });
     const body = await page.locator("body").innerText();
     if (/Next billing/i.test(body)) throw new Error("fabricated 'Next billing' date still present");

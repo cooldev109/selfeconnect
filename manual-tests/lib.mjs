@@ -109,6 +109,26 @@ export async function signupDriver(ctx, { email, name = "MT Driver", photo }) {
   return p;
 }
 
+// Activate the (mock) subscription, then land back on a settled /account.
+// The mock checkout "return" always redirects to /dashboard, so we wait for
+// THAT (not /account, which the page is already on — matching it immediately
+// would abort the in-flight activation) and then navigate back to /account.
+export async function activateSubscription(page) {
+  await page.goto(BASE + "/account", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /Activate subscription/i }).click();
+  await page.waitForURL(/\/dashboard$/, { timeout: 20000 });
+  await page.goto(BASE + "/account", { waitUntil: "networkidle" });
+  await page.getByText("Active", { exact: true }).first().waitFor({ timeout: 10000 });
+}
+
+// Connect (mock) payouts, then return to /account and confirm it reads "Ready".
+export async function connectPayouts(page) {
+  await page.getByRole("button", { name: /Connect payouts/i }).click();
+  await page.waitForURL(/\/dashboard$/, { timeout: 20000 });
+  await page.goto(BASE + "/account", { waitUntil: "networkidle" });
+  await page.getByText(/Ready/).first().waitFor({ timeout: 10000 });
+}
+
 // Remove all test rows created by these suites. No-op if DATABASE_URL unset.
 export function cleanup(prefixes = ["mt_"]) {
   if (!DB) return;

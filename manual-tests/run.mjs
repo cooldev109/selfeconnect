@@ -11,6 +11,17 @@
 //
 // DATABASE_URL is optional; without it P5 is skipped and no test data is
 // cleaned up. With it, P5 runs and all test rows are removed at the end.
+//
+// The billing phases (P3/P4/P6/P7/P8) exercise the checkout round-trip, which
+// bounces through PUBLIC_URL and therefore needs the web app and /api on ONE
+// origin. Production has that via nginx. On dev the two are split across ports,
+// so run them behind the same-origin proxy:
+//   node manual-tests/dev-proxy.mjs &                       # serves :3200
+//   # restart the API with PUBLIC_URL=http://localhost:3200, and build the web
+//   # with VITE_API_URL=/api/v1
+//   BASE_URL=http://localhost:3200 \
+//   DATABASE_URL=postgresql://tips:tips_local_dev@localhost:5432/selfeconnect_dev \
+//     node manual-tests/run.mjs
 import { chromium } from "@playwright/test";
 import { BASE, hasDb, cleanup } from "./lib.mjs";
 import { run as p1 } from "./p1-auth.mjs";

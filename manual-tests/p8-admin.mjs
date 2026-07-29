@@ -3,17 +3,14 @@
 // (redirected by the UI and rejected by the API). Requires DATABASE_URL to
 // promote a driver to admin and to seed.
 import {
-  BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver, hasDb, sql,
+  BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver, hasDb, sql, activateSubscription, connectPayouts,
 } from "./lib.mjs";
 
 async function makeAccepting(ctx, png, email, name) {
   const page = await signupDriver(ctx, { email, name, photo: png });
   await page.goto(BASE + "/account", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /Activate subscription/i }).click();
-  await page.waitForURL(/\/account$/, { timeout: 20000 });
-  await page.getByRole("button", { name: /Connect payouts/i }).click();
-  await page.waitForURL(/\/account$/, { timeout: 20000 });
-  await page.getByText(/Ready/).first().waitFor({ timeout: 10000 });
+  await activateSubscription(page);
+  await connectPayouts(page);
   return page;
 }
 
@@ -52,8 +49,14 @@ export async function run(browser) {
     overview = await pAdmin.evaluate((a) => fetch(a + "/admin/overview", { credentials: "include" }).then((r) => r.json()), API);
     if (overview.totalDrivers < 1) throw new Error("totalDrivers=" + overview.totalDrivers);
     if (overview.activeSubs < 1) throw new Error("activeSubs=" + overview.activeSubs);
-    if (Math.abs(overview.platformRevenue - overview.activeSubs * 9.99) > 0.01) {
-      throw new Error(`revenue ${overview.platformRevenue} != activeSubs ${overview.activeSubs} × 9.99`);
+    // Revenue is now a per-member mix: founding members pay £5.49, everyone
+    // else £9.49 — the same sum the pricing service computes.
+    const [f, st] = sql(
+      `SELECT count(*) FILTER (WHERE "foundingMember"), count(*) FILTER (WHERE NOT "foundingMember") FROM "Driver" WHERE "isActive"`,
+    ).split("|").map(Number);
+    const expectedRevenue = Math.round((f * 5.49 + st * 9.49) * 100) / 100;
+    if (Math.abs(overview.platformRevenue - expectedRevenue) > 0.01) {
+      throw new Error(`revenue ${overview.platformRevenue} != mix ${expectedRevenue} (${f}×5.49 + ${st}×9.49)`);
     }
     if (overview.totalTipsProcessed < 7) throw new Error("tips=" + overview.totalTipsProcessed);
     if (!Array.isArray(overview.monthly) || overview.monthly.length !== 6) throw new Error("monthly bad");
@@ -71,12 +74,12 @@ export async function run(browser) {
     await pAdmin.getByPlaceholder(/Search by name/i).fill(driverName);
     await pAdmin.getByText(driverName).first().waitFor({ timeout: 8000 });
     await pAdmin.getByPlaceholder(/Search by name/i).fill("zzzz-no-match");
-    await pAdmin.getByText(/No drivers match/i).waitFor({ timeout: 5000 });
+    await pAdmin.getByText(/No professionals match/i).waitFor({ timeout: 5000 });
   });
 
   await R.step("admin transactions table lists real tips", async () => {
     await pAdmin.goto(BASE + "/admin/transactions", { waitUntil: "networkidle" });
-    await pAdmin.getByPlaceholder(/Search by driver name/i).fill(driverName);
+    await pAdmin.getByPlaceholder(/Search by professional name/i).fill(driverName);
     await pAdmin.getByText(driverName).first().waitFor({ timeout: 8000 });
     await pAdmin.getByText("£5.00").first().waitFor({ timeout: 8000 });
   });

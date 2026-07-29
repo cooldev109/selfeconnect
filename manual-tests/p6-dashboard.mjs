@@ -1,16 +1,13 @@
 // P6 — Dashboard tips & stats: empty state for a new driver, then real tips
 // drive the hero total, "Recent tips" list and the "Customer love" quote
 // (the useTips mock is gone — this is live data via GET /me/tips).
-import { BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver } from "./lib.mjs";
+import { BASE, API, reporter, uniqueEmail, writeTestPng, signupDriver, activateSubscription, connectPayouts } from "./lib.mjs";
 
 async function makeAccepting(ctx, png, email) {
   const page = await signupDriver(ctx, { email, name: "P6 Driver", photo: png });
   await page.goto(BASE + "/account", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /Activate subscription/i }).click();
-  await page.waitForURL(/\/account$/, { timeout: 20000 });
-  await page.getByRole("button", { name: /Connect payouts/i }).click();
-  await page.waitForURL(/\/account$/, { timeout: 20000 });
-  await page.getByText(/Ready/).first().waitFor({ timeout: 10000 });
+  await activateSubscription(page);
+  await connectPayouts(page);
   return page;
 }
 
