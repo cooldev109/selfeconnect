@@ -330,6 +330,9 @@ function Home() {
             <a href="#pricing" className="transition-colors hover:text-foreground">
               Pricing
             </a>
+            <Link to="/about" className="transition-colors hover:text-foreground">
+              About SelfeConnect
+            </Link>
           </nav>
           <div className="flex shrink-0 items-center gap-3 sm:gap-4">
             <Link
