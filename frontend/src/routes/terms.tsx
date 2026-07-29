@@ -17,6 +17,7 @@ const SECTIONS: { title: string; paragraphs: string[] }[] = [
   {
     title: "1. About SelfeConnect",
     paragraphs: [
+      "selfeconnect.com (“we”, “us”, or “our”) is a site operated by SELFECONNECT LTD. We are registered in England and Wales under company number 17367516 and have our registered office and correspondence address at 66 Paul Street, London, EC2A 4NA. We are a limited company.",
       "SelfeConnect is an online technology platform that connects customers, businesses and independent professionals. Customers can create an account, publish jobs and connect directly with local Professionals. Professionals can create profiles, browse available jobs, connect with Customers and, as an optional feature, receive cashless customer tips and payments through their personal QR code using Stripe Connect.",
       "SelfeConnect only provides the technology that enables these connections. SelfeConnect is not an employer, recruitment agency, staffing agency, contractor, broker, or party to any agreement between Customers and Professionals. Any agreement, negotiation, or business relationship exists solely between the Customer and the Professional.",
       "By creating an account or using the platform, you agree to these Terms & Conditions.",
@@ -164,7 +165,7 @@ function Terms() {
           Terms &amp; Conditions
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: 24 July 2026
+          Last updated: 28 July 2026
         </p>
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-foreground/90">

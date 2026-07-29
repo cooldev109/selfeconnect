@@ -24,7 +24,8 @@ const SECTIONS: Section[] = [
   {
     title: "1. Who We Are",
     paragraphs: [
-      "SelfeConnect (“we”, “us”, or “our”) operates the SelfeConnect platform, which enables self-employed professionals to receive customer feedback, ratings, and payments through personalised QR codes and tipping pages.",
+      "selfeconnect.com (“we”, “us”, or “our”) is a site operated by SELFECONNECT LTD. We are registered in England and Wales under company number 17367516 and have our registered office and correspondence address at 66 Paul Street, London, EC2A 4NA. We are a limited company.",
+      "SelfeConnect operates the platform, which enables self-employed professionals to receive customer feedback, ratings, and payments through personalised QR codes and tipping pages.",
       "SelfeConnect does not process payments. All payments are processed directly by Stripe. SelfeConnect only generates personalised QR codes that link Customers to the Professional's Stripe payment page.",
       "SelfeConnect acts as the data controller for the personal data processed through its platform, unless otherwise stated in this Privacy Policy.",
       "This Privacy Policy explains how we collect, use, and protect your personal data in accordance with applicable UK data protection laws, including the UK GDPR.",
@@ -147,7 +148,7 @@ function Privacy() {
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: 15 July 2026
+          Last updated: 28 July 2026
         </p>
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-foreground/90">
