@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   Star,
   Download,
@@ -9,6 +10,7 @@ import {
   MapPin,
   Quote,
   Wallet,
+  ChevronDown,
 } from "lucide-react";
 import {
   Area,
@@ -48,6 +50,12 @@ function DashboardPage() {
   const { data: driver } = useMe();
   const { data: account } = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
   const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak, payments, paymentTotal, paymentCount } = useTips();
+  // Individual payments are viewable right here on the dashboard, so a
+  // professional never has to open the spreadsheet just to check one.
+  const [showPayments, setShowPayments] = useState(false);
+  const paymentsByNewest = [...payments].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 
   // Everything the professional has been paid, in one file for their records
   // (and their accountant). Tips and payments in one timeline, clearly typed.
@@ -188,34 +196,92 @@ function DashboardPage() {
 
         {/* Direct payments — money for work, kept separate from tips. */}
         <section className="animate-fade-up">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-6 py-4 shadow-soft">
-            <div>
-              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Wallet className="h-4 w-4 text-primary" /> Payments received
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Paid to you directly through your QR — separate from tips.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="font-display text-2xl font-bold text-foreground">
-                  £{paymentTotal.toFixed(2)}
+          <div className="rounded-2xl border border-border bg-card shadow-soft">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Wallet className="h-4 w-4 text-primary" /> Payments received
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {paymentCount} payment{paymentCount === 1 ? "" : "s"}
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Paid to you directly through your QR — separate from tips.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                onClick={downloadReport}
-                disabled={tips.length + payments.length === 0}
-                title="Download every tip and payment as a spreadsheet"
-              >
-                <Download className="mr-1.5 h-4 w-4" /> Report
-              </Button>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="font-display text-2xl font-bold text-foreground">
+                    £{paymentTotal.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {paymentCount} payment{paymentCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+                {paymentCount > 0 && (
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => setShowPayments((v) => !v)}
+                    aria-expanded={showPayments}
+                    title="See each payment individually"
+                  >
+                    {showPayments ? "Hide" : "View payments"}
+                    <ChevronDown
+                      className={`ml-1.5 h-4 w-4 transition-transform ${showPayments ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={downloadReport}
+                  disabled={tips.length + payments.length === 0}
+                  title="Download every tip and payment as a spreadsheet"
+                >
+                  <Download className="mr-1.5 h-4 w-4" /> Report
+                </Button>
+              </div>
             </div>
+
+            {/* Individual payments — the list the professional can open in the
+                dashboard instead of the spreadsheet. */}
+            {showPayments && paymentCount > 0 && (
+              <div className="border-t border-border/60 px-6 py-2">
+                <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-border/50 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span>From</span>
+                  <span className="text-right">Amount</span>
+                </div>
+                <ul>
+                  {paymentsByNewest.map((p) => (
+                    <li
+                      key={p.id}
+                      className="grid grid-cols-[1fr_auto] items-center gap-x-4 border-b border-border/40 py-3 last:border-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {p.customerName?.trim() || "Anonymous"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(p.date).toLocaleDateString(undefined, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <p className="text-right font-display text-base font-bold tabular-nums text-foreground">
+                        £{p.amount.toFixed(2)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-center justify-between gap-4 py-3 text-sm">
+                  <span className="font-semibold text-foreground">Total</span>
+                  <span className="font-display text-base font-bold tabular-nums text-primary">
+                    £{paymentTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
