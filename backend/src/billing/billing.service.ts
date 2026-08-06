@@ -84,6 +84,14 @@ export class BillingService {
     return { onboarded };
   }
 
+  // Login link to the professional's Stripe dashboard (balance, payouts, bank
+  // details, withdrawals). Only meaningful once they have a Connect account.
+  async dashboardLink(driverId: string) {
+    const d = await this.prisma.driver.findUnique({ where: { id: driverId } });
+    if (!d?.stripeAccountId) throw new NotFoundException('no_connect_account');
+    return this.stripe.createDashboardLink(d.stripeAccountId);
+  }
+
   // --- Subscription (monthly fee) ---
   async startCheckout(driverId: string, urls: { successUrl: string; cancelUrl: string }) {
     const d = await this.prisma.driver.findUnique({ where: { id: driverId } });

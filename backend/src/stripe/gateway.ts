@@ -26,6 +26,10 @@ export interface StripeGateway {
   }): Promise<{ url: string }>;
   getAccountStatus(accountId: string): Promise<AccountStatus>;
 
+  // One-time login link to the professional's Stripe Express dashboard, where
+  // they see their balance, payout history and bank details, and can withdraw.
+  createDashboardLink(accountId: string): Promise<{ url: string }>;
+
   createSubscriptionCheckout(input: {
     customerId?: string;
     email: string;

@@ -17,6 +17,9 @@ export class MockStripeGateway implements StripeGateway {
   async getAccountStatus(): Promise<AccountStatus> {
     return { chargesEnabled: true, payoutsEnabled: true, detailsSubmitted: true };
   }
+  async createDashboardLink() {
+    return { url: 'https://dashboard.stripe.com/test' };
+  }
   async createSubscriptionCheckout(i: {
     customerId?: string;
     successUrl: string;

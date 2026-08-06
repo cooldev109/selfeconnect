@@ -54,6 +54,10 @@ export class RealStripeGateway implements StripeGateway {
       detailsSubmitted: Boolean(a.details_submitted),
     };
   }
+  async createDashboardLink(accountId: string) {
+    const l = await this.stripe.accounts.createLoginLink(accountId);
+    return { url: l.url };
+  }
   async createSubscriptionCheckout(i: {
     customerId?: string;
     email: string;

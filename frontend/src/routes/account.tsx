@@ -12,6 +12,7 @@ import {
   startCheckout,
   startPortal,
   startConnect,
+  openConnectDashboard,
   cancelSubscription,
 } from "@/lib/billing";
 import { ApiError } from "@/lib/api";
@@ -252,6 +253,30 @@ function AccountPage() {
                 </Badge>
               ) : null}
             </div>
+            {onboarded && (
+              <div className="mt-5">
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Your earnings are paid to your bank automatically. Open your
+                  Stripe dashboard to see your balance, payout history, and to
+                  withdraw or update your bank details.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  className="rounded-xl"
+                  onClick={() => go(openConnectDashboard, "payout")}
+                >
+                  <ExternalLink className="mr-1.5 h-4 w-4" />
+                  {busy ? "Opening…" : "View earnings & payouts"}
+                </Button>
+                {actionError?.scope === "payout" && (
+                  <p className="mt-3 text-sm text-destructive" role="alert">
+                    {actionError.message}
+                  </p>
+                )}
+              </div>
+            )}
             {!onboarded && (
               <div className="mt-5">
                 <Button

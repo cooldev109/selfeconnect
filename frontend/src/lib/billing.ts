@@ -25,3 +25,6 @@ export const cancelSubscription = () =>
   api<{ ok: true }>("/subscription/cancel", { method: "POST" });
 export const startConnect = () =>
   api<{ url: string }>("/connect/onboard", { method: "POST" });
+// Opens the professional's Stripe dashboard (balance, payouts, withdrawals).
+export const openConnectDashboard = () =>
+  api<{ url: string }>("/connect/dashboard", { method: "POST" });

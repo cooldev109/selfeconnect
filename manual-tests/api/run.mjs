@@ -13,8 +13,9 @@ import { run as geo } from "./geo-gate.mjs";
 import { run as accountFlows } from "./account-flows.mjs";
 import { run as adminCrud } from "./admin-crud.mjs";
 import { run as authBoundaries } from "./auth-boundaries.mjs";
+import { run as payouts } from "./payouts.mjs";
 
-const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries];
+const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts];
 
 const results = [];
 for (const suite of SUITES) {

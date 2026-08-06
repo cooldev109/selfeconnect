@@ -59,6 +59,14 @@ export class BillingController {
     return this.billing.startOnboarding(u.id, { returnUrl: ret, refreshUrl: ret });
   }
 
+  // A one-time link to the professional's Stripe dashboard (balance, payouts,
+  // withdrawals). Returned to the client, which redirects to it.
+  @Post('connect/dashboard')
+  @UseGuards(AuthGuard)
+  dashboard(@CurrentUser() u: AuthUser) {
+    return this.billing.dashboardLink(u.id);
+  }
+
   // Public: just a landing/redirect from Stripe. Never let a status-refresh
   // error block the redirect — the webhook reconciles state regardless.
   @Get('connect/return')

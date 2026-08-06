@@ -11,6 +11,7 @@ import {
   Quote,
   Wallet,
   ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 import {
   Area,
@@ -26,7 +27,7 @@ import { ProShell } from "@/components/ProShell";
 import { useMe } from "@/hooks/useDriver";
 import { useTips } from "@/hooks/useTips";
 import { useQuery } from "@tanstack/react-query";
-import { getAccount } from "@/lib/billing";
+import { getAccount, openConnectDashboard } from "@/lib/billing";
 import scanQrImg from "@/assets/pro-cleaner.jpg";
 
 export const Route = createFileRoute("/dashboard")({
@@ -53,6 +54,16 @@ function DashboardPage() {
   // Individual payments are viewable right here on the dashboard, so a
   // professional never has to open the spreadsheet just to check one.
   const [showPayments, setShowPayments] = useState(false);
+  // Opens the professional's Stripe dashboard (balance, payouts, withdrawals).
+  // Only shown once onboarded, so the endpoint always has a Connect account.
+  const openPayouts = async () => {
+    try {
+      const { url } = await openConnectDashboard();
+      window.location.href = url;
+    } catch {
+      /* button only renders when onboarded */
+    }
+  };
   const paymentsByNewest = [...payments].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
@@ -227,6 +238,16 @@ function DashboardPage() {
                     <ChevronDown
                       className={`ml-1.5 h-4 w-4 transition-transform ${showPayments ? "rotate-180" : ""}`}
                     />
+                  </Button>
+                )}
+                {account?.stripeOnboarded && (
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={openPayouts}
+                    title="See your balance and withdraw to your bank on Stripe"
+                  >
+                    <ExternalLink className="mr-1.5 h-4 w-4" /> Payouts
                   </Button>
                 )}
                 <Button
