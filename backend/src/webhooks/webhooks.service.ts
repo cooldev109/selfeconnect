@@ -1,3 +1,4 @@
+import { subscriptionPeriodEnd } from '../stripe/subscription-period';
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { Prisma, type SubscriptionStatus, type TipStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -90,10 +91,12 @@ export class WebhooksService {
           mapSubscriptionStatus(obj.status),
           {
             subscriptionId: typeof obj.id === 'string' ? obj.id : undefined,
-            currentPeriodEnd:
-              typeof obj.current_period_end === 'number'
-                ? new Date(obj.current_period_end * 1000)
-                : undefined,
+            // Newer Stripe API versions carry current_period_end on the
+            // subscription item, not the subscription — read it version-safely.
+            currentPeriodEnd: (() => {
+              const end = subscriptionPeriodEnd(obj);
+              return typeof end === 'number' ? new Date(end * 1000) : undefined;
+            })(),
             cancelAtPeriodEnd: Boolean(obj.cancel_at_period_end),
           },
         );

@@ -41,7 +41,7 @@ export interface StripeGateway {
 
   cancelSubscriptionAtPeriodEnd(
     subscriptionId: string,
-  ): Promise<{ currentPeriodEnd: number; cancelAtPeriodEnd: boolean }>;
+  ): Promise<{ currentPeriodEnd: number | null; cancelAtPeriodEnd: boolean }>;
 
   createTipPaymentIntent(input: {
     amount: number;

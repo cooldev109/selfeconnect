@@ -1,3 +1,4 @@
+import { subscriptionPeriodEnd } from './subscription-period';
 import Stripe from 'stripe';
 import type { StripeGateway, AccountStatus, WebhookEvent } from './gateway';
 
@@ -89,12 +90,11 @@ export class RealStripeGateway implements StripeGateway {
   async cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
     const s = (await this.stripe.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
-    })) as unknown as {
-      current_period_end: number;
-      cancel_at_period_end: boolean;
-    };
+    })) as unknown as { cancel_at_period_end: boolean };
+    // `current_period_end` lives on the subscription item in newer API
+    // versions — read it version-safely so we never build an Invalid Date.
     return {
-      currentPeriodEnd: s.current_period_end,
+      currentPeriodEnd: subscriptionPeriodEnd(s) ?? null,
       cancelAtPeriodEnd: s.cancel_at_period_end,
     };
   }

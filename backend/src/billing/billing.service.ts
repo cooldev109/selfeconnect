@@ -150,7 +150,9 @@ export class BillingService {
         where: { id: driverId },
         data: {
           subscriptionCancelAtPeriodEnd: r.cancelAtPeriodEnd,
-          subscriptionCurrentPeriodEnd: new Date(r.currentPeriodEnd * 1000),
+          subscriptionCurrentPeriodEnd: r.currentPeriodEnd
+            ? new Date(r.currentPeriodEnd * 1000)
+            : null,
         },
       });
       return { ok: true };
