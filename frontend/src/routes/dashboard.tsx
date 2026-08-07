@@ -208,17 +208,17 @@ function DashboardPage() {
         {/* Direct payments — money for work, kept separate from tips. */}
         <section className="animate-fade-up">
           <div className="rounded-2xl border border-border bg-card shadow-soft">
-            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Wallet className="h-4 w-4 text-primary" /> Payments received
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Paid to you directly through your QR — separate from tips.
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
+            <div className="px-6 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Wallet className="h-4 w-4 text-primary" /> Payments received
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Paid to you directly through your QR — separate from tips.
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
                   <p className="font-display text-2xl font-bold text-foreground">
                     £{paymentTotal.toFixed(2)}
                   </p>
@@ -226,10 +226,14 @@ function DashboardPage() {
                     {paymentCount} payment{paymentCount === 1 ? "" : "s"}
                   </p>
                 </div>
+              </div>
+              {/* Buttons stack full-width on mobile, sit inline on wider
+                  screens — three of them overflow a phone row otherwise. */}
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 {paymentCount > 0 && (
                   <Button
                     variant="outline"
-                    className="rounded-xl"
+                    className="justify-center rounded-xl"
                     onClick={() => setShowPayments((v) => !v)}
                     aria-expanded={showPayments}
                     title="See each payment individually"
@@ -243,7 +247,7 @@ function DashboardPage() {
                 {account?.stripeOnboarded && (
                   <Button
                     variant="outline"
-                    className="rounded-xl"
+                    className="justify-center rounded-xl"
                     onClick={openPayouts}
                     title="See your balance and withdraw to your bank on Stripe"
                   >
@@ -252,7 +256,7 @@ function DashboardPage() {
                 )}
                 <Button
                   variant="outline"
-                  className="rounded-xl"
+                  className="justify-center rounded-xl"
                   onClick={downloadReport}
                   disabled={tips.length + payments.length === 0}
                   title="Download every tip and payment as a spreadsheet"
