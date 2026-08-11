@@ -6,6 +6,7 @@ import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/pro-tradesman.jpg";
 import { customerLogin } from "@/lib/customer-auth";
+import { LoginRoleTabs } from "@/components/LoginRoleTabs";
 
 export const Route = createFileRoute("/customer/login")({
   // Carries a search started from the homepage hero through sign-in.
@@ -128,6 +129,8 @@ function CustomerLoginPage() {
               SelfeConnect
             </span>
           </Link>
+          <LoginRoleTabs active="customer" />
+
           <div className="text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
               Customer log in

@@ -6,6 +6,7 @@ import { LogoMark } from "@/components/Logo";
 import { Button, Card, CardContent, Input } from "@/components/shared";
 import authSide from "@/assets/pro-tradesman.jpg";
 import { login as loginRequest } from "@/lib/auth";
+import { LoginRoleTabs } from "@/components/LoginRoleTabs";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -92,6 +93,8 @@ function LoginPage() {
             <LogoMark className="h-9 w-9" />
             <span className="text-lg font-bold tracking-tight text-foreground font-display">SelfeConnect</span>
           </Link>
+        <LoginRoleTabs active="professional" />
+
         <div className="text-center">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
             Professional log in

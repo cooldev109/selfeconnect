@@ -138,9 +138,36 @@ function SearchPage() {
         </div>
       ) : pros.length === 0 && !badPostcode ? (
         <Card className="mt-6 rounded-2xl border-dashed">
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            No professionals match your search yet. Try a different service or a
-            wider radius.
+          <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                No professionals here yet
+              </p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                Nobody matches your search in this area yet. Try a different
+                service or a wider radius — or post your job and let
+                professionals come to you.
+              </p>
+            </div>
+            {customer ? (
+              <Button
+                asChild
+                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Link to="/customer/jobs/new">
+                  Post a job — let professionals find you
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Link to="/customer/signup">
+                  Sign up free &amp; post a job
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
