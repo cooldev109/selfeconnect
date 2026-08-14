@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, type JobStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
 import { MailService } from '../mail/mail.service';
@@ -18,6 +18,25 @@ const jobInclude = {
   hiredDriver: { select: { publicId: true, name: true, company: true } },
   _count: { select: { unlocks: true } },
 } satisfies Prisma.JobInclude;
+
+// The only status changes the lifecycle allows. `closed` stays purely as a
+// legacy terminal state for pre-lifecycle jobs; new flows use the states below.
+const JOB_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
+  open: ['hired', 'cancelled', 'closed'],
+  hired: ['in_progress', 'completed', 'cancelled'],
+  in_progress: ['completed', 'cancelled'],
+  completed: [],
+  cancelled: [],
+  closed: [],
+};
+
+// The timestamp column that records when a job entered each stage.
+const STATUS_TIMESTAMP: Partial<Record<JobStatus, 'hiredAt' | 'startedAt' | 'completedAt' | 'cancelledAt'>> = {
+  hired: 'hiredAt',
+  in_progress: 'startedAt',
+  completed: 'completedAt',
+  cancelled: 'cancelledAt',
+};
 type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
 // How far a professional will realistically travel for a job alert.
@@ -71,6 +90,12 @@ export class JobsService {
       // Quote cap, and how much of it is used, so the customer sees "3 of 10".
       maxContacts: j.maxContacts ?? null,
       contactCount: j._count.unlocks,
+      // Lifecycle timestamps — null until the job reaches that stage.
+      hiredAt: j.hiredAt?.toISOString() ?? null,
+      startedAt: j.startedAt?.toISOString() ?? null,
+      completedAt: j.completedAt?.toISOString() ?? null,
+      cancelledAt: j.cancelledAt?.toISOString() ?? null,
+      cancelReason: j.cancelReason ?? null,
       createdAt: j.createdAt.toISOString(),
     };
   }
@@ -217,7 +242,20 @@ export class JobsService {
     if (dto.workingHours !== undefined) data.workingHours = dto.workingHours?.trim();
     if (dto.budget !== undefined) data.budget = dto.budget?.trim();
     if (dto.maxContacts !== undefined) data.maxContacts = dto.maxContacts;
-    if (dto.status !== undefined) data.status = dto.status;
+    // A status change must be a valid lifecycle transition, and it stamps the
+    // time the job entered that stage.
+    if (dto.status !== undefined && dto.status !== existing.status) {
+      const allowed = JOB_TRANSITIONS[existing.status] ?? [];
+      if (!allowed.includes(dto.status)) {
+        throw new BadRequestException('invalid_status_transition');
+      }
+      data.status = dto.status;
+      const stamp = STATUS_TIMESTAMP[dto.status];
+      if (stamp) data[stamp] = new Date();
+      if (dto.status === 'cancelled' && dto.cancelReason) {
+        data.cancelReason = dto.cancelReason.trim();
+      }
+    }
     if (dto.hiredDriverPublicId !== undefined) {
       if (dto.hiredDriverPublicId) {
         const hired = await this.prisma.driver.findFirst({

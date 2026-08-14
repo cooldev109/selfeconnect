@@ -63,9 +63,17 @@ export class UpdateJobDto {
   @Max(50)
   maxContacts?: number | null;
 
+  // A lifecycle transition. The service enforces which changes are valid
+  // (e.g. open -> hired -> in_progress -> completed, or -> cancelled).
   @IsOptional()
-  @IsIn(['open', 'closed'])
-  status?: 'open' | 'closed';
+  @IsIn(['open', 'hired', 'in_progress', 'completed', 'cancelled', 'closed'])
+  status?: 'open' | 'hired' | 'in_progress' | 'completed' | 'cancelled' | 'closed';
+
+  // Optional note when cancelling a job.
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  cancelReason?: string;
 
   // The professional the customer says they hired. Pass a publicId to record
   // the hire, or null to clear it. Typically sent together with status:'closed'

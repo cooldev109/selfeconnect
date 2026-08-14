@@ -38,9 +38,18 @@ enum TipType {
   payment
 }
 
+// The job lifecycle. `open` = posted and accepting quotes (the initial state);
+// `closed` is a legacy terminal state kept for jobs created before the
+// lifecycle existed. Derived stages the dashboard also shows — "quoted" (has
+// quotes), "paid" (has a payment), "reviewed" (has a review) — are computed
+// from related rows, not stored here, since they aren't mutually exclusive.
 enum JobStatus {
-  open
-  closed
+  open // posted, accepting quotes
+  hired // customer hired a professional
+  in_progress // work under way
+  completed // work finished
+  cancelled // cancelled by customer or professional
+  closed // legacy terminal state (pre-lifecycle jobs)
 }
 
 // Whether a service-seeker account is an individual or a business.
@@ -248,6 +257,14 @@ model Job {
   // The customer confirmed, when posting, that SelfeConnect may share their
   // contact details with relevant professionals. Recorded for the audit trail.
   contactConsentAt DateTime?
+
+  // Lifecycle timestamps — set as the job moves through its stages. They give
+  // the audit trail and let each dashboard show "hired 2 days ago", etc.
+  hiredAt      DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
