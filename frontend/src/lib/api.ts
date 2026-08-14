@@ -1,6 +1,5 @@
 const BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  "http://localhost:4000/api/v1";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:4000/api/v1";
 
 export class ApiError extends Error {
   status: number;
@@ -16,13 +15,16 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T = unknown>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+  // Let the browser set the multipart boundary for FormData uploads; forcing
+  // application/json here would corrupt the request.
+  const isForm = options.body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
+    headers: {
+      ...(isForm ? {} : { "Content-Type": "application/json" }),
+      ...(options.headers ?? {}),
+    },
     ...options,
   });
   const text = await res.text();

@@ -6,6 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, type JobStatus } from '@prisma/client';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
 import { MailService } from '../mail/mail.service';
@@ -90,6 +94,8 @@ export class JobsService {
       // Quote cap, and how much of it is used, so the customer sees "3 of 10".
       maxContacts: j.maxContacts ?? null,
       contactCount: j._count.unlocks,
+      photos: j.photos ?? [],
+      timing: j.timing ?? null,
       // Lifecycle timestamps — null until the job reaches that stage.
       hiredAt: j.hiredAt?.toISOString() ?? null,
       startedAt: j.startedAt?.toISOString() ?? null,
@@ -98,6 +104,27 @@ export class JobsService {
       cancelReason: j.cancelReason ?? null,
       createdAt: j.createdAt.toISOString(),
     };
+  }
+
+  // Store a job photo (landscape work photo) and return its public URL. Reuses
+  // the same uploads dir + serving route as profile photos.
+  async saveJobPhoto(buffer: Buffer): Promise<{ url: string }> {
+    let webp: Buffer;
+    try {
+      webp = await sharp(buffer)
+        .rotate()
+        .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('invalid_image');
+    }
+    const dir = process.env.UPLOAD_DIR || 'uploads';
+    await mkdir(dir, { recursive: true });
+    const filename = `job_${randomUUID()}.webp`;
+    await writeFile(join(dir, filename), webp);
+    const base = (process.env.PUBLIC_URL ?? 'http://localhost:4000').replace(/\/+$/, '');
+    return { url: `${base}/api/v1/uploads/${filename}` };
   }
 
   async create(customerId: string, dto: CreateJobDto) {
@@ -121,6 +148,8 @@ export class JobsService {
         workingHours: dto.workingHours?.trim(),
         budget: dto.budget?.trim(),
         maxContacts: dto.maxContacts ?? null,
+        photos: (dto.photos ?? []).slice(0, 8),
+        timing: dto.timing?.trim() || null,
         contactConsentAt: new Date(),
       },
       include: jobInclude,

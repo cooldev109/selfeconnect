@@ -232,6 +232,12 @@ model Job {
   description String
   status      JobStatus @default(open)
 
+  // Photos of the job (URLs), so professionals can quote accurately without a
+  // site visit. Optional. When the customer needs it done, kept as a simple,
+  // human phrase ("As soon as possible", "Within a week", "I'm flexible", …).
+  photos String[] @default([])
+  timing String?
+
   // Which professional the customer says they hired (set when the customer
   // marks the job "found my professional"). Optional — off-platform hires stay
   // null. Powers History + a targeted "leave a review".

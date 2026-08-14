@@ -54,6 +54,20 @@ export class CreateJobDto {
   @MaxLength(60)
   budget?: string;
 
+  // When the customer needs the work done — a simple human phrase.
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  timing?: string;
+
+  // Photo URLs (uploaded via POST /jobs/photo) shown to professionals.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(8)
+  @IsString({ each: true })
+  @MaxLength(500, { each: true })
+  photos?: string[];
+
   // How many professionals may unlock the customer's contact details. Omitted
   // or null = no limit. Capped at 50 so a "limit" can't be a de-facto free-for-all.
   @IsOptional()

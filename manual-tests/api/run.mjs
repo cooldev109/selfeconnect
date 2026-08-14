@@ -15,8 +15,9 @@ import { run as adminCrud } from "./admin-crud.mjs";
 import { run as authBoundaries } from "./auth-boundaries.mjs";
 import { run as payouts } from "./payouts.mjs";
 import { run as jobLifecycle } from "./job-lifecycle.mjs";
+import { run as jobPhotos } from "./job-photos.mjs";
 
-const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle];
+const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos];
 
 const results = [];
 for (const suite of SUITES) {

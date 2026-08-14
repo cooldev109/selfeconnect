@@ -14,6 +14,8 @@ export interface Job {
   workingDays: string[];
   workingHours: string | null;
   budget: string | null;
+  timing: string | null;
+  photos: string[];
   hiredDriverPublicId: string | null;
   hiredDriverName: string | null;
   /** How many professionals may unlock contact. null = no limit. */
@@ -39,6 +41,10 @@ export interface JobInput {
   workingDays?: string[];
   workingHours?: string;
   budget?: string;
+  /** Human phrase for when it's needed, e.g. "As soon as possible". */
+  timing?: string;
+  /** Photo URLs from uploadJobPhoto(), shown to professionals. */
+  photos?: string[];
   /** null = no limit on how many professionals may contact them. */
   maxContacts?: number | null;
   /** Required true on create — authorises sharing contact with professionals. */
@@ -47,6 +53,13 @@ export interface JobInput {
 
 export const createJob = (b: JobInput) =>
   api<Job>("/jobs", { method: "POST", body: JSON.stringify(b) });
+
+// Upload one job photo (multipart); returns its public URL for the create payload.
+export const uploadJobPhoto = (file: File) => {
+  const form = new FormData();
+  form.append("file", file);
+  return api<{ url: string }>("/jobs/photo", { method: "POST", body: form });
+};
 
 export const listMyJobs = () => api<Job[]>("/jobs/mine");
 
@@ -61,11 +74,9 @@ export const updateJob = (
   },
 ) => api<Job>(`/jobs/${id}`, { method: "PATCH", body: JSON.stringify(b) });
 
-export const deleteJob = (id: string) =>
-  api<{ ok: true }>(`/jobs/${id}`, { method: "DELETE" });
+export const deleteJob = (id: string) => api<{ ok: true }>(`/jobs/${id}`, { method: "DELETE" });
 
-export const jobInterestedPros = (id: string) =>
-  api<InterestedPro[]>(`/jobs/${id}/interested`);
+export const jobInterestedPros = (id: string) => api<InterestedPro[]>(`/jobs/${id}/interested`);
 
 // ---- Professional job board ----
 export interface ProJobContact {
