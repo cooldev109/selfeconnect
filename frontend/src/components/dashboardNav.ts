@@ -7,12 +7,14 @@ import {
   Search,
   Plus,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 import type { NavItem } from "@/components/DashboardShell";
 
 // Professional dashboard — "Find work" leads; tips move to a secondary tab.
 export const PRO_NAV: NavItem[] = [
   { to: "/jobs", label: "Find work", icon: Briefcase },
+  { to: "/my-jobs", label: "My jobs", icon: ClipboardList },
   { to: "/dashboard", label: "Payments & tips", icon: LineChart },
   { to: "/reviews", label: "My reviews", icon: Star },
   { to: "/profile", label: "Profile & QR", icon: QrCode },

@@ -1,10 +1,12 @@
 import { api } from "./api";
 
+export type JobStatus = "open" | "hired" | "in_progress" | "completed" | "cancelled" | "closed";
+
 export interface Job {
   id: string;
   title: string;
   description: string;
-  status: "open" | "closed";
+  status: JobStatus;
   categorySlug: string;
   categoryName: string;
   postcode: string;
@@ -16,6 +18,7 @@ export interface Job {
   budget: string | null;
   timing: string | null;
   photos: string[];
+  cancelReason: string | null;
   hiredDriverPublicId: string | null;
   hiredDriverName: string | null;
   /** How many professionals may unlock contact. null = no limit. */
@@ -68,7 +71,8 @@ export const getJob = (id: string) => api<Job>(`/jobs/${id}`);
 export const updateJob = (
   id: string,
   b: Partial<JobInput> & {
-    status?: "open" | "closed";
+    status?: JobStatus;
+    cancelReason?: string;
     hiredDriverPublicId?: string | null;
     maxContacts?: number | null;
   },
@@ -96,6 +100,10 @@ export interface ProJob {
   workingDays: string[];
   workingHours: string | null;
   budget: string | null;
+  /** Lifecycle stage — present on the pipeline ("My jobs") view. */
+  status?: JobStatus;
+  /** True when this pro is the one the customer marked as hired. */
+  hired?: boolean;
   createdAt: string;
   unlocked: boolean;
   /** True when the customer's quote limit is reached and this pro hasn't unlocked. */
@@ -113,6 +121,9 @@ export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
 
 export const proUnlockJob = (id: string) =>
   api<ProJob>(`/pro/jobs/${id}/unlock`, { method: "POST" });
+
+// The professional's own pipeline — jobs they've unlocked or been hired for.
+export const proMyJobs = () => api<ProJob[]>("/pro/jobs/mine");
 
 export const WEEK_DAYS: { value: string; label: string }[] = [
   { value: "mon", label: "Mon" },

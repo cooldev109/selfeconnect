@@ -8,10 +8,12 @@ import {
   Trash2,
   Pencil,
   Check,
-  BadgeCheck,
   Star,
   Clock,
   Users,
+  Play,
+  CircleCheck,
+  X,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
@@ -22,6 +24,7 @@ import {
   deleteJob,
   jobInterestedPros,
   type Job,
+  type JobStatus,
 } from "@/lib/jobs";
 
 export const Route = createFileRoute("/customer/")({
@@ -34,18 +37,51 @@ export const Route = createFileRoute("/customer/")({
   component: CustomerHome,
 });
 
+type Stage = "active" | "completed" | "cancelled";
+
+// Which tab a job lives under. `closed` is the pre-lifecycle "filled" state, so
+// it sits with completed work.
+const STAGE_OF: Record<JobStatus, Stage> = {
+  open: "active",
+  hired: "active",
+  in_progress: "active",
+  completed: "completed",
+  closed: "completed",
+  cancelled: "cancelled",
+};
+
+const STATUS_BADGE: Record<JobStatus, { label: string; cls: string }> = {
+  open: { label: "Open", cls: "bg-[#E1F5EE] text-primary" },
+  hired: { label: "Hired", cls: "bg-blue-100 text-blue-700" },
+  in_progress: { label: "In progress", cls: "bg-amber-100 text-amber-800" },
+  completed: { label: "Completed", cls: "bg-muted text-muted-foreground" },
+  closed: { label: "Completed", cls: "bg-muted text-muted-foreground" },
+  cancelled: { label: "Cancelled", cls: "bg-destructive/10 text-destructive" },
+};
+
 function CustomerHome() {
   const navigate = useNavigate();
   const jobsQ = useQuery({ queryKey: ["my-jobs"], queryFn: listMyJobs, retry: false });
+  const [stage, setStage] = useState<Stage>("active");
 
   const jobs = jobsQ.data ?? [];
-  const open = jobs.filter((j) => j.status === "open");
-  const history = jobs.filter((j) => j.status === "closed");
+  const counts: Record<Stage, number> = {
+    active: jobs.filter((j) => STAGE_OF[j.status] === "active").length,
+    completed: jobs.filter((j) => STAGE_OF[j.status] === "completed").length,
+    cancelled: jobs.filter((j) => STAGE_OF[j.status] === "cancelled").length,
+  };
+  const shown = jobs.filter((j) => STAGE_OF[j.status] === stage);
+
+  const tabs: { key: Stage; label: string }[] = [
+    { key: "active", label: "Active" },
+    { key: "completed", label: "Completed" },
+    ...(counts.cancelled > 0 ? [{ key: "cancelled" as Stage, label: "Cancelled" }] : []),
+  ];
 
   return (
     <CustomerShell
       title="My jobs"
-      subtitle={`${open.length} open · ${history.length} completed`}
+      subtitle={`${counts.active} active · ${counts.completed} completed`}
       actions={
         <Button
           className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
@@ -62,9 +98,7 @@ function CustomerHome() {
       ) : jobs.length === 0 ? (
         <Card className="rounded-2xl border-dashed">
           <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              You haven't posted any jobs yet.
-            </p>
+            <p className="text-sm text-muted-foreground">You haven't posted any jobs yet.</p>
             <Button
               className="mt-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => navigate({ to: "/customer/jobs/new" })}
@@ -74,39 +108,48 @@ function CustomerHome() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          <Section title="Open">
-            {open.length === 0 ? (
-              <EmptyLine>No open jobs. Post one to start hearing from pros.</EmptyLine>
-            ) : (
-              open.map((j) => <OpenJobCard key={j.id} job={j} />)
-            )}
-          </Section>
+        <div className="space-y-5">
+          {/* Stage tabs */}
+          <div className="flex flex-wrap gap-2" role="tablist">
+            {tabs.map((t) => {
+              const active = stage === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setStage(t.key)}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label} ({counts[t.key]})
+                </button>
+              );
+            })}
+          </div>
 
-          {history.length > 0 && (
-            <Section title="History">
-              {history.map((j) => (
-                <HistoryJobCard key={j.id} job={j} />
+          {shown.length === 0 ? (
+            <EmptyLine>
+              {stage === "active"
+                ? "No active jobs. Post one to start hearing from professionals."
+                : stage === "completed"
+                  ? "No completed jobs yet."
+                  : "No cancelled jobs."}
+            </EmptyLine>
+          ) : (
+            <div className="space-y-3">
+              {shown.map((j) => (
+                <JobCard key={j.id} job={j} />
               ))}
-            </Section>
+            </div>
           )}
         </div>
       )}
     </CustomerShell>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="mb-3 flex items-center gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </h2>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
   );
 }
 
@@ -144,8 +187,8 @@ function QuoteUsage({ job }: { job: Job }) {
       <Users className="h-3.5 w-3.5 text-primary" />
       {limit == null ? (
         <span>
-          <span className="font-semibold text-foreground">{job.contactCount}</span>{" "}
-          professional{job.contactCount === 1 ? "" : "s"} in touch · no limit
+          <span className="font-semibold text-foreground">{job.contactCount}</span> professional
+          {job.contactCount === 1 ? "" : "s"} in touch · no limit
         </span>
       ) : (
         <span>
@@ -160,82 +203,153 @@ function QuoteUsage({ job }: { job: Job }) {
   );
 }
 
-function OpenJobCard({ job }: { job: Job }) {
+// A single job, rendered with the actions available at its lifecycle stage.
+function JobCard({ job }: { job: Job }) {
   const qc = useQueryClient();
   const [picking, setPicking] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [reason, setReason] = useState("");
+  const done = () => qc.invalidateQueries({ queryKey: ["my-jobs"] });
 
   const interestedQ = useQuery({
     queryKey: ["job-interested", job.id],
     queryFn: () => jobInterestedPros(job.id),
     enabled: picking,
   });
-
-  const fill = useMutation({
-    mutationFn: (hiredDriverPublicId: string | null) =>
-      updateJob(job.id, { status: "closed", hiredDriverPublicId }),
+  const hire = useMutation({
+    mutationFn: (publicId: string | null) =>
+      updateJob(job.id, { status: "hired", hiredDriverPublicId: publicId }),
     onSuccess: () => {
       setPicking(false);
-      qc.invalidateQueries({ queryKey: ["my-jobs"] });
+      done();
+    },
+  });
+  const advance = useMutation({
+    mutationFn: (status: JobStatus) => updateJob(job.id, { status }),
+    onSuccess: done,
+  });
+  const cancel = useMutation({
+    mutationFn: () =>
+      updateJob(job.id, { status: "cancelled", cancelReason: reason.trim() || undefined }),
+    onSuccess: () => {
+      setCancelling(false);
+      done();
     },
   });
   const remove = useMutation({
     mutationFn: () => deleteJob(job.id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-jobs"] }),
+    onSuccess: done,
   });
 
   const pros = interestedQ.data ?? [];
+  const badge = STATUS_BADGE[job.status];
+  const isActive = STAGE_OF[job.status] === "active";
+  const isDone = STAGE_OF[job.status] === "completed";
 
   return (
-    <Card className="rounded-2xl">
+    <Card className={`rounded-2xl ${isActive ? "" : "opacity-95"}`}>
       <CardContent className="p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate font-semibold text-foreground">{job.title}</h3>
-              <Badge className="rounded-full bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]">
-                Open
-              </Badge>
+              <Badge className={`rounded-full border-0 ${badge.cls}`}>{badge.label}</Badge>
             </div>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-              {job.description}
-            </p>
+            {job.status === "open" && (
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+            )}
+            {(job.status === "hired" || job.status === "in_progress") && job.hiredDriverName && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Hired <span className="font-medium text-foreground">{job.hiredDriverName}</span>
+              </p>
+            )}
+            {job.status === "cancelled" && job.cancelReason && (
+              <p className="mt-1 text-sm text-muted-foreground">Reason: {job.cancelReason}</p>
+            )}
             <JobMeta job={job} />
-            <QuoteUsage job={job} />
+            {job.status === "open" && <QuoteUsage job={job} />}
           </div>
+
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Button
-              className="h-9 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
-              onClick={() => setPicking((p) => !p)}
-            >
-              <Check className="mr-1 h-3.5 w-3.5" /> I've found my professional
-            </Button>
-            <Link
-              to="/customer/jobs/$jobId/edit"
-              params={{ jobId: job.id }}
-              className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-medium text-foreground hover:bg-secondary"
-            >
-              <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-            </Link>
-            <Button
-              variant="outline"
-              className="h-9 rounded-lg border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10"
-              onClick={() => remove.mutate()}
-              disabled={remove.isPending}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            {job.status === "open" && (
+              <>
+                <Button
+                  className="h-9 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setPicking((p) => !p)}
+                >
+                  <Check className="mr-1 h-3.5 w-3.5" /> I've found my professional
+                </Button>
+                <Link
+                  to="/customer/jobs/$jobId/edit"
+                  params={{ jobId: job.id }}
+                  className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-medium text-foreground hover:bg-secondary"
+                >
+                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                </Link>
+              </>
+            )}
+
+            {job.status === "hired" && (
+              <Button
+                className="h-9 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
+                onClick={() => advance.mutate("in_progress")}
+                disabled={advance.isPending}
+              >
+                <Play className="mr-1 h-3.5 w-3.5" /> Start work
+              </Button>
+            )}
+
+            {(job.status === "hired" || job.status === "in_progress") && (
+              <Button
+                className="h-9 rounded-lg bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-600/90"
+                onClick={() => advance.mutate("completed")}
+                disabled={advance.isPending}
+              >
+                <CircleCheck className="mr-1 h-3.5 w-3.5" /> Mark complete
+              </Button>
+            )}
+
+            {isDone && job.hiredDriverPublicId && (
+              <Link
+                to="/customer/pros/$publicId"
+                params={{ publicId: job.hiredDriverPublicId }}
+                search={{ review: "1", jobId: job.id }}
+                className="inline-flex h-9 items-center rounded-lg bg-amber-400 px-3 text-xs font-semibold text-amber-950 hover:bg-amber-400/90"
+              >
+                <Star className="mr-1 h-3.5 w-3.5" /> Leave a review
+              </Link>
+            )}
+
+            {isActive && (
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg px-3 text-xs text-muted-foreground"
+                onClick={() => setCancelling((c) => !c)}
+              >
+                <X className="mr-1 h-3.5 w-3.5" /> Cancel
+              </Button>
+            )}
+
+            {!isActive && (
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10"
+                onClick={() => remove.mutate()}
+                disabled={remove.isPending}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
         </div>
 
+        {/* Pick the hired professional (open → hired). */}
         {picking && (
           <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-4">
-            <p className="text-sm font-medium text-foreground">
-              Which professional did you hire?
-            </p>
+            <p className="text-sm font-medium text-foreground">Which professional did you hire?</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              This closes the job and moves it to your history.
+              This moves the job to Hired so you can track it through to done.
             </p>
-
             {interestedQ.isLoading ? (
               <div className="mt-3 flex justify-center">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -246,14 +360,12 @@ function OpenJobCard({ job }: { job: Job }) {
                   <button
                     key={p.publicId}
                     type="button"
-                    disabled={fill.isPending}
-                    onClick={() => fill.mutate(p.publicId)}
+                    disabled={hire.isPending}
+                    onClick={() => hire.mutate(p.publicId)}
                     className="flex w-full items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition hover:border-primary"
                   >
                     <span>
-                      <span className="font-medium text-foreground">
-                        {p.company || p.name}
-                      </span>
+                      <span className="font-medium text-foreground">{p.company || p.name}</span>
                       {p.categories.length > 0 && (
                         <span className="ml-2 text-xs text-muted-foreground">
                           {p.categories.join(" · ")}
@@ -265,12 +377,12 @@ function OpenJobCard({ job }: { job: Job }) {
                 ))}
                 <button
                   type="button"
-                  disabled={fill.isPending}
-                  onClick={() => fill.mutate(null)}
+                  disabled={hire.isPending}
+                  onClick={() => hire.mutate(null)}
                   className="w-full rounded-lg border border-dashed border-border px-3 py-2 text-left text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
                 >
                   {pros.length === 0
-                    ? "Just mark this job as filled"
+                    ? "Just mark this job as hired"
                     : "Someone else / hired off-platform"}
                 </button>
               </div>
@@ -284,71 +396,37 @@ function OpenJobCard({ job }: { job: Job }) {
             </button>
           </div>
         )}
-      </CardContent>
-    </Card>
-  );
-}
 
-function HistoryJobCard({ job }: { job: Job }) {
-  const qc = useQueryClient();
-  const reopen = useMutation({
-    mutationFn: () => updateJob(job.id, { status: "open" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-jobs"] }),
-  });
-  const remove = useMutation({
-    mutationFn: () => deleteJob(job.id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-jobs"] }),
-  });
-
-  return (
-    <Card className="rounded-2xl opacity-90">
-      <CardContent className="p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate font-semibold text-foreground">{job.title}</h3>
-              <Badge className="rounded-full bg-muted text-muted-foreground hover:bg-muted">
-                {job.hiredDriverName ? (
-                  <>
-                    <BadgeCheck className="mr-1 h-3.5 w-3.5" /> Hired{" "}
-                    {job.hiredDriverName}
-                  </>
-                ) : (
-                  "Filled"
-                )}
-              </Badge>
-            </div>
-            <JobMeta job={job} />
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {job.hiredDriverPublicId && (
-              <Link
-                to="/customer/pros/$publicId"
-                params={{ publicId: job.hiredDriverPublicId }}
-                search={{ review: "1", jobId: job.id }}
-                className="inline-flex h-9 items-center rounded-lg bg-amber-400 px-3 text-xs font-semibold text-amber-950 hover:bg-amber-400/90"
+        {/* Cancel the job (open / hired / in_progress → cancelled). */}
+        {cancelling && (
+          <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-foreground">Cancel this job?</p>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Reason (optional) — e.g. no longer needed"
+              rows={2}
+              maxLength={300}
+              className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+            <div className="mt-2 flex gap-2">
+              <Button
+                className="h-9 rounded-lg bg-destructive px-3 text-xs text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => cancel.mutate()}
+                disabled={cancel.isPending}
               >
-                <Star className="mr-1 h-3.5 w-3.5" /> Leave a review
-              </Link>
-            )}
-            <Button
-              variant="outline"
-              className="h-9 rounded-lg px-3 text-xs"
-              onClick={() => reopen.mutate()}
-              disabled={reopen.isPending}
-            >
-              Reopen
-            </Button>
-            <Button
-              variant="outline"
-              className="h-9 rounded-lg border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10"
-              onClick={() => remove.mutate()}
-              disabled={remove.isPending}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+                {cancel.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancel job"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setCancelling(false)}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Keep job
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

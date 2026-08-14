@@ -19,8 +19,9 @@ import { run as jobPhotos } from "./job-photos.mjs";
 import { run as customerLowfriction } from "./customer-lowfriction.mjs";
 import { run as jobAlerts } from "./job-alerts.mjs";
 import { run as proOnboarding } from "./pro-onboarding.mjs";
+import { run as proMyJobs } from "./pro-my-jobs.mjs";
 
-const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos, customerLowfriction, jobAlerts, proOnboarding];
+const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos, customerLowfriction, jobAlerts, proOnboarding, proMyJobs];
 
 const results = [];
 for (const suite of SUITES) {

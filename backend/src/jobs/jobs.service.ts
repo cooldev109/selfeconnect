@@ -361,6 +361,7 @@ export class JobsService {
     }>,
     distanceMiles: number | null,
     unlocked: boolean,
+    hired = false,
   ) {
     // "Full" only matters to a pro who hasn't already unlocked it — someone who
     // reached out earlier keeps their access even after the cap is reached.
@@ -377,6 +378,10 @@ export class JobsService {
       workingDays: j.workingDays,
       workingHours: j.workingHours ?? null,
       budget: j.budget ?? null,
+      // The lifecycle stage — powers the pro's "My jobs" pipeline.
+      status: j.status,
+      // True when this professional is the one the customer marked as hired.
+      hired,
       createdAt: j.createdAt.toISOString(),
       unlocked,
       quotesFull,
@@ -390,6 +395,46 @@ export class JobsService {
           }
         : null,
     };
+  }
+
+  // A professional's own pipeline: every job they've unlocked or been hired
+  // for, newest activity first, at whatever lifecycle stage it's reached. The
+  // contact stays visible (they already unlocked it, or they're the hire).
+  async listMineForPro(driverId: string) {
+    const driver = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      select: { latitude: true, longitude: true },
+    });
+    if (!driver) throw new NotFoundException('driver_not_found');
+
+    const jobs = await this.prisma.job.findMany({
+      where: {
+        OR: [{ unlocks: { some: { driverId } } }, { hiredDriverId: driverId }],
+      },
+      include: {
+        category: true,
+        customer: true,
+        unlocks: { where: { driverId }, select: { id: true } },
+        _count: { select: { unlocks: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const hasLoc = driver.latitude != null && driver.longitude != null;
+    return jobs.map((j) => {
+      let distanceMiles: number | null = null;
+      if (hasLoc && j.latitude != null && j.longitude != null) {
+        distanceMiles = this.round1(
+          this.geo.distanceMiles(
+            { latitude: driver.latitude!, longitude: driver.longitude! },
+            { latitude: j.latitude, longitude: j.longitude },
+          ),
+        );
+      }
+      const hired = j.hiredDriverId === driverId;
+      // They can see the contact if they unlocked it or they're the hire.
+      return this.shapePro(j, distanceMiles, j.unlocks.length > 0 || hired, hired);
+    });
   }
 
   // Open jobs in the professional's own categories, optionally within `radius`

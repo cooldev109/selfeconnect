@@ -34,6 +34,13 @@ export class ProJobsController {
     });
   }
 
+  // The professional's own pipeline — jobs they've unlocked or been hired for,
+  // at any stage. Declared before ':id' so "mine" isn't captured as an id.
+  @Get('mine')
+  mine(@CurrentUser() user: AuthUser) {
+    return this.jobs.listMineForPro(user.id);
+  }
+
   @Post(':id/unlock')
   unlock(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.jobs.unlockContact(user.id, id);

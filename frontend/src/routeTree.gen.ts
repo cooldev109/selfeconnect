@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostAJobRouteImport } from './routes/post-a-job'
+import { Route as MyJobsRouteImport } from './routes/my-jobs'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -90,6 +91,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PostAJobRoute = PostAJobRouteImport.update({
   id: '/post-a-job',
   path: '/post-a-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyJobsRoute = MyJobsRouteImport.update({
+  id: '/my-jobs',
+  path: '/my-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/jobs'
     | '/login'
+    | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
     | '/profile'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/jobs'
     | '/login'
+    | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
     | '/profile'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/jobs'
     | '/login'
+    | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
     | '/profile'
@@ -477,6 +489,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
+  MyJobsRoute: typeof MyJobsRoute
   PostAJobRoute: typeof PostAJobRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -560,6 +573,13 @@ declare module '@tanstack/react-router' {
       path: '/post-a-job'
       fullPath: '/post-a-job'
       preLoaderRoute: typeof PostAJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-jobs': {
+      id: '/my-jobs'
+      path: '/my-jobs'
+      fullPath: '/my-jobs'
+      preLoaderRoute: typeof MyJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -809,6 +829,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
+  MyJobsRoute: MyJobsRoute,
   PostAJobRoute: PostAJobRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
