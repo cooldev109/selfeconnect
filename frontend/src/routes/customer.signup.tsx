@@ -23,8 +23,7 @@ export const Route = createFileRoute("/customer/signup")({
       { title: "Create a customer account — SelfeConnect" },
       {
         name: "description",
-        content:
-          "Create a free account to post jobs and hire trusted professionals.",
+        content: "Create a free account to post jobs and hire trusted professionals.",
       },
     ],
   }),
@@ -35,18 +34,17 @@ const schema = z
   .object({
     name: z.string().trim().min(2, "Please enter your name").max(120),
     email: z.string().trim().email("Enter a valid email").max(255),
+    // Optional — low-friction signup only needs an email.
     phone: z
       .string()
       .trim()
-      .min(6, "Enter a valid phone number")
       .max(20)
-      .regex(/^[+0-9 ()-]+$/, "Only digits, spaces and + ( ) -"),
+      .regex(/^[+0-9 ()-]+$/, "Only digits, spaces and + ( ) -")
+      .or(z.literal(""))
+      .optional(),
     type: z.enum(["person", "business"]),
     companyName: z.string().trim().max(120).optional(),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(72),
+    password: z.string().min(8, "Password must be at least 8 characters").max(72),
   })
   .refine((v) => v.type !== "business" || !!v.companyName, {
     message: "Please enter your company name",
@@ -118,10 +116,9 @@ function CustomerSignupPage() {
         name: parsed.data.name,
         email: parsed.data.email,
         password: parsed.data.password,
-        phone: parsed.data.phone,
+        phone: parsed.data.phone || undefined,
         type: parsed.data.type,
-        companyName:
-          parsed.data.type === "business" ? parsed.data.companyName : undefined,
+        companyName: parsed.data.type === "business" ? parsed.data.companyName : undefined,
       });
       goAfterAuth();
     } catch (err) {
@@ -168,9 +165,7 @@ function CustomerSignupPage() {
         <div className="relative flex h-full flex-col justify-between p-10 text-primary-foreground">
           <Link to="/" className="flex w-fit items-center gap-2">
             <LogoMark className="h-9 w-9" tone="white" />
-            <span className="text-lg font-bold tracking-tight font-display">
-              SelfeConnect
-            </span>
+            <span className="text-lg font-bold tracking-tight font-display">SelfeConnect</span>
           </Link>
           <div className="max-w-md">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground/80">
@@ -180,8 +175,7 @@ function CustomerSignupPage() {
               Hire trusted professionals near you.
             </p>
             <p className="mt-4 text-sm text-primary-foreground/85">
-              Post a job in minutes and connect with reviewed local pros — no
-              fees to post.
+              Post a job in minutes and connect with reviewed local pros — no fees to post.
             </p>
           </div>
         </div>
@@ -190,22 +184,20 @@ function CustomerSignupPage() {
       <section className="relative flex items-center justify-center overflow-hidden bg-background px-6 py-12">
         <div className="absolute inset-0 -z-10 bg-mesh opacity-70" />
         <div className="w-full max-w-md animate-fade-up">
-          <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Back to home
-          </Link>
           <Link
             to="/"
-            className="mx-auto mb-7 flex w-fit items-center gap-2 lg:hidden"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Link>
+          <Link to="/" className="mx-auto mb-7 flex w-fit items-center gap-2 lg:hidden">
             <LogoMark className="h-9 w-9" />
             <span className="text-lg font-bold tracking-tight text-foreground font-display">
               SelfeConnect
             </span>
           </Link>
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground font-display">
-              Create your account
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground font-display">Create your account</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {hasIntent
                 ? "Create a free account to see your search results."
@@ -218,11 +210,7 @@ function CustomerSignupPage() {
               <form onSubmit={onSubmit} noValidate className="space-y-4">
                 <div className="flex gap-2">
                   <TypeButton value="person" label="Individual" icon={User} />
-                  <TypeButton
-                    value="business"
-                    label="Business"
-                    icon={Building2}
-                  />
+                  <TypeButton value="business" label="Business" icon={Building2} />
                 </div>
 
                 <label className="block">
@@ -236,11 +224,7 @@ function CustomerSignupPage() {
                     autoComplete="name"
                     maxLength={120}
                   />
-                  {errors.name && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {errors.name}
-                    </p>
-                  )}
+                  {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
                 </label>
 
                 {form.type === "business" && (
@@ -255,17 +239,13 @@ function CustomerSignupPage() {
                       maxLength={120}
                     />
                     {errors.companyName && (
-                      <p className="mt-1 text-xs text-destructive">
-                        {errors.companyName}
-                      </p>
+                      <p className="mt-1 text-xs text-destructive">{errors.companyName}</p>
                     )}
                   </label>
                 )}
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-foreground">
-                    Email
-                  </span>
+                  <span className="mb-1.5 block text-sm font-medium text-foreground">Email</span>
                   <Input
                     type="email"
                     value={form.email}
@@ -274,16 +254,12 @@ function CustomerSignupPage() {
                     autoComplete="email"
                     maxLength={255}
                   />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {errors.email}
-                    </p>
-                  )}
+                  {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
                 </label>
 
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-foreground">
-                    Phone
+                    Phone <span className="text-muted-foreground">(optional)</span>
                   </span>
                   <Input
                     value={form.phone}
@@ -292,17 +268,11 @@ function CustomerSignupPage() {
                     autoComplete="tel"
                     maxLength={20}
                   />
-                  {errors.phone && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {errors.phone}
-                    </p>
-                  )}
+                  {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone}</p>}
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-foreground">
-                    Password
-                  </span>
+                  <span className="mb-1.5 block text-sm font-medium text-foreground">Password</span>
                   <Input
                     type="password"
                     value={form.password}
@@ -312,9 +282,7 @@ function CustomerSignupPage() {
                     maxLength={72}
                   />
                   {errors.password && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {errors.password}
-                    </p>
+                    <p className="mt-1 text-xs text-destructive">{errors.password}</p>
                   )}
                 </label>
 

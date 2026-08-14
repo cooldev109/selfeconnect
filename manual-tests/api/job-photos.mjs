@@ -7,9 +7,7 @@ import {
   req,
   sql,
   reporter,
-  signupPro,
   signupCustomer,
-  delDriver,
   delCustomer,
   PNG_1PX,
 } from "./_lib.mjs";
@@ -47,28 +45,19 @@ const jobBody = (over = {}) => ({
 export async function run() {
   const { ok, done } = reporter();
   console.log("\n── Job photos + wizard (M1.2) ──");
-  const drivers = [],
-    customers = [];
+  const customers = [];
   try {
     const cust = await signupCustomer();
     customers.push(cust.email);
 
-    // Auth boundary: no session cannot upload.
+    // Upload is intentionally PUBLIC so a logged-out visitor can attach photos
+    // in the job-first wizard before creating their account. Anonymous upload
+    // succeeds; creating the job with those photos still needs a session.
     const anon = await uploadPhoto("");
     ok(
-      "anonymous upload is refused (401)",
-      anon.status === 401,
-      `HTTP ${anon.status}`,
-    );
-
-    // A professional session cannot upload a customer job photo.
-    const pro = await signupPro();
-    drivers.push(pro.email);
-    const proUp = await uploadPhoto(pro.cookie);
-    ok(
-      "a professional cannot upload a job photo (401/403)",
-      proUp.status === 401 || proUp.status === 403,
-      `HTTP ${proUp.status}`,
+      "anonymous upload is allowed (public, for job-first)",
+      anon.ok && typeof anon.body?.url === "string",
+      `HTTP ${anon.status} ${JSON.stringify(anon.body)}`,
     );
 
     // Missing file → 400 no_file.
@@ -180,7 +169,6 @@ export async function run() {
     if (plain.body?.id)
       await req(`/jobs/${plain.body.id}`, { method: "DELETE", cookie: cust.cookie });
   } finally {
-    for (const e of drivers) delDriver(e);
     for (const e of customers) delCustomer(e);
   }
   return done("job-photos");

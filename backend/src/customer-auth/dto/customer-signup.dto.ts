@@ -21,11 +21,14 @@ export class CustomerSignupDto {
   @MinLength(8)
   password!: string;
 
+  // Optional — low-friction signup only needs an email. When a customer skips
+  // it, professionals reach them by email until they add a number later.
+  @IsOptional()
   @IsString()
   @MinLength(6)
   @MaxLength(20)
   @Matches(/^[+0-9 ()-]+$/, { message: 'invalid_phone' })
-  phone!: string;
+  phone?: string;
 
   @IsOptional()
   @IsIn(['person', 'business'])

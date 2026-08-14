@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,11 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -31,14 +27,8 @@ export class JobsController {
     return this.jobs.create(c.id, dto);
   }
 
-  // Upload one job photo; returns its URL for the create/update payload.
-  // Declared before ':id' routes so "photo" isn't captured as a job id.
-  @Post('photo')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadPhoto(@UploadedFile() file?: { buffer: Buffer }) {
-    if (!file?.buffer) throw new BadRequestException('no_file');
-    return this.jobs.saveJobPhoto(file.buffer);
-  }
+  // Photo upload lives in the public JobPhotoController (POST /jobs/photo) so
+  // a logged-out visitor can attach photos before creating their account.
 
   // Declared before ':id' so it isn't captured as a job id.
   @Get('mine')

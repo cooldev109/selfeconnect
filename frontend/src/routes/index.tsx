@@ -194,8 +194,7 @@ function Home() {
       const kids = el.children;
       const n = featured.length;
       if (kids.length >= n + 1) {
-        wrapRef.current =
-          (kids[n] as HTMLElement).offsetLeft - (kids[0] as HTMLElement).offsetLeft;
+        wrapRef.current = (kids[n] as HTMLElement).offsetLeft - (kids[0] as HTMLElement).offsetLeft;
       }
     };
     measure();
@@ -245,8 +244,12 @@ function Home() {
     };
   }, [featured.length]);
 
-  const pause = () => { pausedRef.current = true; };
-  const resume = () => { pausedRef.current = false; };
+  const pause = () => {
+    pausedRef.current = true;
+  };
+  const resume = () => {
+    pausedRef.current = false;
+  };
 
   // Drag-to-scroll for mice; touch devices already pan natively.
   //
@@ -361,13 +364,12 @@ function Home() {
               Reviewed &amp; recommended by real customers
             </span>
             <h1 className="mt-6 text-[2.6rem] font-extrabold tracking-tight text-foreground font-display sm:text-[3.4rem]">
-              Find a trusted{" "}
-              <span className="text-primary">professional</span> near you.
+              Find a trusted <span className="text-primary">professional</span> near you.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Plumbers, electricians, cleaners, man and van and local professionals
-              across many services. Search by service and postcode, read real
-              reviews, and get in touch directly.
+              Plumbers, electricians, cleaners, man and van and local professionals across many
+              services. Search by service and postcode, read real reviews, and get in touch
+              directly.
             </p>
 
             {/* Primary action */}
@@ -596,6 +598,7 @@ function Home() {
             cta="Find a professional"
             to="/customer/signup"
             variant="outline"
+            secondary={{ cta: "Or post a job for free", to: "/post-a-job" }}
             footer={{ text: "Have an account?", link: "Log in", to: "/customer/login" }}
           />
           <PathCard
@@ -616,10 +619,7 @@ function Home() {
       </section>
 
       {/* ── For customers: how hiring works ────────────────────── */}
-      <section
-        id="how-it-works"
-        className="scroll-mt-20 border-y border-border/60 bg-secondary/40"
-      >
+      <section id="how-it-works" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
           <div className="text-center">
             <p className="eyebrow text-primary">For customers</p>
@@ -627,8 +627,8 @@ function Home() {
               Hiring someone, without the guesswork.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-              Free to search, free to post a job, and no one takes a cut of what you
-              pay your professional.
+              Free to search, free to post a job, and no one takes a cut of what you pay your
+              professional.
             </p>
           </div>
 
@@ -670,8 +670,8 @@ function Home() {
               Two ways SelfeConnect pays for itself.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-              Win work you'd never have heard about — and turn the customers you
-              already have into the reviews that win you the next ones.
+              Win work you'd never have heard about — and turn the customers you already have into
+              the reviews that win you the next ones.
             </p>
           </div>
 
@@ -683,9 +683,8 @@ function Home() {
                 Local jobs, on your dashboard the day they're posted.
               </h3>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Customers post jobs in your trades and near your postcode. You see
-                them the moment they land, nearest first, and unlock the customer's
-                details when you want the job.
+                Customers post jobs in your trades and near your postcode. You see them the moment
+                they land, nearest first, and unlock the customer's details when you want the job.
               </p>
               <ul className="mt-6 space-y-4">
                 <Feature
@@ -711,22 +710,17 @@ function Home() {
       </section>
 
       {/* ── Pillar 2 — reputation (the QR half) ────────────────── */}
-      <section
-        id="reputation"
-        className="scroll-mt-20 border-y border-border/60 bg-secondary/40"
-      >
+      <section id="reputation" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
           <div>
-            <span className="eyebrow text-muted-foreground">
-              02 — Build reputation
-            </span>
+            <span className="eyebrow text-muted-foreground">02 — Build reputation</span>
             <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
               The reviews you earn offline win you work online.
             </h3>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Hand your QR code to the customers you already have. They rate you in
-              seconds — no app, no payment required — and those reviews build the
-              public profile that new customers see when they search.
+              Hand your QR code to the customers you already have. They rate you in seconds — no
+              app, no payment required — and those reviews build the public profile that new
+              customers see when they search.
             </p>
             <ul className="mt-7 space-y-4">
               <Feature
@@ -760,9 +754,7 @@ function Home() {
                     className="h-16 w-16 rounded-2xl object-cover ring-2 ring-white/15"
                   />
                   <div>
-                    <p className="font-display text-xl font-bold text-ink-foreground">
-                      Sam Rivers
-                    </p>
+                    <p className="font-display text-xl font-bold text-ink-foreground">Sam Rivers</p>
                     <p className="text-sm text-ink-muted">Plumber · Electrician</p>
                   </div>
                 </div>
@@ -804,10 +796,9 @@ function Home() {
                 One flat fee. No commission. No lead fees.
               </h2>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted">
-                Everything for one price — find work, collect reviews, build your
-                reputation, receive payments, and accept tips. We never take a
-                percentage of your payments or tips, and we never charge you for a
-                lead that goes nowhere.
+                Everything for one price — find work, collect reviews, build your reputation,
+                receive payments, and accept tips. We never take a percentage of your payments or
+                tips, and we never charge you for a lead that goes nowhere.
               </p>
               <ul className="mt-7 grid gap-3 sm:grid-cols-2">
                 {[
@@ -816,10 +807,7 @@ function Home() {
                   "Unlimited customer reviews",
                   "Keep 100% of every payment and tip",
                 ].map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-start gap-2 text-sm text-ink-foreground/90"
-                  >
+                  <li key={f} className="flex items-start gap-2 text-sm text-ink-foreground/90">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     {f}
                   </li>
@@ -842,9 +830,8 @@ function Home() {
                   {pricing.spotsLeft !== null
                     ? `Only ${pricing.spotsLeft} founding ${pricing.spotsLeft === 1 ? "place" : "places"} left. `
                     : ""}
-                  Our first {pricing.foundingCap} professionals keep this price for as long
-                  as they stay subscribed. After that it&rsquo;s{" "}
-                  {gbp(pricing.standardAmountGbp)}/month.
+                  Our first {pricing.foundingCap} professionals keep this price for as long as they
+                  stay subscribed. After that it&rsquo;s {gbp(pricing.standardAmountGbp)}/month.
                 </p>
               ) : null}
               <Button
@@ -857,8 +844,7 @@ function Home() {
                 </Link>
               </Button>
               <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-ink-muted">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Secure payments
-                by Stripe
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Secure payments by Stripe
               </p>
             </div>
           </div>
@@ -876,8 +862,7 @@ function Home() {
               Been given a professional's code?
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enter their 5-character ID to leave a review — and a tip, if you'd
-              like to.
+              Enter their 5-character ID to leave a review — and a tip, if you'd like to.
             </p>
           </div>
           <form onSubmit={handleTipSubmit} className="w-full sm:w-auto">
@@ -920,47 +905,45 @@ function Home() {
           <AccordionItem value="cost-to-customer">
             <AccordionTrigger>What does it cost me as a customer?</AccordionTrigger>
             <AccordionContent>
-              Nothing. Searching is free, posting a job is free, and we take no
-              commission on what you pay your professional — you agree the price
-              with them directly and pay them directly.
+              Nothing. Searching is free, posting a job is free, and we take no commission on what
+              you pay your professional — you agree the price with them directly and pay them
+              directly.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="who-pays">
             <AccordionTrigger>Who handles payment for the job itself?</AccordionTrigger>
             <AccordionContent>
-              You and the professional do — exactly as you would today. SelfeConnect
-              does not hold, process, or take a percentage of the money for the work.
-              The price and payment arrangements are agreed directly between you and
-              the professional.
+              You and the professional do — exactly as you would today. SelfeConnect does not hold,
+              process, or take a percentage of the money for the work. The price and payment
+              arrangements are agreed directly between you and the professional.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="customers-sign-up">
             <AccordionTrigger>Do customers need an account to review me?</AccordionTrigger>
             <AccordionContent>
-              Customers create a free account to post a job or search for
-              professionals. Once they've found and hired someone, they can leave a
-              review, making every review verified rather than anonymous. They can
-              also leave a tip in just a few seconds — no app download required.
+              Customers create a free account to post a job or search for professionals. Once
+              they've found and hired someone, they can leave a review, making every review verified
+              rather than anonymous. They can also leave a tip in just a few seconds — no app
+              download required.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="tip-required">
             <AccordionTrigger>Does a customer have to tip to leave a review?</AccordionTrigger>
             <AccordionContent>
-              No. Rating and reviewing is completely free — tipping is separate and
-              entirely optional. Most reviews cost the customer nothing.
+              No. Rating and reviewing is completely free — tipping is separate and entirely
+              optional. Most reviews cost the customer nothing.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="how-paid">
             <AccordionTrigger>How do I get paid?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Payment for the job itself stays between you and your customer —
-                SelfeConnect does not take a commission or hold your money.
+                Payment for the job itself stays between you and your customer — SelfeConnect does
+                not take a commission or hold your money.
               </p>
               <p className="mt-3">
-                If you choose to use your personal QR code, customers can also send
-                payments, leave reviews, and add tips through your connected payment
-                account.
+                If you choose to use your personal QR code, customers can also send payments, leave
+                reviews, and add tips through your connected payment account.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -968,15 +951,13 @@ function Home() {
             <AccordionTrigger>What is the QR code used for?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Once you register and activate your subscription, you get access to
-                your own personal QR code. This QR code belongs to you and allows
-                customers to access your profile, leave reviews, send payments, and
-                add tips.
+                Once you register and activate your subscription, you get access to your own
+                personal QR code. This QR code belongs to you and allows customers to access your
+                profile, leave reviews, send payments, and add tips.
               </p>
               <p className="mt-3">
-                You can share your QR code with customers after completing a job,
-                making it easier for them to pay you, leave a review, or add a tip —
-                all in one place.
+                You can share your QR code with customers after completing a job, making it easier
+                for them to pay you, leave a review, or add a tip — all in one place.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -984,14 +965,13 @@ function Home() {
             <AccordionTrigger>How do I use my QR code?</AccordionTrigger>
             <AccordionContent>
               <p>
-                On your profile page, we automatically generate a flyer with your QR
-                code that you can share with customers. You can also create your own
-                materials or use the QR code however you prefer.
+                On your profile page, we automatically generate a flyer with your QR code that you
+                can share with customers. You can also create your own materials or use the QR code
+                however you prefer.
               </p>
               <p className="mt-3">
-                Customers simply scan your QR code to access your personal payment
-                page, where they can send a payment, leave a review, and add an
-                optional tip.
+                Customers simply scan your QR code to access your personal payment page, where they
+                can send a payment, leave a review, and add an optional tip.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -999,19 +979,17 @@ function Home() {
             <AccordionTrigger>How do I receive payments?</AccordionTrigger>
             <AccordionContent>
               <p>
-                After activating your subscription, go to your Account page and
-                connect your payouts. This will take you to our payment processing
-                partner, Stripe, where you'll complete a short registration and
-                connect your account.
+                After activating your subscription, go to your Account page and connect your
+                payouts. This will take you to our payment processing partner, Stripe, where you'll
+                complete a short registration and connect your account.
               </p>
               <p className="mt-3">
-                Once connected, payments and tips received through your QR code will
-                go directly to your linked bank account.
+                Once connected, payments and tips received through your QR code will go directly to
+                your linked bank account.
               </p>
               <p className="mt-3">
-                Stripe typically charges 1.5% + £0.20 per transaction. For full
-                transparency, you can always check the exact processing fees directly
-                in your Stripe account.
+                Stripe typically charges 1.5% + £0.20 per transaction. For full transparency, you
+                can always check the exact processing fees directly in your Stripe account.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -1019,13 +997,13 @@ function Home() {
             <AccordionTrigger>How long does it take to receive payments?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Your first payment may take between 7 and 15 days to arrive,
-                depending on Stripe's verification process and your bank.
+                Your first payment may take between 7 and 15 days to arrive, depending on Stripe's
+                verification process and your bank.
               </p>
               <p className="mt-3">
-                After your first payment is completed, you can configure your payout
-                schedule directly from your Stripe account and choose the payment
-                frequency that works best for you.
+                After your first payment is completed, you can configure your payout schedule
+                directly from your Stripe account and choose the payment frequency that works best
+                for you.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -1033,14 +1011,13 @@ function Home() {
             <AccordionTrigger>Does SelfeConnect manage payments?</AccordionTrigger>
             <AccordionContent>
               <p>
-                No. SelfeConnect does not hold or manage customer payments. We simply
-                connect professionals with customers and make the process easier.
+                No. SelfeConnect does not hold or manage customer payments. We simply connect
+                professionals with customers and make the process easier.
               </p>
               <p className="mt-3">
-                Service prices and payment arrangements are agreed and managed
-                entirely between the customer and the professional. The QR code is an
-                optional feature that professionals can choose to use to make
-                receiving payments, reviews, and tips easier.
+                Service prices and payment arrangements are agreed and managed entirely between the
+                customer and the professional. The QR code is an optional feature that professionals
+                can choose to use to make receiving payments, reviews, and tips easier.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -1048,21 +1025,20 @@ function Home() {
             <AccordionTrigger>Is there really no commission?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Yes. We charge a flat fee of {gbp(pricing.amountGbp)}/month and
-                never take a percentage of your payments or tips. We also never
-                charge per lead.
+                Yes. We charge a flat fee of {gbp(pricing.amountGbp)}/month and never take a
+                percentage of your payments or tips. We also never charge per lead.
               </p>
               <p className="mt-3">
-                You keep 100% of every payment and tip, minus only the standard
-                processing fee charged by our payment partner.
+                You keep 100% of every payment and tip, minus only the standard processing fee
+                charged by our payment partner.
               </p>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="cancel">
             <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
             <AccordionContent>
-              Yes — it's monthly, with no contract. Cancel from your account page and
-              you keep full access until the end of the period you've paid for.
+              Yes — it's monthly, with no contract. Cancel from your account page and you keep full
+              access until the end of the period you've paid for.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -1103,8 +1079,7 @@ function Home() {
             <div>
               <Logo />
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                Connecting self-employed professionals and small businesses with
-                local customers.
+                Connecting self-employed professionals and small businesses with local customers.
               </p>
               <p className="mt-3 max-w-xs text-sm font-medium leading-relaxed text-foreground/80">
                 Simple connections. Fair opportunities. No unnecessary costs.
@@ -1130,8 +1105,7 @@ function Home() {
           </div>
           <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 sm:flex-row">
             <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} SelfeConnect. Independent. Impartial.
-              Impactful.
+              &copy; {new Date().getFullYear()} SelfeConnect. Independent. Impartial. Impactful.
             </p>
             <div className="flex items-center gap-2 text-muted-foreground">
               <LogoMark className="h-4 w-4" />
@@ -1205,6 +1179,7 @@ function PathCard({
   to,
   variant,
   footer,
+  secondary,
 }: {
   icon: typeof Search;
   title: string;
@@ -1214,6 +1189,8 @@ function PathCard({
   to: string;
   variant: "default" | "outline";
   footer: { text: string; link: string; to: string };
+  /** An optional second action, e.g. a job-first "Post a job" entry. */
+  secondary?: { cta: string; to: string };
 }) {
   return (
     <div className="group flex flex-col rounded-2xl border border-border/70 bg-card p-7 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elevated">
@@ -1235,15 +1212,23 @@ function PathCard({
           size="lg"
           variant={variant === "outline" ? "outline" : "default"}
           className={`h-11 w-full rounded-xl font-semibold ${
-            variant === "outline"
-              ? "border-primary/40 text-primary hover:bg-primary-soft"
-              : ""
+            variant === "outline" ? "border-primary/40 text-primary hover:bg-primary-soft" : ""
           }`}
         >
           <Link to={to}>
             {cta} <ArrowRight className="ml-1.5 h-4 w-4" />
           </Link>
         </Button>
+        {secondary && (
+          <Button
+            asChild
+            size="lg"
+            variant="ghost"
+            className="h-11 w-full rounded-xl font-semibold text-primary hover:bg-primary-soft"
+          >
+            <Link to={secondary.to}>{secondary.cta}</Link>
+          </Button>
+        )}
         <p className="text-center text-sm text-muted-foreground">
           {footer.text}{" "}
           <Link to={footer.to} className="font-semibold text-primary hover:underline">
@@ -1271,15 +1256,7 @@ function Numbered({ n, title, body }: { n: number; title: string; body: string }
   );
 }
 
-function Feature({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: typeof Star;
-  title: string;
-  body: string;
-}) {
+function Feature({ icon: Icon, title, body }: { icon: typeof Star; title: string; body: string }) {
   return (
     <li className="flex gap-4">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">

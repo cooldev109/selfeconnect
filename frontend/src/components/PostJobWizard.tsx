@@ -51,10 +51,39 @@ const stepSchemas = [
   }),
 ];
 
+// Validation for the inline guest account (job-first signup).
+const accountSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your name").max(120),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+});
+
 type FieldErrors = Record<string, string>;
 
-export function PostJobWizard({ onSubmit }: { onSubmit: (input: JobInput) => Promise<void> }) {
+// The account a logged-out visitor creates inline at the final step (job-first
+// signup). Phone is deliberately omitted — the job carries no phone unless they
+// add one later, keeping this the lowest-friction path to posting.
+export interface GuestAccount {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export function PostJobWizard({
+  onSubmit,
+  requireAccount = false,
+}: {
+  // When requireAccount is set, `account` is provided (a logged-out visitor
+  // creating their account inline); otherwise the customer is already signed in.
+  onSubmit: (input: JobInput, account?: GuestAccount) => Promise<void>;
+  requireAccount?: boolean;
+}) {
   const [step, setStep] = useState(0);
+
+  // Guest account (only used when requireAccount).
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPassword, setGuestPassword] = useState("");
 
   const [categorySlug, setCategorySlug] = useState("");
   const [title, setTitle] = useState("");
@@ -150,23 +179,48 @@ export function PostJobWizard({ onSubmit }: { onSubmit: (input: JobInput) => Pro
       setConsentError(true);
       return;
     }
+    let account: GuestAccount | undefined;
+    if (requireAccount) {
+      const acc = accountSchema.safeParse({
+        name: guestName,
+        email: guestEmail,
+        password: guestPassword,
+      });
+      if (!acc.success) {
+        const fe: FieldErrors = {};
+        for (const issue of acc.error.issues) {
+          const k = issue.path[0] as string;
+          if (!fe[k]) fe[k] = issue.message;
+        }
+        setErrors((x) => ({ ...x, ...fe }));
+        return;
+      }
+      account = {
+        name: acc.data.name.trim(),
+        email: acc.data.email.trim(),
+        password: acc.data.password,
+      };
+    }
     setFormError(null);
     setBusy(true);
     try {
-      await onSubmit({
-        categorySlug,
-        title: title.trim(),
-        description: description.trim(),
-        postcode: postcode.trim(),
-        addressLine: addressLine.trim() || undefined,
-        workingDays,
-        workingHours: workingHours.trim() || undefined,
-        budget: budget.trim() || undefined,
-        timing: timing.trim() || undefined,
-        photos,
-        maxContacts,
-        contactConsent: true,
-      });
+      await onSubmit(
+        {
+          categorySlug,
+          title: title.trim(),
+          description: description.trim(),
+          postcode: postcode.trim(),
+          addressLine: addressLine.trim() || undefined,
+          workingDays,
+          workingHours: workingHours.trim() || undefined,
+          budget: budget.trim() || undefined,
+          timing: timing.trim() || undefined,
+          photos,
+          maxContacts,
+          contactConsent: true,
+        },
+        account,
+      );
     } catch (err) {
       if (
         err instanceof ApiError &&
@@ -176,7 +230,13 @@ export function PostJobWizard({ onSubmit }: { onSubmit: (input: JobInput) => Pro
         setErrors((x) => ({ ...x, postcode: "Enter a valid UK postcode." }));
         setStep(2);
       } else {
-        setFormError("Something went wrong. Please try again.");
+        // A route handling guest signup throws a friendly Error message
+        // (e.g. wrong password for an existing email) — surface it as-is.
+        setFormError(
+          err instanceof Error && err.message && !(err instanceof ApiError)
+            ? err.message
+            : "Something went wrong. Please try again.",
+        );
       }
       setBusy(false);
     }
@@ -433,6 +493,62 @@ export function PostJobWizard({ onSubmit }: { onSubmit: (input: JobInput) => Pro
               time by editing the job.
             </span>
           </label>
+
+          {/* Job-first signup — a logged-out visitor creates their account
+              right here, at the moment they're most committed. */}
+          {requireAccount && (
+            <div className="space-y-4 rounded-xl border border-border/70 bg-secondary/30 p-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Create your free account to post
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  So professionals can send you quotes. Already have one?{" "}
+                  <a href="/customer/login" className="font-medium text-primary hover:underline">
+                    Log in
+                  </a>
+                  .
+                </p>
+              </div>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Your name</span>
+                <Input
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="Jane Doe"
+                  autoComplete="name"
+                  maxLength={120}
+                />
+                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Email</span>
+                <Input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  maxLength={255}
+                />
+                {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Password</span>
+                <Input
+                  type="password"
+                  value={guestPassword}
+                  onChange={(e) => setGuestPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  maxLength={72}
+                />
+                {errors.password && (
+                  <p className="mt-1 text-xs text-destructive">{errors.password}</p>
+                )}
+              </label>
+            </div>
+          )}
 
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border/70 bg-secondary/30 p-3">
             <input

@@ -16,8 +16,9 @@ import { run as authBoundaries } from "./auth-boundaries.mjs";
 import { run as payouts } from "./payouts.mjs";
 import { run as jobLifecycle } from "./job-lifecycle.mjs";
 import { run as jobPhotos } from "./job-photos.mjs";
+import { run as customerLowfriction } from "./customer-lowfriction.mjs";
 
-const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos];
+const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos, customerLowfriction];
 
 const results = [];
 for (const suite of SUITES) {
