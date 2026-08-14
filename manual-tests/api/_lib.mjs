@@ -5,6 +5,7 @@
 // their OWN contribution, never global totals, so they are isolation-safe.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import zlib from "node:zlib";
 
 export const API = process.env.API_URL ?? "http://localhost:4100/api/v1";
 const DB = process.env.DB_URL ?? "postgresql://tips:tips_local_dev@localhost:5432/selfeconnect_dev";
@@ -17,6 +18,38 @@ export const PNG_1PX = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
   "base64",
 );
+
+// A real, decodable PNG (solid teal). The driver photo pipeline resizes with
+// `cover`, which a 1x1 image makes sharp reject — so give it something bigger.
+function makePng(size = 64) {
+  const chunk = (type, data) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type, "ascii"), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(zlib.crc32(td) >>> 0);
+    return Buffer.concat([len, td, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // color type: truecolor RGB
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(size * 3)]);
+  for (let x = 0; x < size; x++) {
+    row[1 + x * 3] = 0x1d;
+    row[2 + x * 3] = 0x9e;
+    row[3 + x * 3] = 0x75;
+  }
+  const raw = Buffer.concat(Array.from({ length: size }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk("IHDR", ihdr),
+    chunk("IDAT", zlib.deflateSync(raw)),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+export const PNG_64 = makePng(64);
 
 export async function req(path, { method = "GET", body, cookie, headers = {} } = {}) {
   const res = await fetch(API + path, {

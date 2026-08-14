@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { useMe } from "@/hooks/useDriver";
 import { useTips } from "@/hooks/useTips";
 import { useQuery } from "@tanstack/react-query";
@@ -50,7 +51,18 @@ function greeting() {
 function DashboardPage() {
   const { data: driver } = useMe();
   const { data: account } = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
-  const { tips, total, average, avgRating, perDay, bestDay, fiveStarStreak, payments, paymentTotal, paymentCount } = useTips();
+  const {
+    tips,
+    total,
+    average,
+    avgRating,
+    perDay,
+    bestDay,
+    fiveStarStreak,
+    payments,
+    paymentTotal,
+    paymentCount,
+  } = useTips();
   // Individual payments are viewable right here on the dashboard, so a
   // professional never has to open the spreadsheet just to check one.
   const [showPayments, setShowPayments] = useState(false);
@@ -129,22 +141,10 @@ function DashboardPage() {
       subtitle="Your payments, tips, ratings and weekly performance."
     >
       <div className="space-y-6">
-        {account && (!account.isActive || !account.stripeOnboarded) && (
-          <Link
-            to="/account"
-            data-testid="setup-banner"
-            className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary-soft px-5 py-3.5 text-sm transition hover:bg-primary-soft/70"
-          >
-            <span className="font-medium text-foreground">
-              {!account.isActive
-                ? "Activate your subscription to go live and start receiving payments and tips."
-                : "Connect your payout account to receive payments and tips."}
-            </span>
-            <span className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-              Finish setup →
-            </span>
-          </Link>
-        )}
+        {/* Guided onboarding — one ordered checklist with a progress bar,
+            replacing the old single-line "finish setup" nudge. Hides itself
+            once the professional is fully set up. */}
+        {driver && account && <OnboardingChecklist driver={driver} account={account} />}
 
         {/* Hero earnings card */}
         <section className="animate-fade-up">
@@ -158,23 +158,21 @@ function DashboardPage() {
                   <Sparkles className="h-3.5 w-3.5" />
                   {greeting()}, {driver?.firstName}
                 </p>
-                <p className="mt-5 text-sm font-medium text-muted-foreground">
-                  You've earned
-                </p>
+                <p className="mt-5 text-sm font-medium text-muted-foreground">You've earned</p>
                 <div className="mt-2 flex items-baseline gap-3">
                   <h1 className="font-display text-6xl font-bold leading-none tracking-tight text-foreground sm:text-7xl">
                     £{(total + paymentTotal).toFixed(2)}
                   </h1>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">£{paymentTotal.toFixed(2)}</span> in payments
+                  <span className="font-semibold text-foreground">£{paymentTotal.toFixed(2)}</span>{" "}
+                  in payments
                   {" · "}
                   <span className="font-semibold text-foreground">£{total.toFixed(2)}</span> in tips
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full border-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                    <TrendingUp className="mr-1 h-3.5 w-3.5" />
-                    +{weekDelta.toFixed(0)}% vs last week
+                    <TrendingUp className="mr-1 h-3.5 w-3.5" />+{weekDelta.toFixed(0)}% vs last week
                   </Badge>
                   <Badge className="rounded-full border-0 bg-amber-100 text-amber-800 hover:bg-amber-100">
                     <Flame className="mr-1 h-3.5 w-3.5" />
@@ -182,13 +180,18 @@ function DashboardPage() {
                   </Badge>
                 </div>
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  Every payment and tip here is a customer valuing your work. Keep doing what you're doing — it's working.
+                  Every payment and tip here is a customer valuing your work. Keep doing what you're
+                  doing — it's working.
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <MiniStat label="Tips received" value={String(tips.length)} sublabel="this month" />
-                <MiniStat label="Average tip" value={`£${average.toFixed(2)}`} sublabel="per customer" />
+                <MiniStat
+                  label="Average tip"
+                  value={`£${average.toFixed(2)}`}
+                  sublabel="per customer"
+                />
                 <MiniStat
                   label="Best day"
                   value={`£${bestDay.total.toFixed(0)}`}
@@ -341,7 +344,11 @@ function DashboardPage() {
                         <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} strokeDasharray="3 6" stroke="hsl(var(--border))" />
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 6"
+                      stroke="hsl(var(--border))"
+                    />
                     <XAxis
                       dataKey="day"
                       stroke="hsl(var(--muted-foreground))"
@@ -357,7 +364,11 @@ function DashboardPage() {
                       tickFormatter={(v) => `£${v}`}
                     />
                     <Tooltip
-                      cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                      cursor={{
+                        stroke: "hsl(var(--primary))",
+                        strokeWidth: 1,
+                        strokeDasharray: "4 4",
+                      }}
                       contentStyle={{
                         borderRadius: 14,
                         border: "1px solid hsl(var(--border))",
@@ -390,9 +401,7 @@ function DashboardPage() {
                 {avgRating.toFixed(1)}
               </p>
               <Stars rating={avgRating} size="lg" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                Across {tips.length} rated jobs
-              </p>
+              <p className="mt-3 text-sm text-muted-foreground">Across {tips.length} rated jobs</p>
               {latestReview && (
                 <div className="mt-6 w-full rounded-2xl bg-white/70 p-4 text-left backdrop-blur">
                   <div className="flex items-start gap-2 text-sm italic text-foreground/80">
@@ -410,9 +419,7 @@ function DashboardPage() {
         <section className="mt-6">
           <div className="mb-3 flex items-end justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                Recent tips
-              </h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">Recent tips</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 The people you made smile this week.
               </p>
@@ -424,7 +431,8 @@ function DashboardPage() {
               <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
                 <p className="text-sm font-medium text-foreground">No tips yet</p>
                 <p className="max-w-sm text-sm text-muted-foreground">
-                  Share your QR code with every customer — on your invoice, your vehicle, your workwear. Your first tips will appear right here.
+                  Share your QR code with every customer — on your invoice, your vehicle, your
+                  workwear. Your first tips will appear right here.
                 </p>
                 <Button asChild variant="outline" className="mt-2 rounded-xl">
                   <Link to="/profile">Get your QR code</Link>
@@ -450,7 +458,9 @@ function DashboardPage() {
               <div>
                 <h2 className="font-display text-2xl font-bold">More scans, more earnings</h2>
                 <p className="mt-2 max-w-md text-sm leading-relaxed text-primary-foreground/85">
-                  Print your QR once, then put it everywhere a customer might see — your invoice, your vehicle, your toolbox, your shop window. The more it's seen, the more it pays.
+                  Print your QR once, then put it everywhere a customer might see — your invoice,
+                  your vehicle, your toolbox, your shop window. The more it's seen, the more it
+                  pays.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -512,7 +522,21 @@ function MiniStat({
   );
 }
 
-function TipCard({ tip, index }: { tip: { id: string; date: string; amount: number; rating: number; customerName?: string; message?: string; area?: string }; index: number }) {
+function TipCard({
+  tip,
+  index,
+}: {
+  tip: {
+    id: string;
+    date: string;
+    amount: number;
+    rating: number;
+    customerName?: string;
+    message?: string;
+    area?: string;
+  };
+  index: number;
+}) {
   const name = tip.customerName ?? "Anonymous customer";
   const initial = (tip.customerName?.[0] ?? "?").toUpperCase();
   const colors = [
@@ -554,9 +578,7 @@ function TipCard({ tip, index }: { tip: { id: string; date: string; amount: numb
 
             {tip.message && (
               <div className="mt-3 rounded-xl bg-muted/60 p-3">
-                <p className="text-sm italic leading-relaxed text-foreground/80">
-                  "{tip.message}"
-                </p>
+                <p className="text-sm italic leading-relaxed text-foreground/80">"{tip.message}"</p>
               </div>
             )}
 
@@ -582,9 +604,7 @@ function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) 
         <Star
           key={i}
           className={`${px} ${
-            i <= Math.round(rating)
-              ? "fill-amber-400 text-amber-400"
-              : "text-muted-foreground/25"
+            i <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/25"
           }`}
         />
       ))}
