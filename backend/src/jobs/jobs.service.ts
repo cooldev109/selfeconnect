@@ -355,6 +355,15 @@ export class JobsService {
     return Math.round(n * 10) / 10;
   }
 
+  // The pro's own quote on a job (from an include filtered to their driverId),
+  // shaped for the API. Null when they haven't quoted.
+  private quoteOf(j: {
+    quotes?: { amount: number | null; message: string }[];
+  }): { amount: number | null; message: string } | null {
+    const q = j.quotes?.[0];
+    return q ? { amount: q.amount ?? null, message: q.message } : null;
+  }
+
   private shapePro(
     j: Prisma.JobGetPayload<{
       include: { category: true; customer: true; _count: { select: { unlocks: true } } };
@@ -362,6 +371,7 @@ export class JobsService {
     distanceMiles: number | null,
     unlocked: boolean,
     hired = false,
+    myQuote: { amount: number | null; message: string } | null = null,
   ) {
     // "Full" only matters to a pro who hasn't already unlocked it — someone who
     // reached out earlier keeps their access even after the cap is reached.
@@ -385,6 +395,8 @@ export class JobsService {
       createdAt: j.createdAt.toISOString(),
       unlocked,
       quotesFull,
+      // This pro's own quote on the job, if they've submitted one.
+      myQuote,
       // Contact is only ever populated once the pro has unlocked it.
       contact: unlocked
         ? {
@@ -415,6 +427,7 @@ export class JobsService {
         category: true,
         customer: true,
         unlocks: { where: { driverId }, select: { id: true } },
+        quotes: { where: { driverId }, select: { amount: true, message: true } },
         _count: { select: { unlocks: true } },
       },
       orderBy: { updatedAt: 'desc' },
@@ -433,7 +446,13 @@ export class JobsService {
       }
       const hired = j.hiredDriverId === driverId;
       // They can see the contact if they unlocked it or they're the hire.
-      return this.shapePro(j, distanceMiles, j.unlocks.length > 0 || hired, hired);
+      return this.shapePro(
+        j,
+        distanceMiles,
+        j.unlocks.length > 0 || hired,
+        hired,
+        this.quoteOf(j),
+      );
     });
   }
 
@@ -462,6 +481,7 @@ export class JobsService {
         category: true,
         customer: true,
         unlocks: { where: { driverId }, select: { id: true } },
+        quotes: { where: { driverId }, select: { amount: true, message: true } },
         _count: { select: { unlocks: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -487,7 +507,9 @@ export class JobsService {
         .filter((r) => r.distanceMiles != null && r.distanceMiles <= opts.radiusMiles!)
         .sort((a, b) => a.distanceMiles! - b.distanceMiles!);
     }
-    return filtered.map((r) => this.shapePro(r.j, r.distanceMiles, r.unlocked));
+    return filtered.map((r) =>
+      this.shapePro(r.j, r.distanceMiles, r.unlocked, false, this.quoteOf(r.j)),
+    );
   }
 
   // Reveal a job's contact details — requires an active subscription. Idempotent.
@@ -505,6 +527,7 @@ export class JobsService {
         customer: true,
         _count: { select: { unlocks: true } },
         unlocks: { where: { driverId }, select: { id: true } },
+        quotes: { where: { driverId }, select: { amount: true, message: true } },
       },
     });
     // Only jobs in the pro's categories are visible/unlockable.
@@ -565,6 +588,90 @@ export class JobsService {
         ),
       );
     }
-    return this.shapePro(job, distanceMiles, true);
+    return this.shapePro(job, distanceMiles, true, false, this.quoteOf(job));
+  }
+
+  // A professional submits (or updates) their quote on a job. Quoting also
+  // unlocks the contact — it's the fuller expression of "I'm interested" — so
+  // it goes through the same subscription + category + cap gate as unlocking.
+  async submitQuote(
+    driverId: string,
+    jobId: string,
+    dto: { amount?: number | null; message: string },
+  ) {
+    // Reuse the unlock path for all the gating (active sub, job in category,
+    // quote cap), the JobContactUnlock upsert, and the interest email.
+    await this.unlockContact(driverId, jobId);
+
+    await this.prisma.quote.upsert({
+      where: { jobId_driverId: { jobId, driverId } },
+      update: {
+        amount: dto.amount ?? null,
+        message: dto.message.trim(),
+      },
+      create: {
+        jobId,
+        driverId,
+        amount: dto.amount ?? null,
+        message: dto.message.trim(),
+      },
+    });
+
+    // Return the freshly-shaped job (now carrying myQuote).
+    const jobs = await this.listMineForPro(driverId);
+    return jobs.find((j) => j.id === jobId) ?? { ok: true };
+  }
+
+  // Quotes on a customer's own job — the pitches they choose a pro from.
+  async listQuotes(customerId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true, latitude: true, longitude: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+
+    const quotes = await this.prisma.quote.findMany({
+      where: { jobId },
+      orderBy: [{ amount: 'asc' }, { createdAt: 'asc' }],
+      include: {
+        driver: {
+          select: {
+            publicId: true,
+            name: true,
+            company: true,
+            latitude: true,
+            longitude: true,
+            categories: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    return quotes.map((q) => {
+      let distanceMiles: number | null = null;
+      if (
+        job.latitude != null &&
+        job.longitude != null &&
+        q.driver.latitude != null &&
+        q.driver.longitude != null
+      ) {
+        distanceMiles = this.round1(
+          this.geo.distanceMiles(
+            { latitude: q.driver.latitude, longitude: q.driver.longitude },
+            { latitude: job.latitude, longitude: job.longitude },
+          ),
+        );
+      }
+      return {
+        publicId: q.driver.publicId,
+        name: q.driver.name,
+        company: q.driver.company ?? null,
+        categories: q.driver.categories.map((c) => c.name),
+        amount: q.amount ?? null,
+        message: q.message,
+        distanceMiles,
+        createdAt: q.createdAt.toISOString(),
+      };
+    });
   }
 }

@@ -108,7 +108,21 @@ export interface ProJob {
   unlocked: boolean;
   /** True when the customer's quote limit is reached and this pro hasn't unlocked. */
   quotesFull: boolean;
+  /** This pro's own quote on the job, if they've submitted one. */
+  myQuote?: { amount: number | null; message: string } | null;
   contact: ProJobContact | null;
+}
+
+// A quote the customer sees on their job — a pro's price + pitch.
+export interface JobQuote {
+  publicId: string;
+  name: string;
+  company: string | null;
+  categories: string[];
+  amount: number | null; // pence
+  message: string;
+  distanceMiles: number | null;
+  createdAt: string;
 }
 
 export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
@@ -122,8 +136,15 @@ export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
 export const proUnlockJob = (id: string) =>
   api<ProJob>(`/pro/jobs/${id}/unlock`, { method: "POST" });
 
+// Submit (or update) this pro's quote on a job. Also unlocks the contact.
+export const proSubmitQuote = (id: string, body: { amount?: number | null; message: string }) =>
+  api<ProJob>(`/pro/jobs/${id}/quote`, { method: "POST", body: JSON.stringify(body) });
+
 // The professional's own pipeline — jobs they've unlocked or been hired for.
 export const proMyJobs = () => api<ProJob[]>("/pro/jobs/mine");
+
+// Quotes a customer has received on their job.
+export const jobQuotes = (id: string) => api<JobQuote[]>(`/jobs/${id}/quotes`);
 
 export const WEEK_DAYS: { value: string; label: string }[] = [
   { value: "mon", label: "Mon" },

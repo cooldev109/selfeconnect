@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -7,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
+import { SubmitQuoteDto } from './dto/submit-quote.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
@@ -44,5 +46,15 @@ export class ProJobsController {
   @Post(':id/unlock')
   unlock(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.jobs.unlockContact(user.id, id);
+  }
+
+  // Submit (or update) this pro's quote on a job. Also unlocks the contact.
+  @Post(':id/quote')
+  quote(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: SubmitQuoteDto,
+  ) {
+    return this.jobs.submitQuote(user.id, id, dto);
   }
 }

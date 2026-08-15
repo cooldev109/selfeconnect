@@ -47,6 +47,12 @@ export class JobsController {
     return this.jobs.interestedPros(c.id, id);
   }
 
+  // Quotes submitted on this job — the pitches the customer chooses from.
+  @Get(':id/quotes')
+  quotes(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
+    return this.jobs.listQuotes(c.id, id);
+  }
+
   @Patch(':id')
   update(
     @CurrentCustomer() c: CustomerUser,

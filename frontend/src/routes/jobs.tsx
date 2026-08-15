@@ -4,12 +4,12 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, MapPin, Lock, Mail, Phone, Sparkles, Clock } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { ContactActions } from "@/components/ContactActions";
-import { Badge, Button, Card, CardContent } from "@/components/shared";
+import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { getAccount } from "@/lib/billing";
 import { useTips } from "@/hooks/useTips";
-import { proBrowseJobs, proUnlockJob, type ProJob } from "@/lib/jobs";
+import { proBrowseJobs, proUnlockJob, proSubmitQuote, type ProJob } from "@/lib/jobs";
 
 export const Route = createFileRoute("/jobs")({
   head: () => ({
@@ -41,20 +41,22 @@ function JobBoard() {
     mutationFn: (id: string) => proUnlockJob(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pro-jobs"] }),
   });
+  const quote = useMutation({
+    mutationFn: (v: { id: string; amount: number | null; message: string }) =>
+      proSubmitQuote(v.id, { amount: v.amount, message: v.message }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pro-jobs"] }),
+  });
 
   const isActive = !!accountQ.data?.isActive;
   const jobs = jobsQ.data ?? [];
 
   return (
-    <ProShell
-      title="Find work"
-      subtitle="Open jobs in your service categories, nearest first."
-    >
+    <ProShell title="Find work" subtitle="Open jobs in your service categories, nearest first.">
       {!isActive && (
         <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-primary/30 bg-[#E1F5EE] p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-center gap-2 text-sm font-medium text-primary">
-            <Sparkles className="h-4 w-4" /> Subscribe to unlock customer contact
-            details and win more work.
+            <Sparkles className="h-4 w-4" /> Subscribe to unlock customer contact details and win
+            more work.
           </p>
           <Button
             className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
@@ -91,11 +93,7 @@ function JobBoard() {
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">Category</span>
           <div className="w-52">
-            <CategorySelect
-              value={category}
-              onChange={setCategory}
-              allLabel="All my services"
-            />
+            <CategorySelect value={category} onChange={setCategory} allLabel="All my services" />
           </div>
         </label>
       </div>
@@ -108,8 +106,7 @@ function JobBoard() {
       ) : jobs.length === 0 ? (
         <Card className="mt-6 rounded-2xl border-dashed">
           <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            No open jobs match your filters right now. Try a wider radius or a
-            different category.
+            No open jobs match your filters right now. Try a wider radius or a different category.
           </CardContent>
         </Card>
       ) : (
@@ -120,7 +117,9 @@ function JobBoard() {
               job={j}
               isActive={isActive}
               unlocking={unlock.isPending && unlock.variables === j.id}
+              quoting={quote.isPending && quote.variables?.id === j.id}
               onUnlock={() => unlock.mutate(j.id)}
+              onQuote={(amount, message) => quote.mutate({ id: j.id, amount, message })}
               onSubscribe={() => navigate({ to: "/account" })}
             />
           ))}
@@ -136,26 +135,44 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 font-display text-2xl font-bold tabular-nums text-foreground">
-        {value}
-      </p>
+      <p className="mt-1 font-display text-2xl font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );
+}
+
+function fmtGbp(pence: number) {
+  const p = pence / 100;
+  return `£${p % 1 === 0 ? p.toFixed(0) : p.toFixed(2)}`;
 }
 
 function JobCard({
   job,
   isActive,
   unlocking,
+  quoting,
   onUnlock,
+  onQuote,
   onSubscribe,
 }: {
   job: ProJob;
   isActive: boolean;
   unlocking: boolean;
+  quoting: boolean;
   onUnlock: () => void;
+  onQuote: (amount: number | null, message: string) => void;
   onSubscribe: () => void;
 }) {
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [message, setMessage] = useState("");
+  const submitQuote = () => {
+    const trimmed = message.trim();
+    if (trimmed.length < 3) return;
+    const n = parseFloat(amount);
+    const pence = amount.trim() && !Number.isNaN(n) ? Math.round(n * 100) : null;
+    onQuote(pence, trimmed);
+    setQuoteOpen(false);
+  };
   return (
     <Card className="rounded-2xl">
       <CardContent className="p-5">
@@ -180,41 +197,114 @@ function JobCard({
           </span>
         </div>
 
+        {/* The quote form — shared between the pre-unlock and post-unlock states. */}
+        {quoteOpen && (
+          <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-3">
+            <label className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">£</span>
+              <Input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Your price (optional)"
+                inputMode="decimal"
+                maxLength={12}
+                className="h-9"
+              />
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Introduce yourself and what you'd do — this is your pitch."
+              rows={3}
+              maxLength={1000}
+              className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+            <div className="mt-2 flex items-center gap-3">
+              <Button
+                className="h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={submitQuote}
+                disabled={quoting || message.trim().length < 3}
+              >
+                {quoting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
+                  </>
+                ) : (
+                  "Send quote"
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setQuoteOpen(false)}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {job.unlocked && job.contact ? (
           <div className="mt-4 rounded-xl border border-primary/20 bg-[#E1F5EE]/50 p-3 text-sm">
             <p className="font-semibold text-foreground">{job.contact.name}</p>
             <div className="mt-2">
-              <ContactActions
-                email={job.contact.email}
-                phone={job.contact.phone}
-              />
+              <ContactActions email={job.contact.email} phone={job.contact.phone} />
             </div>
             {job.contact.addressLine && (
               <p className="mt-1 text-muted-foreground">{job.contact.addressLine}</p>
+            )}
+            {job.myQuote ? (
+              <p className="mt-3 border-t border-primary/15 pt-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  Your quote
+                  {job.myQuote.amount != null ? `: ${fmtGbp(job.myQuote.amount)}` : ""}
+                </span>{" "}
+                — {job.myQuote.message}
+              </p>
+            ) : (
+              !quoteOpen && (
+                <button
+                  type="button"
+                  onClick={() => setQuoteOpen(true)}
+                  className="mt-3 text-xs font-semibold text-primary hover:underline"
+                >
+                  + Send a quote
+                </button>
+              )
             )}
           </div>
         ) : job.quotesFull ? (
           // The customer capped how many pros can reach them, and it's reached.
           <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-sm font-medium text-muted-foreground">
-            <Lock className="h-4 w-4" /> Quotes full — this customer has enough
-            responses
+            <Lock className="h-4 w-4" /> Quotes full — this customer has enough responses
           </div>
         ) : isActive ? (
-          <Button
-            className="mt-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={onUnlock}
-            disabled={unlocking}
-          >
-            {unlocking ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Unlocking…
-              </>
-            ) : (
-              <>
-                <Lock className="mr-2 h-4 w-4" /> Unlock contact
-              </>
-            )}
-          </Button>
+          !quoteOpen && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Button
+                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => setQuoteOpen(true)}
+              >
+                Send a quote
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                onClick={onUnlock}
+                disabled={unlocking}
+              >
+                {unlocking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Unlocking…
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" /> Unlock contact
+                  </>
+                )}
+              </Button>
+            </div>
+          )
         ) : (
           <Button variant="outline" className="mt-4 rounded-xl" onClick={onSubscribe}>
             <Lock className="mr-2 h-4 w-4" /> Subscribe to unlock
