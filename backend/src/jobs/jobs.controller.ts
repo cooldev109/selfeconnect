@@ -13,6 +13,7 @@ import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { CustomerSendMessageDto } from './dto/send-message.dto';
+import { PayJobDto } from './dto/pay-job.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
 import type { CustomerUser } from '../customer-auth/current-customer.decorator';
@@ -78,6 +79,16 @@ export class JobsController {
     @Body() dto: CustomerSendMessageDto,
   ) {
     return this.jobs.customerSendMessage(c.id, id, dto.pro, dto.body);
+  }
+
+  // Pay the hired professional for this job through the platform (optional).
+  @Post(':id/pay')
+  pay(
+    @CurrentCustomer() c: CustomerUser,
+    @Param('id') id: string,
+    @Body() dto: PayJobDto,
+  ) {
+    return this.jobs.payForJob(c.id, id, dto.amount);
   }
 
   @Patch(':id')

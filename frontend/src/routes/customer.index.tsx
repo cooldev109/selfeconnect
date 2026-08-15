@@ -15,11 +15,14 @@ import {
   CircleCheck,
   X,
   MessageSquare,
+  BadgeCheck,
+  CreditCard,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
-import { Badge, Button, Card, CardContent } from "@/components/shared";
+import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
 import { ChatThread } from "@/components/ChatThread";
+import { TipPaymentModal } from "@/components/TipPaymentModal";
 import {
   listMyJobs,
   updateJob,
@@ -29,6 +32,7 @@ import {
   jobThreads,
   jobMessages,
   sendJobMessage,
+  payForJob,
   type Job,
   type JobStatus,
 } from "@/lib/jobs";
@@ -266,6 +270,28 @@ function JobCard({ job }: { job: Job }) {
     onSuccess: done,
   });
 
+  // Optional platform payment.
+  const [paying, setPaying] = useState(false);
+  const [payAmount, setPayAmount] = useState("");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const pay = useMutation({
+    mutationFn: (pence: number) => payForJob(job.id, pence),
+    onSuccess: (res) => {
+      if (res.mock) {
+        // Dev/mock — the payment already settled.
+        setPaying(false);
+        setPayAmount("");
+        done();
+      } else {
+        setClientSecret(res.clientSecret);
+      }
+    },
+  });
+  const submitPay = () => {
+    const n = parseFloat(payAmount);
+    if (!Number.isNaN(n) && n >= 1) pay.mutate(Math.round(n * 100));
+  };
+
   const pros = interestedQ.data ?? [];
   const badge = STATUS_BADGE[job.status];
   const isActive = STAGE_OF[job.status] === "active";
@@ -449,6 +475,81 @@ function JobCard({ job }: { job: Job }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* Optional payment — pay the hired pro through the platform. */}
+        {job.canPayOnPlatform &&
+          (job.status === "hired" ||
+            job.status === "in_progress" ||
+            job.status === "completed") && (
+            <div className="mt-4">
+              {job.paidOnPlatform ? (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary">
+                  <BadgeCheck className="h-4 w-4" /> Paid on SelfeConnect
+                </span>
+              ) : paying ? (
+                <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                  <p className="text-sm font-medium text-foreground">
+                    Pay {job.hiredDriverName ?? "your professional"} through SelfeConnect
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    100% goes to them — pay securely by card.
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">£</span>
+                    <Input
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value)}
+                      placeholder="Amount"
+                      inputMode="decimal"
+                      maxLength={10}
+                      className="h-9 w-32"
+                    />
+                    <Button
+                      onClick={submitPay}
+                      disabled={pay.isPending || !(parseFloat(payAmount) >= 1)}
+                      className="h-9 rounded-lg bg-primary px-4 text-sm text-primary-foreground hover:bg-primary/90"
+                    >
+                      {pay.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setPaying(false)}
+                      className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="h-9 rounded-lg px-3 text-xs"
+                  onClick={() => setPaying(true)}
+                >
+                  <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay through SelfeConnect
+                </Button>
+              )}
+            </div>
+          )}
+
+        {clientSecret && (
+          <TipPaymentModal
+            open
+            clientSecret={clientSecret}
+            amountLabel={payAmount || "0"}
+            title={`Pay ${job.hiredDriverName ?? "your professional"}`}
+            payLabel="Pay"
+            errorLabel="Payment failed. Please try again."
+            returnUrl={typeof window !== "undefined" ? window.location.href : ""}
+            onPaid={() => {
+              setClientSecret(null);
+              setPaying(false);
+              setPayAmount("");
+              done();
+            }}
+            onClose={() => setClientSecret(null)}
+          />
         )}
 
         {/* Pick the hired professional (open → hired). */}

@@ -24,8 +24,9 @@ import { run as jobQuotes } from "./job-quotes.mjs";
 import { run as jobChat } from "./job-chat.mjs";
 import { run as notifications } from "./notifications.mjs";
 import { run as proGallery } from "./pro-gallery.mjs";
+import { run as jobPayments } from "./job-payments.mjs";
 
-const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos, customerLowfriction, jobAlerts, proOnboarding, proMyJobs, jobQuotes, jobChat, notifications, proGallery];
+const SUITES = [customers, pros, jobs, reviews, geo, accountFlows, adminCrud, authBoundaries, payouts, jobLifecycle, jobPhotos, customerLowfriction, jobAlerts, proOnboarding, proMyJobs, jobQuotes, jobChat, notifications, proGallery, jobPayments];
 
 const results = [];
 for (const suite of SUITES) {

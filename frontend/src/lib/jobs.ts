@@ -21,6 +21,10 @@ export interface Job {
   cancelReason: string | null;
   hiredDriverPublicId: string | null;
   hiredDriverName: string | null;
+  /** The hired pro accepts payment through the platform. */
+  canPayOnPlatform: boolean;
+  /** This job has been paid through the platform. */
+  paidOnPlatform: boolean;
   /** How many professionals may unlock contact. null = no limit. */
   maxContacts: number | null;
   /** How many have unlocked so far — the "X" in "X of 10". */
@@ -79,6 +83,14 @@ export const updateJob = (
 ) => api<Job>(`/jobs/${id}`, { method: "PATCH", body: JSON.stringify(b) });
 
 export const deleteJob = (id: string) => api<{ ok: true }>(`/jobs/${id}`, { method: "DELETE" });
+
+// Pay the hired pro for a job through the platform. `amount` is in pence.
+// Returns a Stripe client secret (real mode) or mock:true (dev, settles now).
+export const payForJob = (id: string, amount: number) =>
+  api<{ tipId: string; amount: number; clientSecret: string; mock: boolean }>(`/jobs/${id}/pay`, {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
 
 export const jobInterestedPros = (id: string) => api<InterestedPro[]>(`/jobs/${id}/interested`);
 

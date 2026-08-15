@@ -14,12 +14,24 @@ import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
 import { MailService } from '../mail/mail.service';
 import { AccountAccessService } from '../mail/account-access.service';
+import { STRIPE_GATEWAY, type StripeGateway } from '../stripe/gateway';
+import { Inject } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 
 const jobInclude = {
   category: true,
-  hiredDriver: { select: { publicId: true, name: true, company: true } },
+  hiredDriver: {
+    select: {
+      publicId: true,
+      name: true,
+      company: true,
+      stripeAccountId: true,
+      stripeOnboarded: true,
+      isActive: true,
+    },
+  },
+  payments: { where: { status: 'succeeded' as const }, select: { id: true } },
   _count: { select: { unlocks: true } },
 } satisfies Prisma.JobInclude;
 
@@ -55,6 +67,7 @@ export class JobsService {
     private readonly geo: GeoService,
     private readonly mail: MailService,
     private readonly access: AccountAccessService,
+    @Inject(STRIPE_GATEWAY) private readonly stripe: StripeGateway,
   ) {}
 
   private async resolveCategoryId(slug: string) {
@@ -91,6 +104,14 @@ export class JobsService {
       hiredDriverName: j.hiredDriver
         ? j.hiredDriver.company || j.hiredDriver.name
         : null,
+      // Optional platform payment: whether the hired pro can take payment here,
+      // and whether this job has already been paid through the platform.
+      canPayOnPlatform: !!(
+        j.hiredDriver?.stripeAccountId &&
+        j.hiredDriver.stripeOnboarded &&
+        j.hiredDriver.isActive
+      ),
+      paidOnPlatform: j.payments.length > 0,
       // Quote cap, and how much of it is used, so the customer sees "3 of 10".
       maxContacts: j.maxContacts ?? null,
       contactCount: j._count.unlocks,
@@ -922,5 +943,78 @@ export class JobsService {
       job?.title,
     );
     return this.shapeMessage(m);
+  }
+
+  // ---- Optional payment: a customer pays the hired pro through the platform ----
+
+  // Creates a destination charge to the hired professional's connected account
+  // (the connector model — 100% goes to the pro, no escrow) and records it as a
+  // job payment. In mock mode it settles immediately; with real Stripe the
+  // webhook flips it to succeeded, exactly like the QR payment flow.
+  async payForJob(customerId: string, jobId: string, amount: number) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      include: {
+        hiredDriver: {
+          select: {
+            id: true,
+            name: true,
+            company: true,
+            stripeAccountId: true,
+            stripeOnboarded: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    const pro = job.hiredDriver;
+    if (!pro) throw new BadRequestException('no_hired_pro');
+    if (!pro.stripeAccountId || !pro.stripeOnboarded || !pro.isActive) {
+      throw new BadRequestException('pro_cannot_receive_payments');
+    }
+
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { name: true, companyName: true, email: true },
+    });
+
+    const intent = await this.stripe.createTipPaymentIntent({
+      amount,
+      currency: 'gbp',
+      destinationAccountId: pro.stripeAccountId,
+      metadata: { driverId: pro.id, jobId, type: 'payment' },
+    });
+
+    const tip = await this.prisma.tip.create({
+      data: {
+        driverId: pro.id,
+        amount,
+        currency: 'gbp',
+        type: 'payment',
+        rating: null,
+        customerName: customer?.companyName || customer?.name || null,
+        jobId,
+        status: this.stripe.isMock ? 'succeeded' : 'pending',
+        stripePaymentIntentId: intent.paymentIntentId,
+      },
+    });
+
+    if (customer?.email) {
+      void this.mail.sendPaymentReceipt({
+        email: customer.email,
+        professionalName: pro.company || pro.name,
+        amount,
+        kind: 'payment',
+        reference: tip.id,
+      });
+    }
+
+    return {
+      tipId: tip.id,
+      amount,
+      clientSecret: intent.clientSecret,
+      mock: this.stripe.isMock,
+    };
   }
 }

@@ -8,6 +8,7 @@ export interface ReviewItem {
   date: string;
   verified: boolean; // left by a registered SelfeConnect customer
   hired: boolean; // linked to a job they hired for on the platform
+  paidOnPlatform?: boolean; // the linked job was paid through the platform
 }
 
 export type RatingBreakdown = Record<"1" | "2" | "3" | "4" | "5", number>;

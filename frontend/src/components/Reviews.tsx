@@ -1,25 +1,14 @@
 import { Star, BadgeCheck, ShieldQuestion } from "lucide-react";
 import type { ReviewItem, RatingBreakdown } from "@/lib/reviews";
 
-export function StarRow({
-  value,
-  className = "h-4 w-4",
-}: {
-  value: number;
-  className?: string;
-}) {
+export function StarRow({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
   return (
-    <span
-      className="inline-flex items-center gap-0.5"
-      aria-label={`${value} out of 5`}
-    >
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} out of 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
           className={`${className} ${
-            i <= Math.round(value)
-              ? "fill-amber-400 text-amber-400"
-              : "text-muted-foreground/25"
+            i <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/25"
           }`}
         />
       ))}
@@ -71,9 +60,7 @@ export function RatingSummary({
                   style={{ width: `${pct}%` }}
                 />
               </span>
-              <span className="w-5 text-right tabular-nums text-muted-foreground">
-                {n}
-              </span>
+              <span className="w-5 text-right tabular-nums text-muted-foreground">{n}</span>
             </div>
           );
         })}
@@ -92,10 +79,12 @@ export function ReviewCard({ review }: { review: ReviewItem }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <span className="text-sm font-semibold text-foreground">
-              {review.author}
-            </span>
-            {review.hired ? (
+            <span className="text-sm font-semibold text-foreground">{review.author}</span>
+            {review.paidOnPlatform ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
+                <BadgeCheck className="h-3.5 w-3.5" /> Paid on SelfeConnect
+              </span>
+            ) : review.hired ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
                 <BadgeCheck className="h-3.5 w-3.5" /> Hired on SelfeConnect
               </span>
@@ -126,9 +115,7 @@ export function ReviewCard({ review }: { review: ReviewItem }) {
             </span>
           </div>
           {review.comment && (
-            <p className="mt-2 text-sm leading-relaxed text-foreground/90">
-              {review.comment}
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">{review.comment}</p>
           )}
         </div>
       </div>

@@ -21,6 +21,7 @@ export type ReviewItem = {
   date: string;
   verified: boolean; // left by a registered SelfeConnect customer
   hired: boolean; // linked to a job they hired for
+  paidOnPlatform: boolean; // the linked job was paid through the platform
 };
 
 @Injectable()
@@ -123,6 +124,18 @@ export class ProsService {
       }),
     ]);
 
+    // Which of these reviews' jobs were paid through the platform — the
+    // strongest verification (a real, completed, paid transaction).
+    const jobIds = reviews.map((r) => r.jobId).filter((id): id is string => !!id);
+    const paidJobIds = new Set<string>();
+    if (jobIds.length) {
+      const paid = await this.prisma.tip.findMany({
+        where: { jobId: { in: jobIds }, type: 'payment', status: 'succeeded' },
+        select: { jobId: true },
+      });
+      for (const p of paid) if (p.jobId) paidJobIds.add(p.jobId);
+    }
+
     const items: ReviewItem[] = [
       ...reviews.map((r) => ({
         rating: r.rating,
@@ -137,6 +150,7 @@ export class ProsService {
         // Only a review tied to a real account counts as verified.
         verified: r.customerId != null,
         hired: r.jobId != null,
+        paidOnPlatform: r.jobId != null && paidJobIds.has(r.jobId),
       })),
       ...tips.map((t) => ({
         rating: t.rating as number,
@@ -145,6 +159,7 @@ export class ProsService {
         date: t.createdAt.toISOString(),
         verified: false,
         hired: false,
+        paidOnPlatform: false,
       })),
     ];
     items.sort((a, b) => (a.date < b.date ? 1 : -1));

@@ -136,6 +136,12 @@ model Tip {
   customerAddress String?
   message         String?
 
+  // When set, this payment was made for a specific job through the platform
+  // (powers "paid on SelfeConnect" + the verified-paid review badge). QR tips
+  // and payments have no job and leave this null.
+  jobId String?
+  job   Job?   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
   stripePaymentIntentId String? @unique
 
   createdAt DateTime @default(now())
@@ -284,6 +290,7 @@ model Job {
   unlocks  JobContactUnlock[]
   quotes   Quote[]
   messages Message[]
+  payments Tip[]
   reviews  Review[]
 
   @@index([categoryId])
