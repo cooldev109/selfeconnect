@@ -8,9 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { Loader2, Lock } from "lucide-react";
 import { Button, Modal } from "@/components/shared";
-import { getStripe } from "@/lib/stripe";
-
-const stripePromise = getStripe();
+import { getStripe, getStripeForAccount } from "@/lib/stripe";
 
 function PayForm({
   amountLabel,
@@ -47,7 +45,11 @@ function PayForm({
       setBusy(false);
       return;
     }
-    if (paymentIntent && paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
+    if (
+      paymentIntent &&
+      paymentIntent.status !== "succeeded" &&
+      paymentIntent.status !== "processing"
+    ) {
       setError(errorLabel);
       setBusy(false);
       return;
@@ -108,6 +110,7 @@ function PayForm({
 export function TipPaymentModal({
   open,
   clientSecret,
+  stripeAccount,
   amountLabel,
   title,
   payLabel,
@@ -118,6 +121,8 @@ export function TipPaymentModal({
 }: {
   open: boolean;
   clientSecret: string | null;
+  /** Set for a Direct charge — scopes Stripe.js to the connected account. */
+  stripeAccount?: string | null;
   amountLabel: string;
   title: string;
   payLabel: string;
@@ -126,6 +131,7 @@ export function TipPaymentModal({
   onClose: () => void;
   onPaid: () => void;
 }) {
+  const stripePromise = stripeAccount ? getStripeForAccount(stripeAccount) : getStripe();
   return (
     <Modal
       open={open}

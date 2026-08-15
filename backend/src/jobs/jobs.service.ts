@@ -979,10 +979,10 @@ export class JobsService {
       select: { name: true, companyName: true, email: true },
     });
 
-    const intent = await this.stripe.createTipPaymentIntent({
+    const intent = await this.stripe.createConnectedPaymentIntent({
       amount,
       currency: 'gbp',
-      destinationAccountId: pro.stripeAccountId,
+      connectedAccountId: pro.stripeAccountId,
       metadata: { driverId: pro.id, jobId, type: 'payment' },
     });
 
@@ -1014,6 +1014,9 @@ export class JobsService {
       tipId: tip.id,
       amount,
       clientSecret: intent.clientSecret,
+      // The frontend needs this to scope Stripe.js to the connected account for
+      // a Direct-charge confirmation.
+      connectedAccountId: intent.connectedAccountId,
       mock: this.stripe.isMock,
     };
   }

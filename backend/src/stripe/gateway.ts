@@ -47,12 +47,20 @@ export interface StripeGateway {
     subscriptionId: string,
   ): Promise<{ currentPeriodEnd: number | null; cancelAtPeriodEnd: boolean }>;
 
-  createTipPaymentIntent(input: {
+  // A Direct charge created ON the connected (merchant) account, so the pro is
+  // the merchant of record and their account bears Stripe's processing fee.
+  // The client secret belongs to the connected account, so the frontend must
+  // initialise Stripe.js with `stripeAccount: connectedAccountId`.
+  createConnectedPaymentIntent(input: {
     amount: number;
     currency: string;
-    destinationAccountId: string;
+    connectedAccountId: string;
     metadata?: Record<string, string>;
-  }): Promise<{ paymentIntentId: string; clientSecret: string }>;
+  }): Promise<{
+    paymentIntentId: string;
+    clientSecret: string;
+    connectedAccountId: string;
+  }>;
 
   constructWebhookEvent(
     payload: string | Buffer,

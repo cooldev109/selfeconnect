@@ -36,9 +36,13 @@ export class MockStripeGateway implements StripeGateway {
       cancelAtPeriodEnd: true,
     };
   }
-  async createTipPaymentIntent() {
+  async createConnectedPaymentIntent(i: { connectedAccountId: string }) {
     const id = rid('pi');
-    return { paymentIntentId: id, clientSecret: `${id}_secret_mock` };
+    return {
+      paymentIntentId: id,
+      clientSecret: `${id}_secret_mock`,
+      connectedAccountId: i.connectedAccountId,
+    };
   }
   constructWebhookEvent(payload: string | Buffer): WebhookEvent {
     const parsed = JSON.parse(payload.toString());

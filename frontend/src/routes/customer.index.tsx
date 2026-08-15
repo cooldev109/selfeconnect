@@ -274,6 +274,7 @@ function JobCard({ job }: { job: Job }) {
   const [paying, setPaying] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [payAccount, setPayAccount] = useState<string | null>(null);
   const pay = useMutation({
     mutationFn: (pence: number) => payForJob(job.id, pence),
     onSuccess: (res) => {
@@ -283,6 +284,7 @@ function JobCard({ job }: { job: Job }) {
         setPayAmount("");
         done();
       } else {
+        setPayAccount(res.connectedAccountId);
         setClientSecret(res.clientSecret);
       }
     },
@@ -537,6 +539,7 @@ function JobCard({ job }: { job: Job }) {
           <TipPaymentModal
             open
             clientSecret={clientSecret}
+            stripeAccount={payAccount}
             amountLabel={payAmount || "0"}
             title={`Pay ${job.hiredDriverName ?? "your professional"}`}
             payLabel="Pay"
@@ -544,11 +547,15 @@ function JobCard({ job }: { job: Job }) {
             returnUrl={typeof window !== "undefined" ? window.location.href : ""}
             onPaid={() => {
               setClientSecret(null);
+              setPayAccount(null);
               setPaying(false);
               setPayAmount("");
               done();
             }}
-            onClose={() => setClientSecret(null)}
+            onClose={() => {
+              setClientSecret(null);
+              setPayAccount(null);
+            }}
           />
         )}
 

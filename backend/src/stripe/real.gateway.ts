@@ -10,25 +10,27 @@ export class RealStripeGateway implements StripeGateway {
     this.stripe = new Stripe(secretKey);
   }
 
+  // v2 Accounts API. The professional's account is a `merchant` (merchant of
+  // record via Direct charges) with a full Stripe dashboard, and — crucially —
+  // `fees_collector: 'stripe'` + `losses_collector: 'stripe'`, so the pro's
+  // account bears Stripe's processing fees and the platform pays nothing per
+  // transaction and no per-active-account fee. (Express dashboards can't carry
+  // stripe-collected fees; `full` is the least-work config that can.)
   async createConnectAccount(i: { email: string; driverId: string }) {
-    // Controller-based account (Express dashboard, Stripe-hosted onboarding).
-    // The platform owns the payment and losses; the driver receives tips via
-    // destination charges. Stripe requires `card_payments` to be requested
-    // alongside `transfers` (requesting transfers alone needs special platform
-    // approval), so we request both — payments still settle on the platform.
-    const a = await this.stripe.accounts.create({
-      controller: {
-        stripe_dashboard: { type: 'express' },
-        fees: { payer: 'application' },
-        losses: { payments: 'application' },
-        requirement_collection: 'stripe',
+    const a = await this.stripe.v2.core.accounts.create({
+      contact_email: i.email,
+      identity: { country: 'gb' },
+      configuration: {
+        merchant: { capabilities: { card_payments: { requested: true } } },
       },
-      country: 'GB',
-      email: i.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
+      defaults: {
+        responsibilities: {
+          fees_collector: 'stripe',
+          losses_collector: 'stripe',
+        },
+        locales: ['en-GB'],
       },
+      dashboard: 'full',
       metadata: { driverId: i.driverId },
     });
     return { accountId: a.id };
@@ -38,25 +40,37 @@ export class RealStripeGateway implements StripeGateway {
     returnUrl: string;
     refreshUrl: string;
   }) {
-    const l = await this.stripe.accountLinks.create({
+    const l = await this.stripe.v2.core.accountLinks.create({
       account: i.accountId,
-      return_url: i.returnUrl,
-      refresh_url: i.refreshUrl,
-      type: 'account_onboarding',
+      use_case: {
+        type: 'account_onboarding',
+        account_onboarding: {
+          configurations: ['merchant'],
+          return_url: i.returnUrl,
+          refresh_url: i.refreshUrl,
+        },
+      },
     });
-    return { url: l.url };
+    return { url: l.url ?? '' };
   }
   async getAccountStatus(accountId: string): Promise<AccountStatus> {
-    const a = await this.stripe.accounts.retrieve(accountId);
+    const a = await this.stripe.v2.core.accounts.retrieve(accountId, {
+      include: ['configuration.merchant', 'requirements'],
+    });
+    const status = a.configuration?.merchant?.capabilities?.card_payments?.status;
+    const active = status === 'active';
     return {
-      chargesEnabled: Boolean(a.charges_enabled),
-      payoutsEnabled: Boolean(a.payouts_enabled),
-      detailsSubmitted: Boolean(a.details_submitted),
+      // A merchant that can accept card payments can receive money and (as a
+      // full-dashboard/Standard account) manages its own payouts.
+      chargesEnabled: active,
+      payoutsEnabled: active,
+      detailsSubmitted: status != null && status !== 'restricted',
     };
   }
-  async createDashboardLink(accountId: string) {
-    const l = await this.stripe.accounts.createLoginLink(accountId);
-    return { url: l.url };
+  async createDashboardLink(_accountId: string) {
+    // Full-dashboard (Standard) accounts sign in to their own Stripe dashboard
+    // directly — there is no platform-minted Express login link.
+    return { url: 'https://dashboard.stripe.com/' };
   }
   async createSubscriptionCheckout(i: {
     customerId?: string;
@@ -102,23 +116,29 @@ export class RealStripeGateway implements StripeGateway {
       cancelAtPeriodEnd: s.cancel_at_period_end,
     };
   }
-  async createTipPaymentIntent(i: {
+  async createConnectedPaymentIntent(i: {
     amount: number;
     currency: string;
-    destinationAccountId: string;
+    connectedAccountId: string;
     metadata?: Record<string, string>;
   }) {
-    const pi = await this.stripe.paymentIntents.create({
-      amount: i.amount,
-      currency: i.currency,
-      // Card + wallets (Apple Pay / Google Pay), but no redirect-based methods
-      // (klarna/revolut/amazon) — keeps the tip a one-tap, inline payment with
-      // no return_url round-trip, which is what froze the old flow.
-      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-      transfer_data: { destination: i.destinationAccountId },
-      metadata: i.metadata,
-    });
-    return { paymentIntentId: pi.id, clientSecret: pi.client_secret ?? '' };
+    // Direct charge: created ON the pro's connected account (Stripe-Account
+    // header), so they're the merchant of record and bear Stripe's fee. Card +
+    // wallets only (no redirect methods), for a one-tap inline payment.
+    const pi = await this.stripe.paymentIntents.create(
+      {
+        amount: i.amount,
+        currency: i.currency,
+        automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+        metadata: i.metadata,
+      },
+      { stripeAccount: i.connectedAccountId },
+    );
+    return {
+      paymentIntentId: pi.id,
+      clientSecret: pi.client_secret ?? '',
+      connectedAccountId: i.connectedAccountId,
+    };
   }
   constructWebhookEvent(
     payload: string | Buffer,

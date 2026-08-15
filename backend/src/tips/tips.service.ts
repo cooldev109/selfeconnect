@@ -28,10 +28,10 @@ export class TipsService {
     }
 
     const type = dto.type ?? 'tip';
-    const intent = await this.stripe.createTipPaymentIntent({
+    const intent = await this.stripe.createConnectedPaymentIntent({
       amount: dto.amount,
       currency: 'gbp',
-      destinationAccountId: driver.stripeAccountId,
+      connectedAccountId: driver.stripeAccountId,
       metadata: { driverId: driver.id, publicId, type },
     });
 
@@ -68,6 +68,7 @@ export class TipsService {
       amount: dto.amount,
       paymentIntentId: intent.paymentIntentId,
       clientSecret: intent.clientSecret,
+      connectedAccountId: intent.connectedAccountId,
       mock: this.stripe.isMock,
     };
   }

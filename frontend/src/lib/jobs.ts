@@ -87,7 +87,13 @@ export const deleteJob = (id: string) => api<{ ok: true }>(`/jobs/${id}`, { meth
 // Pay the hired pro for a job through the platform. `amount` is in pence.
 // Returns a Stripe client secret (real mode) or mock:true (dev, settles now).
 export const payForJob = (id: string, amount: number) =>
-  api<{ tipId: string; amount: number; clientSecret: string; mock: boolean }>(`/jobs/${id}/pay`, {
+  api<{
+    tipId: string;
+    amount: number;
+    clientSecret: string;
+    connectedAccountId: string;
+    mock: boolean;
+  }>(`/jobs/${id}/pay`, {
     method: "POST",
     body: JSON.stringify({ amount }),
   });

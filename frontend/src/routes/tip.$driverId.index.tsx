@@ -1,21 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  ChevronDown,
-  Heart,
-  Loader2,
-  Lock,
-  Sparkles,
-  Star,
-} from "lucide-react";
-import {
-  Button,
-  Card,
-  CardContent,
-  Input,
-  Textarea,
-} from "@/components/shared";
+import { BadgeCheck, ChevronDown, Heart, Loader2, Lock, Sparkles, Star } from "lucide-react";
+import { Button, Card, CardContent, Input, Textarea } from "@/components/shared";
 import { useDriverPublic } from "@/hooks/useDriver";
 import { api, ApiError } from "@/lib/api";
 import { createAnonymousReview } from "@/lib/reviews";
@@ -28,8 +14,7 @@ export const Route = createFileRoute("/tip/$driverId/")({
       { title: "Leave a review — SelfeConnect" },
       {
         name: "description",
-        content:
-          "Rate the professional who did your job — free, in seconds. Tipping is optional.",
+        content: "Rate the professional who did your job — free, in seconds. Tipping is optional.",
       },
     ],
   }),
@@ -83,6 +68,7 @@ function TipPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [payAccount, setPayAccount] = useState<string | null>(null);
   const [showPay, setShowPay] = useState(false);
 
   const LIVE = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -115,7 +101,7 @@ function TipPage() {
     setError(null);
     setNotice(null);
     try {
-      const res = await api<{ mock: boolean; clientSecret: string }>(
+      const res = await api<{ mock: boolean; clientSecret: string; connectedAccountId: string }>(
         `/drivers/${driverId}/tips`,
         {
           method: "POST",
@@ -131,6 +117,7 @@ function TipPage() {
         return;
       }
       setClientSecret(res.clientSecret);
+      setPayAccount(res.connectedAccountId);
       setShowPay(true);
       setSubmitting(false);
     } catch (err) {
@@ -182,7 +169,7 @@ function TipPage() {
 
     // They chose to tip as well.
     try {
-      const res = await api<{ mock: boolean; clientSecret: string }>(
+      const res = await api<{ mock: boolean; clientSecret: string; connectedAccountId: string }>(
         `/drivers/${driverId}/tips`,
         {
           method: "POST",
@@ -197,6 +184,7 @@ function TipPage() {
         return;
       }
       setClientSecret(res.clientSecret);
+      setPayAccount(res.connectedAccountId);
       setShowPay(true);
       setSubmitting(false);
     } catch (err) {
@@ -215,12 +203,8 @@ function TipPage() {
   if (isError) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background p-6 text-center">
-        <h1 className="font-display text-xl font-bold text-foreground">
-          Professional not found
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Please check the code and try again.
-        </p>
+        <h1 className="font-display text-xl font-bold text-foreground">Professional not found</h1>
+        <p className="text-sm text-muted-foreground">Please check the code and try again.</p>
         <Link to="/" className="mt-2 text-sm font-semibold text-primary hover:underline">
           Go to SelfeConnect
         </Link>
@@ -257,9 +241,7 @@ function TipPage() {
               </span>
             )}
           </div>
-          <h1 className="mt-4 font-display text-2xl font-bold text-white">
-            {driver.name}
-          </h1>
+          <h1 className="mt-4 font-display text-2xl font-bold text-white">{driver.name}</h1>
           {(driver.company || driver.categoryNames?.length) && (
             <p className="mt-0.5 text-sm text-white/85">
               {driver.company || driver.categoryNames?.join(" · ")}
@@ -298,243 +280,241 @@ function TipPage() {
             </div>
 
             {mode === "tip" && (
-            <>
-            <div className="text-center">
-              <h2 className="font-display text-xl font-bold text-foreground">
-                How was {driver.firstName}'s work?
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your review is free and takes seconds. No account needed.
-              </p>
-            </div>
-
-            <form onSubmit={onSubmit} className="mt-6 space-y-6">
-              {/* 1. The rating — the actual point of the page */}
-              <div>
-                <div
-                  className="flex items-center justify-center gap-1"
-                  onMouseLeave={() => setHoverRating(0)}
-                >
-                  {[1, 2, 3, 4, 5].map((s) => {
-                    const filled = s <= (hoverRating || rating);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setRating(s)}
-                        onMouseEnter={() => setHoverRating(s)}
-                        aria-label={`${s} star${s > 1 ? "s" : ""}`}
-                        className="p-1 transition-transform active:scale-90"
-                      >
-                        <Star
-                          className={cn(
-                            "h-10 w-10 transition-all duration-150",
-                            filled
-                              ? "fill-amber-400 text-amber-400 drop-shadow-[0_2px_6px_rgb(251_191_36_/_0.4)]"
-                              : "text-muted-foreground/30",
-                          )}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2. Optional words */}
-              <div className="rounded-2xl bg-muted/50">
-                <button
-                  type="button"
-                  onClick={() => setShowPersonal((v) => !v)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-foreground"
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Add a few words (optional)
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                      showPersonal && "rotate-180",
-                    )}
-                  />
-                </button>
-                {showPersonal && (
-                  <div className="space-y-3 px-4 pb-4 animate-fade-in">
-                    <Input
-                      placeholder="Your name (e.g. Jane)"
-                      aria-label="Your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-11 rounded-xl bg-background"
-                      maxLength={120}
-                    />
-                    <Textarea
-                      placeholder="What did they do, and how did it go?"
-                      aria-label="Your review"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[80px] rounded-xl bg-background"
-                      maxLength={1000}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* 3. The tip — genuinely optional, and off by default */}
-              <div className="rounded-2xl border border-border/70 p-4">
-                <div className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold text-foreground">
-                    Add a tip? <span className="font-normal text-muted-foreground">Optional</span>
+              <>
+                <div className="text-center">
+                  <h2 className="font-display text-xl font-bold text-foreground">
+                    How was {driver.firstName}'s work?
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Your review is free and takes seconds. No account needed.
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  100% goes to {driver.firstName}. Your review posts either way.
-                </p>
-                <div className="mt-3 grid grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPreset(null);
-                      setCustom("");
-                    }}
-                    className={cn(
-                      "rounded-xl border-2 py-2.5 text-sm font-bold transition",
-                      amount === 0
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-muted-foreground hover:border-primary/50",
+
+                <form onSubmit={onSubmit} className="mt-6 space-y-6">
+                  {/* 1. The rating — the actual point of the page */}
+                  <div>
+                    <div
+                      className="flex items-center justify-center gap-1"
+                      onMouseLeave={() => setHoverRating(0)}
+                    >
+                      {[1, 2, 3, 4, 5].map((s) => {
+                        const filled = s <= (hoverRating || rating);
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setRating(s)}
+                            onMouseEnter={() => setHoverRating(s)}
+                            aria-label={`${s} star${s > 1 ? "s" : ""}`}
+                            className="p-1 transition-transform active:scale-90"
+                          >
+                            <Star
+                              className={cn(
+                                "h-10 w-10 transition-all duration-150",
+                                filled
+                                  ? "fill-amber-400 text-amber-400 drop-shadow-[0_2px_6px_rgb(251_191_36_/_0.4)]"
+                                  : "text-muted-foreground/30",
+                              )}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Optional words */}
+                  <div className="rounded-2xl bg-muted/50">
+                    <button
+                      type="button"
+                      onClick={() => setShowPersonal((v) => !v)}
+                      className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Add a few words (optional)
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                          showPersonal && "rotate-180",
+                        )}
+                      />
+                    </button>
+                    {showPersonal && (
+                      <div className="space-y-3 px-4 pb-4 animate-fade-in">
+                        <Input
+                          placeholder="Your name (e.g. Jane)"
+                          aria-label="Your name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="h-11 rounded-xl bg-background"
+                          maxLength={120}
+                        />
+                        <Textarea
+                          placeholder="What did they do, and how did it go?"
+                          aria-label="Your review"
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          className="min-h-[80px] rounded-xl bg-background"
+                          maxLength={1000}
+                        />
+                      </div>
                     )}
-                  >
-                    No tip
-                  </button>
-                  {PRESETS.map((p) => {
-                    const active = preset === p.value && !custom;
-                    return (
+                  </div>
+
+                  {/* 3. The tip — genuinely optional, and off by default */}
+                  <div className="rounded-2xl border border-border/70 p-4">
+                    <div className="flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-semibold text-foreground">
+                        Add a tip?{" "}
+                        <span className="font-normal text-muted-foreground">Optional</span>
+                      </p>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      100% goes to {driver.firstName}. Your review posts either way.
+                    </p>
+                    <div className="mt-3 grid grid-cols-4 gap-2">
                       <button
-                        key={p.value}
                         type="button"
                         onClick={() => {
-                          setPreset(p.value);
+                          setPreset(null);
                           setCustom("");
                         }}
                         className={cn(
                           "rounded-xl border-2 py-2.5 text-sm font-bold transition",
-                          active
+                          amount === 0
                             ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-background text-foreground hover:border-primary/50",
+                            : "border-border bg-background text-muted-foreground hover:border-primary/50",
                         )}
                       >
-                        {p.label}
+                        No tip
                       </button>
-                    );
-                  })}
-                </div>
-                <div className="relative mt-2">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground/60">
-                    £
-                  </span>
-                  <Input
-                    inputMode="decimal"
-                    placeholder="Other amount"
-                    value={custom}
-                    onChange={(e) => {
-                      setCustom(e.target.value);
-                      setPreset(null);
-                    }}
-                    className={cn(
-                      "h-11 rounded-xl pl-7 text-sm",
-                      custom && "border-primary ring-2 ring-primary/20",
-                    )}
-                  />
-                </div>
-              </div>
-            </form>
-            </>
+                      {PRESETS.map((p) => {
+                        const active = preset === p.value && !custom;
+                        return (
+                          <button
+                            key={p.value}
+                            type="button"
+                            onClick={() => {
+                              setPreset(p.value);
+                              setCustom("");
+                            }}
+                            className={cn(
+                              "rounded-xl border-2 py-2.5 text-sm font-bold transition",
+                              active
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background text-foreground hover:border-primary/50",
+                            )}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="relative mt-2">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground/60">
+                        £
+                      </span>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="Other amount"
+                        value={custom}
+                        onChange={(e) => {
+                          setCustom(e.target.value);
+                          setPreset(null);
+                        }}
+                        className={cn(
+                          "h-11 rounded-xl pl-7 text-sm",
+                          custom && "border-primary ring-2 ring-primary/20",
+                        )}
+                      />
+                    </div>
+                  </div>
+                </form>
+              </>
             )}
 
             {mode === "payment" && (
-            <div className="animate-fade-in">
-              <div className="text-center">
-                <h2 className="font-display text-xl font-bold text-foreground">
-                  Make a payment to {driver.firstName}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose the amount you'd like to pay.
-                </p>
-              </div>
+              <div className="animate-fade-in">
+                <div className="text-center">
+                  <h2 className="font-display text-xl font-bold text-foreground">
+                    Make a payment to {driver.firstName}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Choose the amount you'd like to pay.
+                  </p>
+                </div>
 
-              {/* Amount — the box is primary; the chips just fill it quickly. */}
-              <div className="mt-6">
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground/70">
-                    £
-                  </span>
+                {/* Amount — the box is primary; the chips just fill it quickly. */}
+                <div className="mt-6">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground/70">
+                      £
+                    </span>
+                    <Input
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      aria-label="Payment amount"
+                      value={custom}
+                      onChange={(e) => {
+                        setCustom(e.target.value);
+                        setPreset(null);
+                      }}
+                      className={cn(
+                        "h-14 rounded-2xl pl-9 text-xl font-bold",
+                        amount > 0 && "border-primary ring-2 ring-primary/20",
+                      )}
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {PAY_PRESETS.map((p) => {
+                      const active = preset === p.value && !custom;
+                      return (
+                        <button
+                          key={p.value}
+                          type="button"
+                          onClick={() => {
+                            setPreset(p.value);
+                            setCustom("");
+                          }}
+                          className={cn(
+                            "rounded-xl border-2 py-2.5 text-sm font-bold transition",
+                            active
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background text-foreground hover:border-primary/50",
+                          )}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Optional: who's paying, so it shows in the pro's records. */}
+                <div className="mt-4">
                   <Input
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    aria-label="Payment amount"
-                    value={custom}
-                    onChange={(e) => {
-                      setCustom(e.target.value);
-                      setPreset(null);
-                    }}
-                    className={cn(
-                      "h-14 rounded-2xl pl-9 text-xl font-bold",
-                      amount > 0 && "border-primary ring-2 ring-primary/20",
-                    )}
+                    placeholder="Your name (optional)"
+                    aria-label="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-11 rounded-xl bg-background"
+                    maxLength={120}
                   />
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {PAY_PRESETS.map((p) => {
-                    const active = preset === p.value && !custom;
-                    return (
-                      <button
-                        key={p.value}
-                        type="button"
-                        onClick={() => {
-                          setPreset(p.value);
-                          setCustom("");
-                        }}
-                        className={cn(
-                          "rounded-xl border-2 py-2.5 text-sm font-bold transition",
-                          active
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-background text-foreground hover:border-primary/50",
-                        )}
-                      >
-                        {p.label}
-                      </button>
-                    );
-                  })}
+
+                {/* The disclaimer — read right before paying. */}
+                <div className="mt-4 rounded-2xl border border-border/70 bg-muted/50 p-4">
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    You're paying{" "}
+                    <span className="font-semibold text-foreground">{driver.name}</span> directly.
+                    SelfeConnect only provides the tool to process this payment — we're not a party
+                    to your agreement and aren't responsible for the service, its quality, or any
+                    refund. Please make sure you're happy with what you've agreed before paying.
+                  </p>
                 </div>
               </div>
-
-              {/* Optional: who's paying, so it shows in the pro's records. */}
-              <div className="mt-4">
-                <Input
-                  placeholder="Your name (optional)"
-                  aria-label="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-11 rounded-xl bg-background"
-                  maxLength={120}
-                />
-              </div>
-
-              {/* The disclaimer — read right before paying. */}
-              <div className="mt-4 rounded-2xl border border-border/70 bg-muted/50 p-4">
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  You're paying{" "}
-                  <span className="font-semibold text-foreground">
-                    {driver.name}
-                  </span>{" "}
-                  directly. SelfeConnect only provides the tool to process this
-                  payment — we're not a party to your agreement and aren't
-                  responsible for the service, its quality, or any refund. Please
-                  make sure you're happy with what you've agreed before paying.
-                </p>
-              </div>
-            </div>
             )}
           </CardContent>
         </Card>
@@ -544,12 +524,18 @@ function TipPage() {
             <Lock className="h-3 w-3" /> Secured by Stripe
           </span>
           <span className="h-1 w-1 rounded-full bg-border" />
-          <span>{mode === "payment" ? "100% goes to your professional" : "Reviews are always free"}</span>
+          <span>
+            {mode === "payment" ? "100% goes to your professional" : "Reviews are always free"}
+          </span>
         </div>
         <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
-          <Link to="/terms" className="underline hover:text-foreground">Terms</Link>
+          <Link to="/terms" className="underline hover:text-foreground">
+            Terms
+          </Link>
           <span className="h-1 w-1 rounded-full bg-border" />
-          <Link to="/privacy" className="underline hover:text-foreground">Privacy</Link>
+          <Link to="/privacy" className="underline hover:text-foreground">
+            Privacy
+          </Link>
         </div>
       </div>
 
@@ -600,6 +586,7 @@ function TipPage() {
       <TipPaymentModal
         open={showPay}
         clientSecret={clientSecret}
+        stripeAccount={payAccount}
         amountLabel={amountLabel}
         title={mode === "payment" ? "Complete your payment" : "Complete your tip"}
         payLabel="Pay"
@@ -609,9 +596,7 @@ function TipPage() {
             : "Payment failed. Your review is already posted."
         }
         returnUrl={
-          typeof window !== "undefined"
-            ? `${window.location.origin}/tip/${driverId}/success`
-            : ""
+          typeof window !== "undefined" ? `${window.location.origin}/tip/${driverId}/success` : ""
         }
         onClose={() => {
           setShowPay(false);
