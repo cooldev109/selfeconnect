@@ -21,6 +21,7 @@ export function DashboardShell({
   title,
   subtitle,
   actions,
+  bell,
   children,
 }: {
   nav: NavItem[];
@@ -30,6 +31,8 @@ export function DashboardShell({
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
+  /** Notification bell, pinned to the top-right of the header. */
+  bell?: ReactNode;
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -62,9 +65,7 @@ export function DashboardShell({
                 }`}
               >
                 <Icon
-                  className={`h-[18px] w-[18px] shrink-0 ${
-                    active ? "text-primary" : "opacity-80"
-                  }`}
+                  className={`h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : "opacity-80"}`}
                 />
                 {item.label}
               </Link>
@@ -73,9 +74,7 @@ export function DashboardShell({
         </nav>
 
         {footer && (
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-3">
-            {footer}
-          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-3">{footer}</div>
         )}
         <button
           onClick={onLogout}
@@ -110,9 +109,7 @@ export function DashboardShell({
                 key={item.to}
                 to={item.to}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-[#AEC1CE] hover:bg-white/10"
+                  active ? "bg-primary text-primary-foreground" : "text-[#AEC1CE] hover:bg-white/10"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -126,19 +123,18 @@ export function DashboardShell({
       {/* Main content */}
       <main className="min-w-0">
         <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
-          {(title || actions) && (
+          {(title || actions || bell) && (
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 {title && (
-                  <h1 className="font-display text-2xl font-bold text-foreground">
-                    {title}
-                  </h1>
+                  <h1 className="font-display text-2xl font-bold text-foreground">{title}</h1>
                 )}
-                {subtitle && (
-                  <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-                )}
+                {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
               </div>
-              {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+              <div className="flex flex-wrap items-center gap-3">
+                {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+                {bell}
+              </div>
             </div>
           )}
           {children}

@@ -3,9 +3,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { NotificationBell } from "@/components/NotificationBell";
 import { CUSTOMER_NAV } from "@/components/dashboardNav";
 import { useRequireCustomer } from "@/lib/useRequireCustomer";
 import { customerLogout } from "@/lib/customer-auth";
+import { customerNotifications, customerReadNotifications } from "@/lib/notifications";
 
 // Chrome for every customer page: side-nav + auth guard. Exposes the signed-in
 // customer to children via a render prop so pages don't re-query.
@@ -38,6 +40,14 @@ export function CustomerShell({
       title={title}
       subtitle={subtitle}
       actions={actions}
+      bell={
+        <NotificationBell
+          queryKey={["customer-notifications"]}
+          fetchNotifications={customerNotifications}
+          markAllRead={customerReadNotifications}
+          onOpenNotification={() => navigate({ to: "/customer" })}
+        />
+      }
       onLogout={async () => {
         await customerLogout().catch(() => {});
         qc.clear(); // drop all cached session/data so no stale content lingers

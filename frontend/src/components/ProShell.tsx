@@ -3,11 +3,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { NotificationBell } from "@/components/NotificationBell";
 import { PRO_NAV } from "@/components/dashboardNav";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useMe } from "@/hooks/useDriver";
 import { getAccount } from "@/lib/billing";
 import { logout } from "@/lib/auth";
+import { proNotifications, proReadNotifications } from "@/lib/notifications";
 
 // Chrome for every professional page: side-nav + auth guard + a live
 // subscription status pinned to the rail. Renders children only once authed.
@@ -41,9 +43,7 @@ export function ProShell({
   }
 
   const endsOn =
-    account?.isActive &&
-    account.cancelAtPeriodEnd &&
-    account.currentPeriodEnd
+    account?.isActive && account.cancelAtPeriodEnd && account.currentPeriodEnd
       ? new Date(account.currentPeriodEnd).toLocaleDateString(undefined, {
           day: "numeric",
           month: "short",
@@ -58,6 +58,14 @@ export function ProShell({
       title={title}
       subtitle={subtitle}
       actions={actions}
+      bell={
+        <NotificationBell
+          queryKey={["pro-notifications"]}
+          fetchNotifications={proNotifications}
+          markAllRead={proReadNotifications}
+          onOpenNotification={() => navigate({ to: "/my-jobs" })}
+        />
+      }
       onLogout={async () => {
         await logout().catch(() => {});
         qc.clear(); // drop all cached session/data so no stale content lingers
@@ -69,11 +77,7 @@ export function ProShell({
             Subscription
           </div>
           <div className="mt-1 flex items-center gap-2 text-[13px] font-semibold text-white">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                active ? "bg-primary" : "bg-amber-400"
-              }`}
-            />
+            <span className={`h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-amber-400"}`} />
             {endsOn ? `Active until ${endsOn}` : active ? "Active" : "Inactive"}
           </div>
         </div>

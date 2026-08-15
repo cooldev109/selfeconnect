@@ -285,6 +285,7 @@ export class JobsService {
         data.cancelReason = dto.cancelReason.trim();
       }
     }
+    let hiredDriverIdToNotify: string | null = null;
     if (dto.hiredDriverPublicId !== undefined) {
       if (dto.hiredDriverPublicId) {
         const hired = await this.prisma.driver.findFirst({
@@ -296,6 +297,8 @@ export class JobsService {
         });
         if (!hired) throw new BadRequestException('invalid_professional');
         data.hiredDriver = { connect: { id: hired.id } };
+        // Only alert them if this is a change (not re-confirming the same pro).
+        if (existing.hiredDriverId !== hired.id) hiredDriverIdToNotify = hired.id;
       } else {
         data.hiredDriver = { disconnect: true };
       }
@@ -306,6 +309,20 @@ export class JobsService {
       data,
       include: jobInclude,
     });
+
+    // Tell the professional they've been hired.
+    if (hiredDriverIdToNotify) {
+      await this.prisma.notification.create({
+        data: {
+          driverId: hiredDriverIdToNotify,
+          kind: 'hired',
+          title: 'You’ve been hired!',
+          body: job.title,
+          jobId: job.id,
+        },
+      });
+    }
+
     return this.shape(job);
   }
 
@@ -603,6 +620,10 @@ export class JobsService {
     // quote cap), the JobContactUnlock upsert, and the interest email.
     await this.unlockContact(driverId, jobId);
 
+    const before = await this.prisma.quote.findUnique({
+      where: { jobId_driverId: { jobId, driverId } },
+      select: { id: true },
+    });
     await this.prisma.quote.upsert({
       where: { jobId_driverId: { jobId, driverId } },
       update: {
@@ -616,6 +637,29 @@ export class JobsService {
         message: dto.message.trim(),
       },
     });
+
+    // Notify the customer on a *new* quote (not on edits).
+    if (!before) {
+      const job = await this.prisma.job.findUnique({
+        where: { id: jobId },
+        select: { customerId: true, title: true },
+      });
+      const driver = await this.prisma.driver.findUnique({
+        where: { id: driverId },
+        select: { name: true, company: true },
+      });
+      if (job) {
+        await this.prisma.notification.create({
+          data: {
+            customerId: job.customerId,
+            kind: 'quote',
+            title: `New quote from ${driver?.company || driver?.name || 'a professional'}`,
+            body: job.title,
+            jobId,
+          },
+        });
+      }
+    }
 
     // Return the freshly-shaped job (now carrying myQuote).
     const jobs = await this.listMineForPro(driverId);
@@ -691,6 +735,26 @@ export class JobsService {
     };
   }
 
+  // Raise a "new message" notification for the recipient — but only if they
+  // don't already have an unread one for this job's thread, so a burst of
+  // messages doesn't become a stack of identical alerts.
+  private async notifyMessageOnce(
+    recipient: { driverId: string } | { customerId: string },
+    jobId: string,
+    title: string,
+    body?: string,
+  ) {
+    const existing = await this.prisma.notification.findFirst({
+      where: { ...recipient, kind: 'message', jobId, readAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      await this.prisma.notification.create({
+        data: { ...recipient, kind: 'message', jobId, title, body: body ?? null },
+      });
+    }
+  }
+
   // A pro may chat about a job once they've engaged with it (unlocked/quoted),
   // or if they're the hired professional. Returns the job for reuse.
   private async assertProEngaged(driverId: string, jobId: string) {
@@ -756,6 +820,23 @@ export class JobsService {
     const m = await this.prisma.message.create({
       data: { jobId, driverId, fromCustomer: false, body: body.trim() },
     });
+    // Notify the customer they have a new message.
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { customerId: true, title: true },
+    });
+    const driver = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      select: { name: true, company: true },
+    });
+    if (job) {
+      await this.notifyMessageOnce(
+        { customerId: job.customerId },
+        jobId,
+        `New message from ${driver?.company || driver?.name || 'a professional'}`,
+        job.title,
+      );
+    }
     return this.shapeMessage(m);
   }
 
@@ -825,6 +906,21 @@ export class JobsService {
     const m = await this.prisma.message.create({
       data: { jobId, driverId, fromCustomer: true, body: body.trim() },
     });
+    // Notify the pro they have a new message.
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { title: true },
+    });
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { name: true, companyName: true },
+    });
+    await this.notifyMessageOnce(
+      { driverId },
+      jobId,
+      `New message from ${customer?.companyName || customer?.name || 'a customer'}`,
+      job?.title,
+    );
     return this.shapeMessage(m);
   }
 }

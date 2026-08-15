@@ -14,6 +14,7 @@ import { CustomerAuthModule } from './customer-auth/customer-auth.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ProsModule } from './pros/pros.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -34,6 +35,7 @@ import { AppService } from './app.service';
     JobsModule,
     ProsModule,
     ReviewsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

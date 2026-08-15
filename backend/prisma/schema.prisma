@@ -114,6 +114,7 @@ model Driver {
   jobUnlocks JobContactUnlock[]
   quotes     Quote[]
   messages   Message[]
+  notifications Notification[]
   reviews    Review[]
   hiredJobs  Job[]              @relation("JobHired")
 }
@@ -187,8 +188,9 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  jobs    Job[]
-  reviews Review[]
+  jobs          Job[]
+  reviews       Review[]
+  notifications Notification[]
 }
 
 // A single-use, short-lived token for resetting a password or confirming an
@@ -345,6 +347,35 @@ model Quote {
   @@unique([jobId, driverId])
   @@index([jobId])
   @@index([driverId])
+}
+
+// An in-app notification for either a professional or a customer (exactly one
+// recipient FK is set). Generated on the events people care about — a new
+// quote, a new message, being hired — and deep-links to the job.
+enum NotificationKind {
+  quote
+  message
+  hired
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  driverId String?
+  driver   Driver?   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  kind  NotificationKind
+  title String
+  body  String?
+  jobId String? // deep-link target (not a FK: the job may be deleted)
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([driverId, readAt])
+  @@index([customerId, readAt])
 }
 
 // One message in the per-job conversation between a customer and one pro. A
