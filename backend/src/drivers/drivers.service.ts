@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { Prisma, type Driver } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -32,6 +33,7 @@ export type DriverShape = {
   // Marketplace profile
   bio: string;
   postcode: string;
+  galleryPhotos: string[];
   categorySlugs: string[];
   categoryNames: string[];
 };
@@ -65,6 +67,7 @@ export class DriversService {
       tagline: driver.tagline ?? '',
       bio: driver.bio ?? '',
       postcode: driver.postcode ?? '',
+      galleryPhotos: driver.galleryPhotos,
       categorySlugs: categories.map((c) => c.slug),
       categoryNames: categories.map((c) => c.name),
     };
@@ -165,6 +168,63 @@ export class DriversService {
     const driver = await this.prisma.driver.update({
       where: { id: driverId },
       data: { photoUrl },
+      include: { categories: { select: { slug: true, name: true } } },
+    });
+    return this.shape(driver, driver.categories);
+  }
+
+  // Most work photos a professional may show. Keeps the profile tidy and the
+  // upload directory bounded.
+  private static readonly GALLERY_MAX = 12;
+
+  // Add one photo to the work gallery (a larger, uncropped image than the
+  // square avatar) and append its URL. Rejects once the cap is reached.
+  async addGalleryPhoto(driverId: string, buffer: Buffer): Promise<DriverShape> {
+    const existing = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      select: { galleryPhotos: true },
+    });
+    if (!existing) throw new NotFoundException('driver_not_found');
+    if (existing.galleryPhotos.length >= DriversService.GALLERY_MAX) {
+      throw new BadRequestException('gallery_full');
+    }
+
+    let webp: Buffer;
+    try {
+      webp = await sharp(buffer)
+        .rotate()
+        .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('invalid_image');
+    }
+
+    const dir = process.env.UPLOAD_DIR || 'uploads';
+    await mkdir(dir, { recursive: true });
+    const filename = `gallery_${driverId}_${randomUUID()}.webp`;
+    await writeFile(join(dir, filename), webp);
+    const base = (process.env.PUBLIC_URL ?? 'http://localhost:4000').replace(/\/+$/, '');
+    const url = `${base}/api/v1/uploads/${filename}`;
+
+    const driver = await this.prisma.driver.update({
+      where: { id: driverId },
+      data: { galleryPhotos: { push: url } },
+      include: { categories: { select: { slug: true, name: true } } },
+    });
+    return this.shape(driver, driver.categories);
+  }
+
+  async removeGalleryPhoto(driverId: string, url: string): Promise<DriverShape> {
+    const existing = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      select: { galleryPhotos: true },
+    });
+    if (!existing) throw new NotFoundException('driver_not_found');
+
+    const driver = await this.prisma.driver.update({
+      where: { id: driverId },
+      data: { galleryPhotos: existing.galleryPhotos.filter((u) => u !== url) },
       include: { categories: { select: { slug: true, name: true } } },
     });
     return this.shape(driver, driver.categories);

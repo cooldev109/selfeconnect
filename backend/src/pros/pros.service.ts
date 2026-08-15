@@ -264,6 +264,7 @@ export class ProsService {
       bio: d.bio ?? null,
       city: d.city ?? null,
       postcode: d.postcode ?? null,
+      galleryPhotos: d.galleryPhotos,
       categories: d.categories.map((c) => c.name),
       avgRating: summary.avgRating,
       reviewCount: summary.reviewCount,

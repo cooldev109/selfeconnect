@@ -11,9 +11,7 @@ import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
 
 export const Route = createFileRoute("/customer/pros/$publicId")({
-  validateSearch: (
-    s: Record<string, unknown>,
-  ): { review?: string; jobId?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { review?: string; jobId?: string } => ({
     review: typeof s.review === "string" ? s.review : undefined,
     jobId: typeof s.jobId === "string" ? s.jobId : undefined,
   }),
@@ -71,19 +69,14 @@ function ProProfilePage() {
                 <img
                   src={
                     p.photoUrl ||
-                    "https://api.dicebear.com/7.x/initials/svg?seed=" +
-                      encodeURIComponent(p.name)
+                    "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(p.name)
                   }
                   alt={p.name}
                   className="h-24 w-24 shrink-0 rounded-2xl object-cover ring-2 ring-white/15"
                 />
                 <div className="min-w-0 flex-1">
-                  <h1 className="font-display text-3xl font-bold text-ink-foreground">
-                    {p.name}
-                  </h1>
-                  {p.company && (
-                    <p className="mt-0.5 text-sm text-ink-muted">{p.company}</p>
-                  )}
+                  <h1 className="font-display text-3xl font-bold text-ink-foreground">{p.name}</h1>
+                  {p.company && <p className="mt-0.5 text-sm text-ink-muted">{p.company}</p>}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StarRow value={p.avgRating} className="h-4 w-4" />
                     <span className="text-sm font-semibold text-ink-foreground tabular-nums">
@@ -123,18 +116,12 @@ function ProProfilePage() {
             {/* Bio, then the one thing worth an account: how to reach them. */}
             <div className="bg-card p-6">
               {p.bio && (
-                <p className="max-w-prose text-sm leading-relaxed text-foreground/90">
-                  {p.bio}
-                </p>
+                <p className="max-w-prose text-sm leading-relaxed text-foreground/90">{p.bio}</p>
               )}
 
               {p.contact ? (
                 <div className={p.bio ? "mt-5 border-t border-border pt-5" : ""}>
-                  <ContactActions
-                    email={p.contact.email}
-                    phone={p.contact.phone}
-                    size="lg"
-                  />
+                  <ContactActions email={p.contact.email} phone={p.contact.phone} size="lg" />
                 </div>
               ) : (
                 <div
@@ -145,9 +132,8 @@ function ProProfilePage() {
                     Contact details are free — just not public
                   </p>
                   <p className="mt-1.5 text-sm text-muted-foreground">
-                    Create a free account to see {p.name.split(" ")[0]}'s phone
-                    number and email, and to leave a review afterwards. No fees, no
-                    commission.
+                    Create a free account to see {p.name.split(" ")[0]}'s phone number and email,
+                    and to leave a review afterwards. No fees, no commission.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button
@@ -159,13 +145,40 @@ function ProProfilePage() {
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="rounded-xl">
-                      <Link to="/customer/login" search={{ pro: publicId }}>Log in</Link>
+                      <Link to="/customer/login" search={{ pro: publicId }}>
+                        Log in
+                      </Link>
                     </Button>
                   </div>
                 </div>
               )}
             </div>
           </div>
+
+          {p.galleryPhotos.length > 0 && (
+            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="p-6">
+                <h2 className="mb-3 text-lg font-semibold text-foreground">Recent work</h2>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {p.galleryPhotos.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block aspect-square overflow-hidden rounded-xl border border-border"
+                    >
+                      <img
+                        src={url}
+                        alt="Work by this professional"
+                        className="h-full w-full object-cover transition hover:scale-105"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {reviewing && (
             <ReviewForm
@@ -242,17 +255,11 @@ function ReviewForm({
       <Card className="rounded-2xl border-primary/30 bg-[#E1F5EE]/40">
         <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
           <Star className="h-7 w-7 fill-amber-400 text-amber-400" />
-          <p className="text-sm font-semibold text-foreground">
-            Thanks for your review!
-          </p>
+          <p className="text-sm font-semibold text-foreground">Thanks for your review!</p>
           <p className="text-xs text-muted-foreground">
             It's now live on this professional's profile.
           </p>
-          <Button
-            variant="outline"
-            className="mt-2 rounded-xl"
-            onClick={onDone}
-          >
+          <Button variant="outline" className="mt-2 rounded-xl" onClick={onDone}>
             Close
           </Button>
         </CardContent>
@@ -264,9 +271,7 @@ function ReviewForm({
     <Card className="rounded-2xl border-primary/30">
       <CardContent className="p-6">
         <h2 className="text-base font-semibold text-foreground">Leave a review</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          How was the service?
-        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">How was the service?</p>
 
         <div className="mt-3 flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((i) => (

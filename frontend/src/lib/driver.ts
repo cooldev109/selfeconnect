@@ -1,6 +1,24 @@
 import { api } from "./api";
 import type { Driver } from "@/hooks/useDriver";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+
+// Add one work-gallery photo (multipart). Returns the updated driver.
+export async function addGalleryPhoto(file: File): Promise<Driver> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(`${API_BASE}/me/gallery`, {
+    method: "POST",
+    credentials: "include",
+    body,
+  });
+  if (!res.ok) throw new Error("upload_failed");
+  return res.json();
+}
+
+export const removeGalleryPhoto = (url: string) =>
+  api<Driver>("/me/gallery/remove", { method: "POST", body: JSON.stringify({ url }) });
+
 export function updateMe(input: {
   name?: string;
   company?: string;

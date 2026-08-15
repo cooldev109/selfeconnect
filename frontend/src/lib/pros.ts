@@ -20,6 +20,7 @@ export interface ProProfile {
   bio: string | null;
   city: string | null;
   postcode: string | null;
+  galleryPhotos: string[];
   categories: string[];
   avgRating: number;
   reviewCount: number;
@@ -32,11 +33,7 @@ export interface ProProfile {
   reviews: ReviewItem[];
 }
 
-export const browsePros = (opts: {
-  category?: string;
-  postcode?: string;
-  radius?: number;
-}) => {
+export const browsePros = (opts: { category?: string; postcode?: string; radius?: number }) => {
   const p = new URLSearchParams();
   if (opts.category) p.set("category", opts.category);
   if (opts.postcode) p.set("postcode", opts.postcode);
@@ -45,5 +42,4 @@ export const browsePros = (opts: {
   return api<ProSearchResult[]>(`/pros${qs ? `?${qs}` : ""}`);
 };
 
-export const getProProfile = (publicId: string) =>
-  api<ProProfile>(`/pros/${publicId}`);
+export const getProProfile = (publicId: string) => api<ProProfile>(`/pros/${publicId}`);

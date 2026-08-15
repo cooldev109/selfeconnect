@@ -18,6 +18,7 @@ export interface Driver {
   tagline: string;
   bio: string;
   postcode: string;
+  galleryPhotos: string[];
   categorySlugs: string[];
   categoryNames: string[];
 }

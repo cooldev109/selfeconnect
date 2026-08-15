@@ -71,6 +71,8 @@ model Driver {
   phone       String?
   photoUrl    String?
   vanPhotoUrl String?
+  // A gallery of the professional's past work, shown on their public profile.
+  galleryPhotos String[] @default([])
   city        String?
   tagline     String?
   verified    Boolean @default(false)

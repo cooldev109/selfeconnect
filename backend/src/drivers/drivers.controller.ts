@@ -54,6 +54,30 @@ export class DriversController {
     return this.drivers.savePhoto(user.id, file.buffer);
   }
 
+  // Add one work-gallery photo.
+  @Post('me/gallery')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async addGalleryPhoto(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('no_file');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      throw new BadRequestException('bad_type');
+    }
+    if (file.size > 8 * 1024 * 1024) throw new BadRequestException('too_large');
+    return this.drivers.addGalleryPhoto(user.id, file.buffer);
+  }
+
+  // Remove one work-gallery photo by its URL.
+  @Post('me/gallery/remove')
+  @UseGuards(AuthGuard)
+  removeGalleryPhoto(@CurrentUser() user: AuthUser, @Body('url') url?: string) {
+    if (!url) throw new BadRequestException('no_url');
+    return this.drivers.removeGalleryPhoto(user.id, url);
+  }
+
   @Get('drivers/:publicId')
   getPublic(@Param('publicId') publicId: string) {
     return this.drivers.getPublic(publicId.toUpperCase());

@@ -2,19 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Input,
-} from "@/components/shared";
+import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
 import { useMe } from "@/hooks/useDriver";
 import { LOGO_MARK_SVG } from "@/components/Logo";
 import { updateMe, uploadPhoto } from "@/lib/driver";
+import { WorkGallery } from "@/components/WorkGallery";
 import { ApiError } from "@/lib/api";
 import professionalsFlyer from "@/assets/professionals-flyer.png";
 import flyerDriver from "@/assets/flyer-driver.png";
@@ -249,9 +244,7 @@ function ProfilePage() {
       if (
         err instanceof ApiError &&
         err.status === 400 &&
-        String((err.body as { message?: string })?.message ?? "").includes(
-          "postcode",
-        )
+        String((err.body as { message?: string })?.message ?? "").includes("postcode")
       ) {
         setSaveError("Enter a valid UK postcode.");
       } else {
@@ -265,10 +258,7 @@ function ProfilePage() {
   if (!driver) return null;
 
   return (
-    <ProShell
-      title="Profile & QR"
-      subtitle="Your public profile, services and tipping QR code."
-    >
+    <ProShell title="Profile & QR" subtitle="Your public profile, services and tipping QR code.">
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Identity card */}
         <Card className="rounded-2xl">
@@ -283,15 +273,12 @@ function ProfilePage() {
               Profile created
             </Badge>
             <h2 className="mt-3 text-xl font-bold text-foreground">{name}</h2>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Your unique professional ID:
-            </p>
+            <p className="mt-4 text-sm text-muted-foreground">Your unique professional ID:</p>
             <div className="mt-2 rounded-full bg-foreground px-6 py-2 text-2xl font-extrabold tracking-[0.25em] text-background">
               {driver.id}
             </div>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              This QR code is yours. Print it once and share it with every
-              customer you work for.
+              This QR code is yours. Print it once and share it with every customer you work for.
             </p>
           </CardContent>
         </Card>
@@ -299,17 +286,8 @@ function ProfilePage() {
         {/* QR Code card */}
         <Card className="rounded-2xl">
           <CardContent className="flex flex-col items-center p-6">
-            <div
-              ref={qrRef}
-              className="rounded-2xl bg-white p-4 ring-1 ring-border"
-            >
-              <QRCodeCanvas
-                value={tipUrl}
-                size={224}
-                level="H"
-                marginSize={2}
-                fgColor="#0F172A"
-              />
+            <div ref={qrRef} className="rounded-2xl bg-white p-4 ring-1 ring-border">
+              <QRCodeCanvas value={tipUrl} size={224} level="H" marginSize={2} fgColor="#0F172A" />
             </div>
 
             <div className="mt-5 w-full max-w-xs space-y-3">
@@ -377,27 +355,31 @@ function ProfilePage() {
                 Where to show your QR
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Professionals who show their code in <strong>two visible spots</strong> get
-                more reviews and tips. Hand the printed flyer to your customer and keep it
-                on display where they can see it.
+                Professionals who show their code in <strong>two visible spots</strong> get more
+                reviews and tips. Hand the printed flyer to your customer and keep it on display
+                where they can see it.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-foreground">
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Hand it to customers</li>
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On display where customers can see it</li>
-                <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for quick handovers</li>
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Hand it to customers
+                </li>
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On display where customers
+                  can see it
+                </li>
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for quick
+                  handovers
+                </li>
               </ul>
             </div>
           </CardContent>
         </Card>
 
-
-
         {/* Editable details */}
         <Card className="rounded-2xl">
           <CardContent className="p-6">
-            <h3 className="text-base font-semibold text-foreground">
-              Edit your details
-            </h3>
+            <h3 className="text-base font-semibold text-foreground">Edit your details</h3>
             <form onSubmit={onSave} className="mt-5 space-y-5">
               <div className="flex items-center gap-4">
                 <button
@@ -431,14 +413,8 @@ function ProfilePage() {
               </div>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-foreground">
-                  Full name
-                </span>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={80}
-                />
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Full name</span>
+                <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
               </label>
 
               <label className="block">
@@ -461,21 +437,14 @@ function ProfilePage() {
                     Select all that apply
                   </span>
                 </span>
-                <CategoryMultiSelect
-                  value={categorySlugs}
-                  onChange={setCategorySlugs}
-                />
+                <CategoryMultiSelect value={categorySlugs} onChange={setCategorySlugs} />
               </div>
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-foreground">
                   Your postcode
                 </span>
-                <PostcodeInput
-                  value={postcode}
-                  onChange={setPostcode}
-                  ariaLabel="Your postcode"
-                />
+                <PostcodeInput value={postcode} onChange={setPostcode} ariaLabel="Your postcode" />
                 <span className="mt-1 block text-xs text-muted-foreground">
                   Used to match you with nearby jobs and customers.
                 </span>
@@ -483,8 +452,7 @@ function ProfilePage() {
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-foreground">
-                  About you{" "}
-                  <span className="text-muted-foreground">(optional)</span>
+                  About you <span className="text-muted-foreground">(optional)</span>
                 </span>
                 <textarea
                   value={bio}
@@ -503,11 +471,7 @@ function ProfilePage() {
               )}
 
               <div className="flex items-center justify-between">
-                {savedAt && !saving ? (
-                  <p className="text-xs text-primary">Saved.</p>
-                ) : (
-                  <span />
-                )}
+                {savedAt && !saving ? <p className="text-xs text-primary">Saved.</p> : <span />}
                 <Button
                   type="submit"
                   disabled={saving || name.trim().length < 2}
@@ -519,6 +483,10 @@ function ProfilePage() {
             </form>
           </CardContent>
         </Card>
+
+        <div className="mt-6">
+          <WorkGallery photos={driver.galleryPhotos ?? []} />
+        </div>
       </div>
     </ProShell>
   );
