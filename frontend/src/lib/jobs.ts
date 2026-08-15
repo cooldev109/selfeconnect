@@ -146,6 +146,34 @@ export const proMyJobs = () => api<ProJob[]>("/pro/jobs/mine");
 // Quotes a customer has received on their job.
 export const jobQuotes = (id: string) => api<JobQuote[]>(`/jobs/${id}/quotes`);
 
+// ---- In-job chat (customer <-> a pro, per job) ----
+export interface ChatMessage {
+  id: string;
+  fromCustomer: boolean;
+  body: string;
+  createdAt: string;
+}
+export interface JobThread {
+  publicId: string;
+  name: string;
+  company: string | null;
+  lastMessage: string | null;
+  lastAt: string | null;
+  unread: number;
+}
+
+// Professional side — a single thread with the customer on a job.
+export const proJobMessages = (id: string) => api<ChatMessage[]>(`/pro/jobs/${id}/messages`);
+export const proSendJobMessage = (id: string, body: string) =>
+  api<ChatMessage>(`/pro/jobs/${id}/messages`, { method: "POST", body: JSON.stringify({ body }) });
+
+// Customer side — the pros they can chat with, and each thread's messages.
+export const jobThreads = (id: string) => api<JobThread[]>(`/jobs/${id}/threads`);
+export const jobMessages = (id: string, pro: string) =>
+  api<ChatMessage[]>(`/jobs/${id}/messages?pro=${encodeURIComponent(pro)}`);
+export const sendJobMessage = (id: string, pro: string, body: string) =>
+  api<ChatMessage>(`/jobs/${id}/messages`, { method: "POST", body: JSON.stringify({ pro, body }) });
+
 export const WEEK_DAYS: { value: string; label: string }[] = [
   { value: "mon", label: "Mon" },
   { value: "tue", label: "Tue" },

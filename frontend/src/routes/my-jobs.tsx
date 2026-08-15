@@ -1,11 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MapPin, Clock, Mail, Phone, BadgeCheck } from "lucide-react";
+import { Loader2, MapPin, Clock, Mail, Phone, BadgeCheck, MessageSquare } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
-import { Badge, Card, CardContent } from "@/components/shared";
+import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
-import { proMyJobs, type ProJob, type JobStatus } from "@/lib/jobs";
+import { ChatThread } from "@/components/ChatThread";
+import {
+  proMyJobs,
+  proJobMessages,
+  proSendJobMessage,
+  type ProJob,
+  type JobStatus,
+} from "@/lib/jobs";
 
 export const Route = createFileRoute("/my-jobs")({
   head: () => ({
@@ -117,6 +124,7 @@ function MyJobsPage() {
 
 function ProJobCard({ job }: { job: ProJob }) {
   const badge = STATUS_BADGE[job.status ?? "open"];
+  const [chatOpen, setChatOpen] = useState(false);
   return (
     <Card className="rounded-2xl">
       <CardContent className="p-5">
@@ -164,6 +172,29 @@ function ProJobCard({ job }: { job: ProJob }) {
             </div>
           </div>
         )}
+
+        {/* Chat with the customer about this job. */}
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            className="h-9 rounded-lg px-3 text-xs"
+            onClick={() => setChatOpen((o) => !o)}
+          >
+            <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+            {chatOpen ? "Hide messages" : "Message customer"}
+          </Button>
+          {chatOpen && (
+            <div className="mt-2">
+              <ChatThread
+                queryKey={["pro-thread", job.id]}
+                fetchMessages={() => proJobMessages(job.id)}
+                sendMessage={(b) => proSendJobMessage(job.id, b)}
+                isMine={(m) => !m.fromCustomer}
+                placeholder="Message the customer…"
+              />
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

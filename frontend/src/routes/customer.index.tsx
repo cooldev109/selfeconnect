@@ -14,16 +14,21 @@ import {
   Play,
   CircleCheck,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
+import { ChatThread } from "@/components/ChatThread";
 import {
   listMyJobs,
   updateJob,
   deleteJob,
   jobInterestedPros,
   jobQuotes,
+  jobThreads,
+  jobMessages,
+  sendJobMessage,
   type Job,
   type JobStatus,
 } from "@/lib/jobs";
@@ -228,6 +233,14 @@ function JobCard({ job }: { job: Job }) {
     queryFn: () => jobQuotes(job.id),
     enabled: job.status === "open",
   });
+  // Chat threads — available while the job is active (someone's engaged).
+  const [chatWith, setChatWith] = useState<string | null>(null);
+  const threadsQ = useQuery({
+    queryKey: ["job-threads", job.id],
+    queryFn: () => jobThreads(job.id),
+    enabled: STAGE_OF[job.status] === "active",
+    refetchInterval: 8000,
+  });
   const hire = useMutation({
     mutationFn: (publicId: string | null) =>
       updateJob(job.id, { status: "hired", hiredDriverPublicId: publicId }),
@@ -389,6 +402,52 @@ function JobCard({ job }: { job: Job }) {
                 <p className="mt-2 whitespace-pre-line text-sm text-foreground/90">{q.message}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Messages — chat with each engaged professional about this job. */}
+        {STAGE_OF[job.status] === "active" && (threadsQ.data?.length ?? 0) > 0 && (
+          <div className="mt-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Messages
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {threadsQ.data!.map((th) => {
+                const active = chatWith === th.publicId;
+                return (
+                  <button
+                    key={th.publicId}
+                    type="button"
+                    onClick={() => setChatWith(active ? null : th.publicId)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                      active
+                        ? "border-primary bg-[#E1F5EE] text-primary"
+                        : "border-border text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    {th.company || th.name}
+                    {th.unread > 0 && (
+                      <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                        {th.unread}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {chatWith && (
+              <div className="mt-2">
+                <ChatThread
+                  queryKey={["job-thread", job.id, chatWith]}
+                  fetchMessages={() => jobMessages(job.id, chatWith)}
+                  sendMessage={(b) => sendJobMessage(job.id, chatWith, b)}
+                  isMine={(m) => m.fromCustomer}
+                  onActivity={() => threadsQ.refetch()}
+                  placeholder="Message the professional…"
+                />
+              </div>
+            )}
           </div>
         )}
 

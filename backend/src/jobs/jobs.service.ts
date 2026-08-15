@@ -674,4 +674,157 @@ export class JobsService {
       };
     });
   }
+
+  // ---- In-job chat (customer <-> a single pro, per job) ----
+
+  private shapeMessage(m: {
+    id: string;
+    fromCustomer: boolean;
+    body: string;
+    createdAt: Date;
+  }) {
+    return {
+      id: m.id,
+      fromCustomer: m.fromCustomer,
+      body: m.body,
+      createdAt: m.createdAt.toISOString(),
+    };
+  }
+
+  // A pro may chat about a job once they've engaged with it (unlocked/quoted),
+  // or if they're the hired professional. Returns the job for reuse.
+  private async assertProEngaged(driverId: string, jobId: string) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { id: true, hiredDriverId: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    const unlocked = await this.prisma.jobContactUnlock.findUnique({
+      where: { jobId_driverId: { jobId, driverId } },
+      select: { id: true },
+    });
+    if (!unlocked && job.hiredDriverId !== driverId) {
+      throw new ForbiddenException('not_engaged');
+    }
+    return job;
+  }
+
+  // Resolves a pro publicId to an id and checks the customer owns the job and
+  // that pro is engaged with it. Returns { driverId }.
+  private async assertCustomerThread(
+    customerId: string,
+    jobId: string,
+    proPublicId: string,
+  ) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true, hiredDriverId: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    const driver = await this.prisma.driver.findFirst({
+      where: { publicId: proPublicId.trim().toUpperCase(), role: 'driver' },
+      select: { id: true },
+    });
+    if (!driver) throw new NotFoundException('professional_not_found');
+    const unlocked = await this.prisma.jobContactUnlock.findUnique({
+      where: { jobId_driverId: { jobId, driverId: driver.id } },
+      select: { id: true },
+    });
+    if (!unlocked && job.hiredDriverId !== driver.id) {
+      throw new ForbiddenException('not_engaged');
+    }
+    return { driverId: driver.id };
+  }
+
+  // The pro's thread with the customer on a job. Reading it marks the
+  // customer's messages as read (clears the pro's unread badge).
+  async proThreadMessages(driverId: string, jobId: string) {
+    await this.assertProEngaged(driverId, jobId);
+    await this.prisma.message.updateMany({
+      where: { jobId, driverId, fromCustomer: true, readAt: null },
+      data: { readAt: new Date() },
+    });
+    const messages = await this.prisma.message.findMany({
+      where: { jobId, driverId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return messages.map((m) => this.shapeMessage(m));
+  }
+
+  async proSendMessage(driverId: string, jobId: string, body: string) {
+    await this.assertProEngaged(driverId, jobId);
+    const m = await this.prisma.message.create({
+      data: { jobId, driverId, fromCustomer: false, body: body.trim() },
+    });
+    return this.shapeMessage(m);
+  }
+
+  // Every pro the customer can chat with on a job (those who've engaged), each
+  // with a last-message preview and the customer's unread count.
+  async customerThreads(customerId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+
+    const unlocks = await this.prisma.jobContactUnlock.findMany({
+      where: { jobId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        driver: { select: { id: true, publicId: true, name: true, company: true } },
+      },
+    });
+
+    return Promise.all(
+      unlocks.map(async (u) => {
+        const last = await this.prisma.message.findFirst({
+          where: { jobId, driverId: u.driverId },
+          orderBy: { createdAt: 'desc' },
+        });
+        // Unread for the customer = messages from the pro they've not read.
+        const unread = await this.prisma.message.count({
+          where: { jobId, driverId: u.driverId, fromCustomer: false, readAt: null },
+        });
+        return {
+          publicId: u.driver.publicId,
+          name: u.driver.name,
+          company: u.driver.company ?? null,
+          lastMessage: last?.body ?? null,
+          lastAt: last?.createdAt.toISOString() ?? null,
+          unread,
+        };
+      }),
+    );
+  }
+
+  async customerThreadMessages(
+    customerId: string,
+    jobId: string,
+    proPublicId: string,
+  ) {
+    const { driverId } = await this.assertCustomerThread(customerId, jobId, proPublicId);
+    await this.prisma.message.updateMany({
+      where: { jobId, driverId, fromCustomer: false, readAt: null },
+      data: { readAt: new Date() },
+    });
+    const messages = await this.prisma.message.findMany({
+      where: { jobId, driverId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return messages.map((m) => this.shapeMessage(m));
+  }
+
+  async customerSendMessage(
+    customerId: string,
+    jobId: string,
+    proPublicId: string,
+    body: string,
+  ) {
+    const { driverId } = await this.assertCustomerThread(customerId, jobId, proPublicId);
+    const m = await this.prisma.message.create({
+      data: { jobId, driverId, fromCustomer: true, body: body.trim() },
+    });
+    return this.shapeMessage(m);
+  }
 }

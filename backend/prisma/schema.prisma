@@ -113,6 +113,7 @@ model Driver {
   categories ServiceCategory[]  @relation("DriverCategories")
   jobUnlocks JobContactUnlock[]
   quotes     Quote[]
+  messages   Message[]
   reviews    Review[]
   hiredJobs  Job[]              @relation("JobHired")
 }
@@ -276,9 +277,10 @@ model Job {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  unlocks JobContactUnlock[]
-  quotes  Quote[]
-  reviews Review[]
+  unlocks  JobContactUnlock[]
+  quotes   Quote[]
+  messages Message[]
+  reviews  Review[]
 
   @@index([categoryId])
   @@index([status])
@@ -342,6 +344,27 @@ model Quote {
 
   @@unique([jobId, driverId])
   @@index([jobId])
+  @@index([driverId])
+}
+
+// One message in the per-job conversation between a customer and one pro. A
+// thread is the set of messages sharing (jobId, driverId) — the customer has a
+// separate thread with each pro, and pros never see each other. `fromCustomer`
+// says who sent it; `readAt` powers unread badges.
+model Message {
+  id       String @id @default(uuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  fromCustomer Boolean
+  body         String
+  readAt       DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([jobId, driverId])
   @@index([driverId])
 }
 

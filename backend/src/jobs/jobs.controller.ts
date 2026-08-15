@@ -6,11 +6,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
+import { CustomerSendMessageDto } from './dto/send-message.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
 import type { CustomerUser } from '../customer-auth/current-customer.decorator';
@@ -51,6 +53,31 @@ export class JobsController {
   @Get(':id/quotes')
   quotes(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
     return this.jobs.listQuotes(c.id, id);
+  }
+
+  // Chat threads on this job — one per pro the customer can message.
+  @Get(':id/threads')
+  threads(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
+    return this.jobs.customerThreads(c.id, id);
+  }
+
+  // Messages in the thread with one pro (?pro=<publicId>).
+  @Get(':id/messages')
+  messages(
+    @CurrentCustomer() c: CustomerUser,
+    @Param('id') id: string,
+    @Query('pro') pro: string,
+  ) {
+    return this.jobs.customerThreadMessages(c.id, id, pro ?? '');
+  }
+
+  @Post(':id/messages')
+  sendMessage(
+    @CurrentCustomer() c: CustomerUser,
+    @Param('id') id: string,
+    @Body() dto: CustomerSendMessageDto,
+  ) {
+    return this.jobs.customerSendMessage(c.id, id, dto.pro, dto.body);
   }
 
   @Patch(':id')

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { SubmitQuoteDto } from './dto/submit-quote.dto';
+import { ProSendMessageDto } from './dto/send-message.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
@@ -56,5 +57,20 @@ export class ProJobsController {
     @Body() dto: SubmitQuoteDto,
   ) {
     return this.jobs.submitQuote(user.id, id, dto);
+  }
+
+  // The pro's chat thread with the customer on a job.
+  @Get(':id/messages')
+  messages(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.jobs.proThreadMessages(user.id, id);
+  }
+
+  @Post(':id/messages')
+  sendMessage(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ProSendMessageDto,
+  ) {
+    return this.jobs.proSendMessage(user.id, id, dto.body);
   }
 }
