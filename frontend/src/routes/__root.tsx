@@ -77,6 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google-site-verification", content: "pKaBHMhnxoXURMG5NnxHrYyOFCUeRMv08uubh2tgXrg" },
       { title: "SelfeConnect — Hire trusted local professionals" },
       { name: "description", content: "Find reviewed local professionals — plumbers, electricians, cleaners, gardeners and more. Post a job for free, or join as a professional to win work and collect reviews and tips." },
       { property: "og:title", content: "SelfeConnect — Hire trusted local professionals" },
@@ -85,6 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
     ],
     links: [
+      { rel: "canonical", href: "https://selfeconnect.com/" },
       {
         rel: "icon",
         type: "image/svg+xml",
