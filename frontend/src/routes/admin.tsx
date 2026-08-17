@@ -11,6 +11,8 @@ import {
   Star,
   CreditCard,
   Tags,
+  ShieldCheck,
+  FileText,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { me, logout, type AuthDriver } from "@/lib/auth";
@@ -44,7 +46,9 @@ const ITEMS = [
   { title: "Customers", url: "/admin/customers", icon: UserRound },
   { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
   { title: "Job postings", url: "/admin/jobs", icon: Briefcase },
+  { title: "Quotes", url: "/admin/quotes", icon: FileText },
   { title: "Reviews", url: "/admin/reviews", icon: Star },
+  { title: "Verifications", url: "/admin/verifications", icon: ShieldCheck },
   { title: "Services", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/transactions", icon: Receipt },
 ] as const;

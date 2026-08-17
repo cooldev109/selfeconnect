@@ -109,6 +109,15 @@ export async function run() {
     const admDoc = await fetch(`${API}/admin/verifications/${sub.id}/document`, { headers: { cookie: admin.cookie } });
     ok("admin streams the document (200)", admDoc.status === 200, `HTTP ${admDoc.status}`);
 
+    // M3.2 admin control centre: overview surfaces the pending count, and the
+    // quotes list is admin-only.
+    const ov = await req("/admin/overview", { cookie: admin.cookie });
+    ok("admin overview reports pendingVerifications", ov.ok && typeof ov.body?.pendingVerifications === "number", `HTTP ${ov.status}`);
+    const quotesList = await req("/admin/quotes", { cookie: admin.cookie });
+    ok("admin quotes list returns an array", quotesList.ok && Array.isArray(quotesList.body), `HTTP ${quotesList.status}`);
+    const forbQuotes = await req("/admin/quotes", { cookie: pro.cookie });
+    ok("non-admin can't list quotes (403)", forbQuotes.status === 403, `HTTP ${forbQuotes.status}`);
+
     // badge surfaces on the public profile + in search
     const cust = await signupCustomer();
     customers.push(cust.email);

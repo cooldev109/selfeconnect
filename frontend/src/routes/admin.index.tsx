@@ -17,6 +17,7 @@ import {
   Briefcase,
   Star,
   CreditCard,
+  ShieldCheck,
 } from "lucide-react";
 import { Badge, Card, CardContent } from "@/components/shared";
 import { useAdminData } from "@/hooks/useAdminData";
@@ -41,6 +42,7 @@ function AdminIndex() {
     openJobs,
     totalJobs,
     totalReviews,
+    pendingVerifications,
     totalTipsProcessed,
     tipCount,
     totalPaymentsProcessed,
@@ -88,6 +90,13 @@ function AdminIndex() {
           Icon={Briefcase}
         />
         <Metric label="Reviews" value={String(totalReviews)} Icon={Star} />
+        <Metric
+          label="Verifications"
+          value={String(pendingVerifications)}
+          hint="awaiting review"
+          Icon={ShieldCheck}
+          accent={pendingVerifications > 0}
+        />
         <Metric
           label="Tips processed"
           value={`£${totalTipsProcessed.toFixed(2)}`}
@@ -168,14 +177,16 @@ function Metric({
   value,
   hint,
   Icon,
+  accent,
 }: {
   label: string;
   value: string;
   hint?: string;
   Icon: React.ComponentType<{ className?: string }>;
+  accent?: boolean;
 }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className={`rounded-2xl ${accent ? "border-primary/40 ring-1 ring-primary/20" : ""}`}>
       <CardContent className="flex items-center gap-4 p-6">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E1F5EE] text-primary">
           <Icon className="h-5 w-5" />

@@ -78,6 +78,12 @@ export class AdminController {
     return this.admin.deleteReview(id);
   }
 
+  // ---- Quotes ----
+  @Get('quotes')
+  quotes() {
+    return this.admin.getQuotes();
+  }
+
   // ---- Payments / transactions ----
   @Get('transactions')
   transactions() {

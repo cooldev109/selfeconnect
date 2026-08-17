@@ -1,5 +1,21 @@
 import { api } from "./api";
 
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:4000/api/v1";
+
+// Admin: fetch a private verification document with credentials and open it in a
+// new tab (a plain link wouldn't carry the auth cookie cross-origin in dev).
+export async function openVerificationDoc(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/admin/verifications/${id}/document`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Could not load the document");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 // Mirrors the backend badge set (backend/src/verification/badges.ts).
 export interface VerificationBadges {
   email: boolean;

@@ -36,9 +36,11 @@ import { Route as CustomerSignupRouteImport } from './routes/customer.signup'
 import { Route as CustomerSearchRouteImport } from './routes/customer.search'
 import { Route as CustomerLoginRouteImport } from './routes/customer.login'
 import { Route as CustomerAccountRouteImport } from './routes/customer.account'
+import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminTransactionsRouteImport } from './routes/admin.transactions'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
+import { Route as AdminQuotesRouteImport } from './routes/admin.quotes'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
@@ -184,6 +186,11 @@ const CustomerAccountRoute = CustomerAccountRouteImport.update({
   path: '/customer/account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
+  id: '/verifications',
+  path: '/verifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -197,6 +204,11 @@ const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
 const AdminReviewsRoute = AdminReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuotesRoute = AdminQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminJobsRoute = AdminJobsRouteImport.update({
@@ -270,9 +282,11 @@ export interface FileRoutesByFullPath {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
+  '/admin/quotes': typeof AdminQuotesRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
@@ -310,9 +324,11 @@ export interface FileRoutesByTo {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
+  '/admin/quotes': typeof AdminQuotesRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
@@ -351,9 +367,11 @@ export interface FileRoutesById {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
+  '/admin/quotes': typeof AdminQuotesRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
   '/customer/search': typeof CustomerSearchRoute
@@ -394,9 +412,11 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/drivers'
     | '/admin/jobs'
+    | '/admin/quotes'
     | '/admin/reviews'
     | '/admin/subscriptions'
     | '/admin/transactions'
+    | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
     | '/customer/search'
@@ -434,9 +454,11 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/drivers'
     | '/admin/jobs'
+    | '/admin/quotes'
     | '/admin/reviews'
     | '/admin/subscriptions'
     | '/admin/transactions'
+    | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
     | '/customer/search'
@@ -474,9 +496,11 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/drivers'
     | '/admin/jobs'
+    | '/admin/quotes'
     | '/admin/reviews'
     | '/admin/subscriptions'
     | '/admin/transactions'
+    | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
     | '/customer/search'
@@ -714,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/verifications': {
+      id: '/admin/verifications'
+      path: '/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AdminVerificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/transactions': {
       id: '/admin/transactions'
       path: '/transactions'
@@ -733,6 +764,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/admin/reviews'
       preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quotes': {
+      id: '/admin/quotes'
+      path: '/quotes'
+      fullPath: '/admin/quotes'
+      preLoaderRoute: typeof AdminQuotesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/jobs': {
@@ -806,9 +844,11 @@ interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminJobsRoute: typeof AdminJobsRoute
+  AdminQuotesRoute: typeof AdminQuotesRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
+  AdminVerificationsRoute: typeof AdminVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -817,9 +857,11 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminJobsRoute: AdminJobsRoute,
+  AdminQuotesRoute: AdminQuotesRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
+  AdminVerificationsRoute: AdminVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

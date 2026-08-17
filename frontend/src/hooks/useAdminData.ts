@@ -80,6 +80,32 @@ export interface AdminReview {
   createdAt: string;
 }
 
+export interface AdminVerification {
+  id: string;
+  type: "identity" | "insurance" | "qualification";
+  status: "pending" | "verified" | "rejected";
+  label: string | null;
+  reference: string | null;
+  expiresAt: string | null;
+  hasDocument: boolean;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewerNotes: string | null;
+  driver: { publicId: string; name: string; email: string; company: string | null };
+}
+
+export interface AdminQuote {
+  id: string;
+  driverName: string;
+  driverId: string;
+  jobTitle: string;
+  jobStatus: string;
+  customerName: string;
+  amount: number | null;
+  message: string;
+  createdAt: string;
+}
+
 export interface MonthBucket {
   month: string;
   volume: number;
@@ -94,6 +120,7 @@ interface Overview {
   openJobs: number;
   totalJobs: number;
   totalReviews: number;
+  pendingVerifications: number;
   totalTipsProcessed: number;
   tipCount: number;
   totalPaymentsProcessed: number;
@@ -141,6 +168,16 @@ export function useAdminData() {
     queryFn: () => api<AdminReview[]>("/admin/reviews"),
     retry: false,
   });
+  const verificationsQ = useQuery({
+    queryKey: ["admin-verifications"],
+    queryFn: () => api<AdminVerification[]>("/admin/verifications?status="),
+    retry: false,
+  });
+  const quotesQ = useQuery({
+    queryKey: ["admin-quotes"],
+    queryFn: () => api<AdminQuote[]>("/admin/quotes"),
+    retry: false,
+  });
   const o = overview.data;
 
   return {
@@ -150,6 +187,8 @@ export function useAdminData() {
     subscriptions: subscriptionsQ.data ?? [],
     jobs: jobsQ.data ?? [],
     reviews: reviewsQ.data ?? [],
+    verifications: verificationsQ.data ?? [],
+    quotes: quotesQ.data ?? [],
     monthly: o?.monthly ?? [],
     totalDrivers: o?.totalDrivers ?? 0,
     activeSubs: o?.activeSubs ?? 0,
@@ -159,6 +198,7 @@ export function useAdminData() {
     openJobs: o?.openJobs ?? 0,
     totalJobs: o?.totalJobs ?? 0,
     totalReviews: o?.totalReviews ?? 0,
+    pendingVerifications: o?.pendingVerifications ?? 0,
     totalTipsProcessed: o?.totalTipsProcessed ?? 0,
     tipCount: o?.tipCount ?? 0,
     totalPaymentsProcessed: o?.totalPaymentsProcessed ?? 0,

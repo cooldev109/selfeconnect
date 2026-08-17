@@ -25,6 +25,7 @@ export class AdminService {
       openJobs,
       totalJobs,
       totalReviews,
+      pendingVerifications,
       tipAgg,
       paymentAgg,
     ] = await Promise.all([
@@ -38,6 +39,7 @@ export class AdminService {
       this.prisma.job.count({ where: { status: 'open' } }),
       this.prisma.job.count(),
       this.prisma.review.count(),
+      this.prisma.verification.count({ where: { status: 'pending' } }),
       this.prisma.tip.aggregate({
         where: { status: 'succeeded', type: 'tip' },
         _sum: { amount: true },
@@ -59,6 +61,7 @@ export class AdminService {
       openJobs,
       totalJobs,
       totalReviews,
+      pendingVerifications,
       totalTipsProcessed: round2((tipAgg._sum.amount ?? 0) / 100),
       tipCount: tipAgg._count,
       totalPaymentsProcessed: round2((paymentAgg._sum.amount ?? 0) / 100),
@@ -276,6 +279,34 @@ export class AdminService {
       rating: r.rating,
       comment: r.comment ?? '',
       createdAt: r.createdAt.toISOString(),
+    }));
+  }
+
+  // ---- Quotes ----
+  async getQuotes() {
+    const quotes = await this.prisma.quote.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        driver: { select: { publicId: true, name: true } },
+        job: {
+          select: {
+            title: true,
+            status: true,
+            customer: { select: { name: true } },
+          },
+        },
+      },
+    });
+    return quotes.map((q) => ({
+      id: q.id,
+      driverName: q.driver.name,
+      driverId: q.driver.publicId,
+      jobTitle: q.job.title,
+      jobStatus: q.job.status,
+      customerName: q.job.customer.name,
+      amount: q.amount, // pence; null = "will confirm after a look"
+      message: q.message,
+      createdAt: q.createdAt.toISOString(),
     }));
   }
 
