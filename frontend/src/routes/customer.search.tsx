@@ -7,6 +7,7 @@ import { BrowseShell } from "@/components/BrowseShell";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
 import { StarRow } from "@/components/Reviews";
+import { VerificationBadges } from "@/components/VerificationBadges";
 import { browsePros } from "@/lib/pros";
 import { useCustomer } from "@/lib/useCustomer";
 import { ApiError } from "@/lib/api";
@@ -201,6 +202,12 @@ function SearchPage() {
                       {p.avgRating.toFixed(1)} ({p.reviewCount})
                     </span>
                   </div>
+                  <VerificationBadges
+                    badges={p.badges}
+                    only={["verifiedPro", "insurance", "qualification"]}
+                    size="sm"
+                    className="mt-1.5"
+                  />
                   <p className="mt-1 truncate text-xs text-muted-foreground">
                     {p.categories.join(" · ")}
                   </p>

@@ -58,6 +58,22 @@ enum CustomerType {
   business
 }
 
+// M3 — Trust. The document-backed checks a professional can hold, each shown as
+// its own granular badge ("Identity Verified", "Insurance checked — [date]").
+// Email + phone are self-serve (see Driver.emailVerifiedAt / phoneVerifiedAt);
+// these three need evidence + a manual admin decision.
+enum VerificationType {
+  identity // government ID / proof of identity
+  insurance // liability insurance certificate (carries an expiry)
+  qualification // trade certification / accreditation (e.g. Gas Safe)
+}
+
+enum VerificationStatus {
+  pending // submitted, awaiting admin review
+  verified // approved by an admin
+  rejected // declined (see reviewerNotes)
+}
+
 model Driver {
   id           String @id @default(uuid())
   publicId     String @unique // short code shown on QR / typed by customers (e.g. "5HQN7")
@@ -66,18 +82,18 @@ model Driver {
   role         Role   @default(driver)
 
   // Profile (mirrors frontend Driver interface)
-  name        String
-  company     String?
-  phone       String?
-  photoUrl    String?
-  vanPhotoUrl String?
+  name          String
+  company       String?
+  phone         String?
+  photoUrl      String?
+  vanPhotoUrl   String?
   // A gallery of the professional's past work, shown on their public profile.
   galleryPhotos String[] @default([])
-  city        String?
-  tagline     String?
-  verified    Boolean @default(false)
-  yearsActive Int     @default(0)
-  deliveries  Int     @default(0)
+  city          String?
+  tagline       String?
+  verified      Boolean  @default(false)
+  yearsActive   Int      @default(0)
+  deliveries    Int      @default(0)
 
   // Marketplace profile + location (UK postcode geocoded via postcodes.io).
   // NOTE: `Driver` is the platform's "professional" entity — it can now belong
@@ -88,37 +104,44 @@ model Driver {
   longitude Float?
 
   // Stripe / billing
-  stripeAccountId      String?            @unique
-  stripeCustomerId     String?            @unique
-  stripeSubscriptionId String?            @unique
-  subscriptionStatus   SubscriptionStatus @default(none)
-  stripeOnboarded      Boolean            @default(false)
-  isActive             Boolean            @default(false)
+  stripeAccountId               String?            @unique
+  stripeCustomerId              String?            @unique
+  stripeSubscriptionId          String?            @unique
+  subscriptionStatus            SubscriptionStatus @default(none)
+  stripeOnboarded               Boolean            @default(false)
+  isActive                      Boolean            @default(false)
   // When set + still active, the sub is cancelled but paid until this date.
-  subscriptionCancelAtPeriodEnd Boolean   @default(false)
+  subscriptionCancelAtPeriodEnd Boolean            @default(false)
   subscriptionCurrentPeriodEnd  DateTime?
   // One of the first N professionals to subscribe — they keep the launch rate
   // for as long as the subscription stays live. Set when checkout is started;
   // the spot is only counted as taken once the subscription actually exists.
-  foundingMember Boolean @default(false)
+  foundingMember                Boolean            @default(false)
 
   // Email: verification, and whether they want job alerts. The unsubscribe
   // token lets a one-click opt-out work without logging in.
-  emailVerifiedAt   DateTime?
-  notifyNewJobs     Boolean @default(true)
-  unsubscribeToken  String? @unique
+  emailVerifiedAt  DateTime?
+  notifyNewJobs    Boolean   @default(true)
+  unsubscribeToken String?   @unique
+
+  // Phone verification (M3): a one-time 6-digit code is hashed here with a short
+  // expiry; phoneVerifiedAt (set when a code is confirmed) is the badge signal.
+  phoneVerifiedAt      DateTime?
+  phoneVerifyCodeHash  String?
+  phoneVerifyExpiresAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tips       Tip[]
-  categories ServiceCategory[]  @relation("DriverCategories")
-  jobUnlocks JobContactUnlock[]
-  quotes     Quote[]
-  messages   Message[]
+  tips          Tip[]
+  categories    ServiceCategory[]  @relation("DriverCategories")
+  jobUnlocks    JobContactUnlock[]
+  quotes        Quote[]
+  messages      Message[]
   notifications Notification[]
-  reviews    Review[]
-  hiredJobs  Job[]              @relation("JobHired")
+  reviews       Review[]
+  hiredJobs     Job[]              @relation("JobHired")
+  verifications Verification[]
 }
 
 model Tip {
@@ -140,7 +163,7 @@ model Tip {
   // (powers "paid on SelfeConnect" + the verified-paid review badge). QR tips
   // and payments have no job and leave this null.
   jobId String?
-  job   Job?   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  job   Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
   stripePaymentIntentId String? @unique
 
@@ -189,9 +212,9 @@ model Customer {
   latitude  Float?
   longitude Float?
 
-  emailVerifiedAt   DateTime?
-  notifyJobUpdates  Boolean @default(true)
-  unsubscribeToken  String? @unique
+  emailVerifiedAt  DateTime?
+  notifyJobUpdates Boolean   @default(true)
+  unsubscribeToken String?   @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -309,10 +332,10 @@ model Review {
   // Null for a review left by scanning the QR code, where the customer has no
   // account — which is the whole point of the QR: no app, no sign-up, seconds.
   // A review with a customer attached is the one we can call "verified".
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   // What an anonymous reviewer chose to call themselves, if anything.
-  authorName String?
+  authorName   String?
   // A salted hash of the reviewer's IP — never the address itself. Used only to
   // stop one person spraying a professional with reviews (or a professional
   // farming their own). Nothing here identifies a person.
@@ -334,6 +357,45 @@ model Review {
   @@unique([driverId, customerId])
   @@index([driverId])
   @@index([driverId, authorIpHash])
+}
+
+// M3 — a document-backed trust check a professional submits for admin review.
+// Each approved row becomes a granular badge on their public profile. Email and
+// phone are self-serve (Driver.emailVerifiedAt / phoneVerifiedAt) and live
+// outside this table; identity / insurance / qualifications need evidence + a
+// human decision, so they're modelled here with an audit trail.
+model Verification {
+  id       String @id @default(uuid())
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  type   VerificationType
+  status VerificationStatus @default(pending)
+
+  // The uploaded evidence — a PRIVATE file (PDF or image), served only to the
+  // owner and admins (never the public /uploads route).
+  documentUrl String?
+  // Human context shown on the badge and in the admin queue.
+  label       String? // e.g. "Public liability £2m", "Gas Safe"
+  reference   String? // policy / certificate number
+  // Insurance & qualifications lapse — powers "Insurance checked — [date]" and
+  // lets a badge expire without an admin having to revoke it.
+  expiresAt   DateTime?
+
+  // Review audit trail.
+  submittedAt   DateTime  @default(now())
+  reviewedAt    DateTime?
+  reviewerId    String? // Driver(admin) id who decided
+  reviewerNotes String? // reason shown to the pro on rejection
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One live record per type per pro; re-submitting updates it (a rejected or
+  // expired check can be replaced without piling up rows).
+  @@unique([driverId, type])
+  @@index([status])
+  @@index([driverId])
 }
 
 // A professional's structured response to a job — a price (optional; some work
@@ -365,13 +427,14 @@ enum NotificationKind {
   quote
   message
   hired
+  verification // M3: a verification was approved or rejected
 }
 
 model Notification {
   id String @id @default(uuid())
 
-  driverId String?
-  driver   Driver?   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driverId   String?
+  driver     Driver?   @relation(fields: [driverId], references: [id], onDelete: Cascade)
   customerId String?
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
 

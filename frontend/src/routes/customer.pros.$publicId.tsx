@@ -6,6 +6,7 @@ import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { BrowseShell } from "@/components/BrowseShell";
 import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
+import { VerificationBadges } from "@/components/VerificationBadges";
 import { getProProfile } from "@/lib/pros";
 import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
@@ -115,6 +116,7 @@ function ProProfilePage() {
 
             {/* Bio, then the one thing worth an account: how to reach them. */}
             <div className="bg-card p-6">
+              <VerificationBadges badges={p.badges} className="mb-4" />
               {p.bio && (
                 <p className="max-w-prose text-sm leading-relaxed text-foreground/90">{p.bio}</p>
               )}

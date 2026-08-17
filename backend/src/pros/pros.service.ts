@@ -5,6 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
+import {
+  computeVerificationBadges,
+  type VerificationBadges,
+} from '../verification/badges';
 
 // A rating summary combining legacy tip ratings and standalone reviews.
 export type RatingSummary = {
@@ -195,7 +199,12 @@ export class ProsService {
         isActive: true,
         ...(categoryId ? { categories: { some: { id: categoryId } } } : {}),
       },
-      include: { categories: { select: { name: true, slug: true } } },
+      include: {
+        categories: { select: { name: true, slug: true } },
+        verifications: {
+          select: { type: true, status: true, expiresAt: true, label: true },
+        },
+      },
     });
 
     const summaries = await this.ratingSummary(drivers.map((d) => d.id));
@@ -209,6 +218,7 @@ export class ProsService {
       avgRating: number;
       reviewCount: number;
       distanceMiles: number | null;
+      badges: VerificationBadges;
     }[] = [];
     for (const d of drivers) {
       let distanceMiles: number | null = null;
@@ -238,6 +248,7 @@ export class ProsService {
         avgRating: s?.avgRating ?? 0,
         reviewCount: s?.reviewCount ?? 0,
         distanceMiles,
+        badges: computeVerificationBadges(d),
       });
     }
 
@@ -256,7 +267,12 @@ export class ProsService {
   async profile(publicId: string, opts: { includeContact: boolean }) {
     const d = await this.prisma.driver.findFirst({
       where: { publicId, role: 'driver', isActive: true },
-      include: { categories: { select: { name: true, slug: true } } },
+      include: {
+        categories: { select: { name: true, slug: true } },
+        verifications: {
+          select: { type: true, status: true, expiresAt: true, label: true },
+        },
+      },
     });
     if (!d) throw new NotFoundException('professional_not_found');
 
@@ -284,6 +300,7 @@ export class ProsService {
       avgRating: summary.avgRating,
       reviewCount: summary.reviewCount,
       breakdown: summary.breakdown,
+      badges: computeVerificationBadges(d),
       // Never serialise the email/phone for an anonymous visitor — hiding it in
       // the UI alone would still ship it in the JSON.
       contact: opts.includeContact

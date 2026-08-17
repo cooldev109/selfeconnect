@@ -1,5 +1,6 @@
 import { api } from "./api";
 import type { ReviewItem, RatingBreakdown } from "./reviews";
+import type { VerificationBadges } from "./verification";
 
 export interface ProSearchResult {
   publicId: string;
@@ -10,6 +11,7 @@ export interface ProSearchResult {
   avgRating: number;
   reviewCount: number;
   distanceMiles: number | null;
+  badges: VerificationBadges;
 }
 
 export interface ProProfile {
@@ -31,6 +33,7 @@ export interface ProProfile {
   contact: { phone: string | null; email: string } | null;
   contactLocked: boolean;
   reviews: ReviewItem[];
+  badges: VerificationBadges;
 }
 
 export const browsePros = (opts: { category?: string; postcode?: string; radius?: number }) => {

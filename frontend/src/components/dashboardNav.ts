@@ -8,6 +8,7 @@ import {
   Plus,
   Settings,
   ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
 import type { NavItem } from "@/components/DashboardShell";
 
@@ -17,6 +18,7 @@ export const PRO_NAV: NavItem[] = [
   { to: "/my-jobs", label: "My jobs", icon: ClipboardList },
   { to: "/dashboard", label: "Payments & tips", icon: LineChart },
   { to: "/reviews", label: "My reviews", icon: Star },
+  { to: "/verify", label: "Verification", icon: ShieldCheck },
   { to: "/profile", label: "Profile & QR", icon: QrCode },
   { to: "/account", label: "Account", icon: CreditCard },
 ];

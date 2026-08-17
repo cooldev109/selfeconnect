@@ -15,6 +15,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { ProsModule } from './pros/pros.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { VerificationModule } from './verification/verification.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -36,6 +37,7 @@ import { AppService } from './app.service';
     ProsModule,
     ReviewsModule,
     NotificationsModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
