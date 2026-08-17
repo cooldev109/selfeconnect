@@ -7,6 +7,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PricingService } from '../billing/pricing.service';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+// Median of a numeric list (0 for empty) — robust to the outliers a mean isn't.
+function median(xs: number[]): number {
+  if (xs.length === 0) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
 
 @Injectable()
 export class AdminService {
@@ -297,6 +306,262 @@ export class AdminService {
       data: { hiddenAt: hidden ? new Date() : null },
     });
     return { ok: true, hidden };
+  }
+
+  // ---- Analytics (M3.4) ----
+  async getAnalytics() {
+    const now = Date.now();
+    const since30 = new Date(now - 30 * 24 * 3600 * 1000);
+    const since56 = new Date(now - 56 * 24 * 3600 * 1000);
+
+    const [
+      totalPros,
+      activePros,
+      onboardedPros,
+      totalCustomers,
+      newPros30,
+      newCustomers30,
+      totalJobs,
+      openJobs,
+      completedJobs,
+      everHiredJobs,
+      cancelledJobs,
+      totalQuotes,
+      cancellingSubs,
+      canceledSubs,
+      mrr,
+    ] = await Promise.all([
+      this.prisma.driver.count({ where: { role: 'driver' } }),
+      this.prisma.driver.count({ where: { role: 'driver', isActive: true } }),
+      this.prisma.driver.count({ where: { role: 'driver', stripeOnboarded: true } }),
+      this.prisma.customer.count(),
+      this.prisma.driver.count({ where: { role: 'driver', createdAt: { gte: since30 } } }),
+      this.prisma.customer.count({ where: { createdAt: { gte: since30 } } }),
+      this.prisma.job.count(),
+      this.prisma.job.count({ where: { status: 'open' } }),
+      this.prisma.job.count({ where: { status: 'completed' } }),
+      this.prisma.job.count({
+        where: { status: { in: ['hired', 'in_progress', 'completed'] } },
+      }),
+      this.prisma.job.count({ where: { status: 'cancelled' } }),
+      this.prisma.quote.count(),
+      this.prisma.driver.count({
+        where: { role: 'driver', subscriptionCancelAtPeriodEnd: true },
+      }),
+      this.prisma.driver.count({ where: { role: 'driver', subscriptionStatus: 'canceled' } }),
+      this.pricing.monthlyRevenue(),
+    ]);
+
+    // Jobs that never received a quote — unmet demand, the metric that most
+    // signals a cold marketplace.
+    const jobsWithQuotes = (
+      await this.prisma.quote.findMany({ distinct: ['jobId'], select: { jobId: true } })
+    ).length;
+    const noQuoteJobs = Math.max(0, totalJobs - jobsWithQuotes);
+
+    // Median response time = job posted → its first quote, in hours.
+    const [firstQuotes, jobsCreated] = await Promise.all([
+      this.prisma.quote.groupBy({ by: ['jobId'], _min: { createdAt: true } }),
+      this.prisma.job.findMany({ select: { id: true, createdAt: true } }),
+    ]);
+    const createdById = new Map(jobsCreated.map((j) => [j.id, j.createdAt]));
+    const responseHours: number[] = [];
+    for (const q of firstQuotes) {
+      const created = createdById.get(q.jobId);
+      if (created && q._min.createdAt) {
+        responseHours.push((q._min.createdAt.getTime() - created.getTime()) / 3_600_000);
+      }
+    }
+
+    // Weekly signup trend (last 8 weeks), pros + customers combined.
+    const [recentPros, recentCustomers] = await Promise.all([
+      this.prisma.driver.findMany({
+        where: { role: 'driver', createdAt: { gte: since56 } },
+        select: { createdAt: true },
+      }),
+      this.prisma.customer.findMany({
+        where: { createdAt: { gte: since56 } },
+        select: { createdAt: true },
+      }),
+    ]);
+    const weeks: { week: string; pros: number; customers: number }[] = [];
+    for (let i = 7; i >= 0; i--) {
+      const start = now - (i + 1) * 7 * 24 * 3600 * 1000;
+      const end = now - i * 7 * 24 * 3600 * 1000;
+      weeks.push({
+        week: new Date(end).toISOString().slice(0, 10),
+        pros: recentPros.filter((p) => p.createdAt.getTime() > start && p.createdAt.getTime() <= end).length,
+        customers: recentCustomers.filter((c) => c.createdAt.getTime() > start && c.createdAt.getTime() <= end).length,
+      });
+    }
+
+    const pct = (num: number, den: number) => (den > 0 ? round1((num / den) * 100) : 0);
+
+    return {
+      users: {
+        totalPros,
+        totalCustomers,
+        newPros30,
+        newCustomers30,
+        activePros,
+        onboardedPros,
+      },
+      jobs: {
+        totalJobs,
+        openJobs,
+        completedJobs,
+        cancelledJobs,
+        noQuoteJobs,
+        totalQuotes,
+        quotesPerJob: totalJobs > 0 ? round1(totalQuotes / totalJobs) : 0,
+      },
+      conversions: {
+        // signup → paying pro, job → hired, job → completed (as percentages)
+        signupToActivePct: pct(activePros, totalPros),
+        jobToHiredPct: pct(everHiredJobs, totalJobs),
+        jobToCompletedPct: pct(completedJobs, totalJobs),
+        noQuotePct: pct(noQuoteJobs, totalJobs),
+      },
+      revenue: {
+        mrr,
+        activePros,
+        cancellingSubs,
+        canceledSubs,
+        // churn ≈ subs set to cancel at period end, over the live base.
+        churnPct: pct(cancellingSubs, activePros + cancellingSubs),
+      },
+      responseTime: {
+        medianHours: round1(median(responseHours)),
+        quotedJobs: responseHours.length,
+      },
+      signupTrend: weeks,
+    };
+  }
+
+  // Per-user history — a professional's timeline for the admin drill-down.
+  async getDriverHistory(publicId: string) {
+    const d = await this.prisma.driver.findUnique({
+      where: { publicId },
+      include: {
+        quotes: { include: { job: { select: { title: true } } } },
+        reviews: { include: { customer: { select: { name: true } } } },
+        tips: true,
+        verifications: true,
+        hiredJobs: { select: { id: true, title: true, hiredAt: true, status: true } },
+      },
+    });
+    if (!d) throw new NotFoundException('driver_not_found');
+
+    type Ev = { at: string; kind: string; title: string; detail?: string };
+    const ev: Ev[] = [];
+    ev.push({ at: d.createdAt.toISOString(), kind: 'signup', title: 'Joined SelfeConnect' });
+    for (const q of d.quotes) {
+      ev.push({
+        at: q.createdAt.toISOString(),
+        kind: 'quote',
+        title: `Quoted "${q.job.title}"`,
+        detail: q.amount != null ? `£${(q.amount / 100).toFixed(2)}` : 'On request',
+      });
+    }
+    for (const j of d.hiredJobs) {
+      if (j.hiredAt) ev.push({ at: j.hiredAt.toISOString(), kind: 'hired', title: `Hired for "${j.title}"` });
+    }
+    for (const r of d.reviews) {
+      ev.push({
+        at: r.createdAt.toISOString(),
+        kind: 'review',
+        title: `${r.rating}★ review${r.customer ? ` from ${r.customer.name}` : ''}`,
+        detail: r.comment ?? undefined,
+      });
+    }
+    for (const t of d.tips) {
+      ev.push({
+        at: t.createdAt.toISOString(),
+        kind: t.type,
+        title: `${t.type === 'payment' ? 'Payment' : 'Tip'} £${(t.amount / 100).toFixed(2)}`,
+        detail: t.status,
+      });
+    }
+    for (const v of d.verifications) {
+      ev.push({
+        at: (v.reviewedAt ?? v.submittedAt).toISOString(),
+        kind: 'verification',
+        title: `${v.type} verification — ${v.status}`,
+      });
+    }
+    ev.sort((a, b) => (a.at < b.at ? 1 : -1));
+
+    const earnings = d.tips
+      .filter((t) => t.status === 'succeeded')
+      .reduce((s, t) => s + t.amount, 0);
+
+    return {
+      user: {
+        publicId: d.publicId,
+        name: d.name,
+        email: d.email,
+        role: 'professional' as const,
+        joinedAt: d.createdAt.toISOString(),
+        active: d.isActive,
+        onboarded: d.stripeOnboarded,
+        subscriptionStatus: d.subscriptionStatus,
+        verified: d.verified,
+      },
+      stats: {
+        quotes: d.quotes.length,
+        hired: d.hiredJobs.length,
+        reviews: d.reviews.length,
+        earnings: round2(earnings / 100),
+      },
+      timeline: ev,
+    };
+  }
+
+  // Per-user history — a customer's timeline.
+  async getCustomerHistory(id: string) {
+    const c = await this.prisma.customer.findUnique({
+      where: { id },
+      include: {
+        jobs: {
+          include: { category: { select: { name: true } }, _count: { select: { quotes: true } } },
+        },
+        reviews: { include: { driver: { select: { name: true } } } },
+      },
+    });
+    if (!c) throw new NotFoundException('customer_not_found');
+
+    type Ev = { at: string; kind: string; title: string; detail?: string };
+    const ev: Ev[] = [];
+    ev.push({ at: c.createdAt.toISOString(), kind: 'signup', title: 'Created an account' });
+    for (const j of c.jobs) {
+      ev.push({
+        at: j.createdAt.toISOString(),
+        kind: 'job',
+        title: `Posted "${j.title}"`,
+        detail: `${j.category.name} · ${j.status} · ${j._count.quotes} quote(s)`,
+      });
+    }
+    for (const r of c.reviews) {
+      ev.push({
+        at: r.createdAt.toISOString(),
+        kind: 'review',
+        title: `${r.rating}★ review of ${r.driver.name}`,
+        detail: r.comment ?? undefined,
+      });
+    }
+    ev.sort((a, b) => (a.at < b.at ? 1 : -1));
+
+    return {
+      user: {
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        role: 'customer' as const,
+        joinedAt: c.createdAt.toISOString(),
+      },
+      stats: { jobs: c.jobs.length, reviews: c.reviews.length },
+      timeline: ev,
+    };
   }
 
   // ---- Quotes ----

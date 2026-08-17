@@ -24,6 +24,22 @@ export class AdminController {
     return this.admin.getOverview();
   }
 
+  // ---- Analytics (M3.4) ----
+  @Get('analytics')
+  analytics() {
+    return this.admin.getAnalytics();
+  }
+
+  @Get('drivers/:id/history')
+  driverHistory(@Param('id') id: string) {
+    return this.admin.getDriverHistory(id);
+  }
+
+  @Get('customers/:id/history')
+  customerHistory(@Param('id') id: string) {
+    return this.admin.getCustomerHistory(id);
+  }
+
   // ---- Professionals ----
   @Get('drivers')
   drivers() {

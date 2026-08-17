@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, Building2, UserRound } from "lucide-react";
+import { Trash2, Building2, UserRound, History } from "lucide-react";
 import { Badge, Button, Modal } from "@/components/shared";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { AdminList } from "@/components/AdminList";
+import { UserHistoryModal } from "@/components/UserHistoryModal";
 import { api } from "@/lib/api";
 import { useAdminData, type AdminCustomer } from "@/hooks/useAdminData";
 
@@ -22,6 +23,7 @@ function AdminCustomers() {
   const { customers } = useAdminData();
   const qc = useQueryClient();
   const [toDelete, setToDelete] = useState<AdminCustomer | null>(null);
+  const [historyOf, setHistoryOf] = useState<AdminCustomer | null>(null);
 
   const remove = useMutation({
     mutationFn: (id: string) => api(`/admin/customers/${id}`, { method: "DELETE" }),
@@ -108,13 +110,23 @@ function AdminCustomers() {
               {new Date(c.joinDate).toLocaleDateString()}
             </TableCell>
             <TableCell className="text-right">
-              <Button
-                variant="outline"
-                className="rounded-lg text-destructive hover:bg-destructive/10"
-                onClick={() => setToDelete(c)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  className="rounded-lg"
+                  title="View history"
+                  onClick={() => setHistoryOf(c)}
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-lg text-destructive hover:bg-destructive/10"
+                  onClick={() => setToDelete(c)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         )}
@@ -145,6 +157,14 @@ function AdminCustomers() {
           </Button>
         </div>
       </Modal>
+
+      <UserHistoryModal
+        open={!!historyOf}
+        onClose={() => setHistoryOf(null)}
+        kind="customer"
+        id={historyOf?.id ?? null}
+        name={historyOf?.name ?? ""}
+      />
     </>
   );
 }

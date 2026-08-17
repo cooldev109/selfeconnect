@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, MoreHorizontal, Star, Trash2 } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
+import { UserHistoryModal } from "@/components/UserHistoryModal";
 import { api } from "@/lib/api";
 import {
   Table,
@@ -54,6 +55,7 @@ function AdminDrivers() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AdminDriver | null>(null);
   const [toDelete, setToDelete] = useState<AdminDriver | null>(null);
+  const [historyOf, setHistoryOf] = useState<AdminDriver | null>(null);
 
   const removeDriver = useMutation({
     mutationFn: (id: string) => api(`/admin/drivers/${id}`, { method: "DELETE" }),
@@ -174,6 +176,7 @@ function AdminDrivers() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl">
                           <DropdownMenuItem onClick={() => setSelected(d)}>View</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setHistoryOf(d)}>History</DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => setToDelete(d)}
@@ -293,6 +296,14 @@ function AdminDrivers() {
             </Button>
           </>
         }
+      />
+
+      <UserHistoryModal
+        open={!!historyOf}
+        onClose={() => setHistoryOf(null)}
+        kind="driver"
+        id={historyOf?.id ?? null}
+        name={historyOf?.name ?? ""}
       />
     </div>
   );

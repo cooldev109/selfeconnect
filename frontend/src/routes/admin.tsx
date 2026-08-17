@@ -13,6 +13,7 @@ import {
   Tags,
   ShieldCheck,
   FileText,
+  LineChart,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { me, logout, type AuthDriver } from "@/lib/auth";
@@ -42,6 +43,7 @@ export const Route = createFileRoute("/admin")({
 
 const ITEMS = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
+  { title: "Analytics", url: "/admin/analytics", icon: LineChart },
   { title: "Professionals", url: "/admin/drivers", icon: Users },
   { title: "Customers", url: "/admin/customers", icon: UserRound },
   { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
