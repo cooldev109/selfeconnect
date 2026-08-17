@@ -134,7 +134,8 @@ export async function run(sharedBrowser) {
   }
   console.log(`\n  M3 E2E: ${pass}/${pass + fail} passed`);
   if (fails.length) console.log("  Failures:\n   - " + fails.join("\n   - "));
-  return { name: "m3-trust", pass, fail, fails };
+  // Return both shapes so either runner (api pass/fail, e2e passed/total) totals.
+  return { name: "m3-trust", pass, fail, fails, passed: pass, total: pass + fail };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
