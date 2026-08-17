@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, Star, BadgeCheck, ShieldQuestion } from "lucide-react";
+import { Trash2, Star, BadgeCheck, ShieldQuestion, EyeOff, Eye, Flag } from "lucide-react";
 import { Badge, Button, Modal } from "@/components/shared";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { AdminList } from "@/components/AdminList";
@@ -24,19 +24,27 @@ function AdminReviews() {
   const qc = useQueryClient();
   const [toDelete, setToDelete] = useState<AdminReview | null>(null);
   const [onlyLow, setOnlyLow] = useState(false);
+  const [onlyReported, setOnlyReported] = useState(false);
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+    qc.invalidateQueries({ queryKey: ["admin-overview"] });
+  };
   const remove = useMutation({
     mutationFn: (id: string) => api(`/admin/reviews/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-reviews"] });
-      qc.invalidateQueries({ queryKey: ["admin-overview"] });
-      setToDelete(null);
-    },
+    onSuccess: () => { invalidate(); setToDelete(null); },
+  });
+  const setHidden = useMutation({
+    mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
+      api(`/admin/reviews/${id}/${hidden ? "hide" : "unhide"}`, { method: "POST" }),
+    onSuccess: invalidate,
   });
 
-  // Low-star reviews are the ones most likely to need a look, so they get a
-  // one-click filter rather than making someone scan the whole list.
-  const rows = onlyLow ? reviews.filter((r) => r.rating <= 2) : reviews;
+  // Low-star and reported reviews are the ones most likely to need a look, so
+  // they get one-click filters rather than making someone scan the whole list.
+  let rows = onlyLow ? reviews.filter((r) => r.rating <= 2) : reviews;
+  if (onlyReported) rows = rows.filter((r) => r.reportCount > 0);
+  const reportedCount = reviews.filter((r) => r.reportCount > 0).length;
   const verified = reviews.filter((r) => r.verified).length;
   const avg = reviews.length
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
@@ -53,8 +61,8 @@ function AdminReviews() {
         emptyText={onlyLow ? "No 1–2 star reviews." : "No reviews yet."}
         stats={[
           { label: "Total reviews", value: reviews.length, accent: true },
+          { label: "Reported", value: reportedCount, hint: "flagged for review", accent: reportedCount > 0 },
           { label: "Verified", value: verified, hint: "from a real account" },
-          { label: "Unverified", value: reviews.length - verified, hint: "left via QR" },
           { label: "Average rating", value: avg || "—" },
         ]}
         csv={{
@@ -63,13 +71,22 @@ function AdminReviews() {
           line: (r) => [r.driverName, r.author, r.rating, r.verified, r.hired, r.comment, r.createdAt],
         }}
         filters={
-          <Button
-            variant="outline"
-            className={`rounded-xl ${onlyLow ? "border-primary text-primary" : ""}`}
-            onClick={() => setOnlyLow((v) => !v)}
-          >
-            {onlyLow ? "Showing 1–2★" : "Show 1–2★ only"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className={`rounded-xl ${onlyReported ? "border-primary text-primary" : ""}`}
+              onClick={() => setOnlyReported((v) => !v)}
+            >
+              <Flag className="mr-1.5 h-4 w-4" /> {onlyReported ? "Reported only" : "Reported"}
+            </Button>
+            <Button
+              variant="outline"
+              className={`rounded-xl ${onlyLow ? "border-primary text-primary" : ""}`}
+              onClick={() => setOnlyLow((v) => !v)}
+            >
+              {onlyLow ? "1–2★" : "1–2★"}
+            </Button>
+          </div>
         }
         head={
           <TableRow>
@@ -116,19 +133,44 @@ function AdminReviews() {
               </Badge>
             </TableCell>
             <TableCell className="max-w-[280px]">
-              <p className="truncate text-sm text-muted-foreground">{r.comment || "—"}</p>
+              <p className={`truncate text-sm ${r.hidden ? "text-muted-foreground/50 line-through" : "text-muted-foreground"}`}>
+                {r.comment || "—"}
+              </p>
+              <div className="mt-0.5 flex flex-wrap gap-1.5">
+                {r.reportCount > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                    <Flag className="h-3 w-3" /> {r.reportCount} report{r.reportCount === 1 ? "" : "s"}
+                  </span>
+                )}
+                {r.hidden && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <EyeOff className="h-3 w-3" /> Hidden
+                  </span>
+                )}
+              </div>
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">
               {timeAgo(r.createdAt)}
             </TableCell>
             <TableCell className="text-right">
-              <Button
-                variant="outline"
-                className="rounded-lg text-destructive hover:bg-destructive/10"
-                onClick={() => setToDelete(r)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  className="rounded-lg"
+                  title={r.hidden ? "Restore to public profile" : "Hide from public profile"}
+                  disabled={setHidden.isPending}
+                  onClick={() => setHidden.mutate({ id: r.id, hidden: !r.hidden })}
+                >
+                  {r.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-lg text-destructive hover:bg-destructive/10"
+                  onClick={() => setToDelete(r)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         )}

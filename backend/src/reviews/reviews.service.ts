@@ -115,4 +115,48 @@ export class ReviewsService {
     });
     return { ok: true as const, id: review.id };
   }
+
+  // M3.3 — flag a review as fake/abusive. One report per reporter per review;
+  // repeats are idempotent (no count inflation). A professional can only report
+  // reviews left on their own profile.
+  async report(
+    reviewId: string,
+    reporterKind: 'professional' | 'customer',
+    reporterId: string,
+    reason: string,
+  ) {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      select: { id: true, driverId: true },
+    });
+    if (!review) throw new NotFoundException('review_not_found');
+    if (reporterKind === 'professional' && review.driverId !== reporterId) {
+      throw new ForbiddenException('not_your_review');
+    }
+
+    try {
+      await this.prisma.reviewReport.create({
+        data: { reviewId, reporterKind, reporterId, reason: reason.trim() },
+      });
+    } catch {
+      // Unique (reviewId, reporterId) violation → already reported; treat as ok.
+      return { ok: true as const, alreadyReported: true };
+    }
+    await this.prisma.review.update({
+      where: { id: reviewId },
+      data: { reportCount: { increment: 1 } },
+    });
+    return { ok: true as const };
+  }
+
+  // Admin moderation: hide (reversible soft-takedown) / unhide a review.
+  async setHidden(id: string, hidden: boolean) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('review_not_found');
+    await this.prisma.review.update({
+      where: { id },
+      data: { hiddenAt: hidden ? new Date() : null },
+    });
+    return { ok: true as const, hidden };
+  }
 }

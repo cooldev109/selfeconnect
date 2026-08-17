@@ -349,6 +349,14 @@ model Review {
   rating  Int // 1..5
   comment String?
 
+  // M3.3 review integrity. `hiddenAt` is a reversible admin takedown (softer
+  // than delete — the review stays for the audit trail but leaves the public
+  // profile + rating). `reportCount` denormalises open reports for the admin
+  // queue; the reports themselves live in ReviewReport.
+  hiddenAt    DateTime?
+  reportCount Int            @default(0)
+  reports     ReviewReport[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -357,6 +365,30 @@ model Review {
   @@unique([driverId, customerId])
   @@index([driverId])
   @@index([driverId, authorIpHash])
+}
+
+// M3.3 — someone flagged a review as fake/abusive. Kept as an audit trail so an
+// admin can see who reported what and why. The reporter is a pro (usually the
+// subject) or a customer; anonymous reports aren't accepted (too easy to abuse).
+enum ReporterKind {
+  professional
+  customer
+}
+
+model ReviewReport {
+  id       String @id @default(uuid())
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  reporterKind ReporterKind
+  reporterId   String // Driver or Customer id, per reporterKind
+  reason       String
+
+  createdAt DateTime @default(now())
+
+  // One report per reporter per review — no piling on to inflate the count.
+  @@unique([reviewId, reporterId])
+  @@index([reviewId])
 }
 
 // M3 — a document-backed trust check a professional submits for admin review.

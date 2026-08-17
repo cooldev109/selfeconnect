@@ -261,10 +261,11 @@ export class AdminService {
 
   async getReviews() {
     const reviews = await this.prisma.review.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ reportCount: 'desc' }, { createdAt: 'desc' }],
       include: {
         driver: { select: { publicId: true, name: true } },
         customer: { select: { name: true, companyName: true } },
+        job: { select: { status: true } },
       },
     });
     return reviews.map((r) => ({
@@ -276,10 +277,26 @@ export class AdminService {
       // Only a review tied to a real account is verified; QR reviews are not.
       verified: r.customerId != null,
       hired: r.jobId != null,
+      verifiedJob: r.job?.status === 'completed',
       rating: r.rating,
       comment: r.comment ?? '',
+      // M3.3 moderation state.
+      hidden: r.hiddenAt != null,
+      reportCount: r.reportCount,
       createdAt: r.createdAt.toISOString(),
     }));
+  }
+
+  // Reversible soft-takedown: hidden reviews leave the public profile + rating
+  // but stay for the audit trail.
+  async setReviewHidden(id: string, hidden: boolean) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('review_not_found');
+    await this.prisma.review.update({
+      where: { id },
+      data: { hiddenAt: hidden ? new Date() : null },
+    });
+    return { ok: true, hidden };
   }
 
   // ---- Quotes ----

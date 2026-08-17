@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -76,6 +77,16 @@ export class AdminController {
   @Delete('reviews/:id')
   removeReview(@Param('id') id: string) {
     return this.admin.deleteReview(id);
+  }
+
+  @Post('reviews/:id/hide')
+  hideReview(@Param('id') id: string) {
+    return this.admin.setReviewHidden(id, true);
+  }
+
+  @Post('reviews/:id/unhide')
+  unhideReview(@Param('id') id: string) {
+    return this.admin.setReviewHidden(id, false);
   }
 
   // ---- Quotes ----

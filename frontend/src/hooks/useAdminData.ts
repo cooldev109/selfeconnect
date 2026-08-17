@@ -75,8 +75,11 @@ export interface AdminReview {
   author: string;
   verified: boolean;
   hired: boolean;
+  verifiedJob: boolean;
   rating: number;
   comment: string;
+  hidden: boolean;
+  reportCount: number;
   createdAt: string;
 }
 

@@ -19,12 +19,15 @@ export type RatingSummary = {
 
 // A single review row shown on a professional's profile / "My reviews".
 export type ReviewItem = {
+  /** The Review id — present for standalone reviews (reportable), null for rated tips. */
+  id: string | null;
   rating: number;
   comment: string | null;
   author: string;
   date: string;
   verified: boolean; // left by a registered SelfeConnect customer
   hired: boolean; // linked to a job they hired for
+  verifiedJob: boolean; // linked job was completed on-platform (a "Verified Job Review")
   paidOnPlatform: boolean; // the linked job was paid through the platform
 };
 
@@ -58,7 +61,8 @@ export class ProsService {
       }),
       this.prisma.review.groupBy({
         by: ['driverId', 'rating'],
-        where: { driverId: { in: driverIds } },
+        // Hidden (admin-moderated) reviews don't count toward the rating.
+        where: { driverId: { in: driverIds }, hiddenAt: null },
         _count: { _all: true },
       }),
     ]);
@@ -110,10 +114,13 @@ export class ProsService {
   ): Promise<ReviewItem[]> {
     const [reviews, tips] = await Promise.all([
       this.prisma.review.findMany({
-        where: { driverId },
+        where: { driverId, hiddenAt: null },
         orderBy: { createdAt: 'desc' },
         take,
-        include: { customer: { select: { name: true, companyName: true } } },
+        include: {
+          customer: { select: { name: true, companyName: true } },
+          job: { select: { status: true } },
+        },
       }),
       this.prisma.tip.findMany({
         where: { driverId, rating: { not: null } },
@@ -142,6 +149,7 @@ export class ProsService {
 
     const items: ReviewItem[] = [
       ...reviews.map((r) => ({
+        id: r.id,
         rating: r.rating,
         comment: r.comment ?? null,
         // A QR review has no customer — fall back to whatever name they gave.
@@ -154,15 +162,19 @@ export class ProsService {
         // Only a review tied to a real account counts as verified.
         verified: r.customerId != null,
         hired: r.jobId != null,
+        // A "Verified Job Review" — tied to a job actually completed on-platform.
+        verifiedJob: r.job?.status === 'completed',
         paidOnPlatform: r.jobId != null && paidJobIds.has(r.jobId),
       })),
       ...tips.map((t) => ({
+        id: null,
         rating: t.rating as number,
         comment: t.message ?? null,
         author: t.customerName || 'Anonymous',
         date: t.createdAt.toISOString(),
         verified: false,
         hired: false,
+        verifiedJob: false,
         paidOnPlatform: false,
       })),
     ];
@@ -283,7 +295,7 @@ export class ProsService {
     // How many of these came from someone with a real account — so a reader can
     // weigh a stranger's rating against a customer who actually hired them.
     const verifiedCount = await this.prisma.review.count({
-      where: { driverId: d.id, customerId: { not: null } },
+      where: { driverId: d.id, customerId: { not: null }, hiddenAt: null },
     });
 
     return {

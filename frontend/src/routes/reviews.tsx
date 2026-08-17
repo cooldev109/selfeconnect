@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, Star } from "lucide-react";
-import { Card, CardContent } from "@/components/shared";
+import { Button, Card, CardContent, Modal } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { RatingSummary, ReviewCard } from "@/components/Reviews";
-import { getMyReviews } from "@/lib/reviews";
+import { getMyReviews, reportMyReview, type ReviewItem } from "@/lib/reviews";
 
 export const Route = createFileRoute("/reviews")({
   head: () => ({
@@ -22,6 +23,20 @@ function MyReviewsPage() {
     queryFn: getMyReviews,
     retry: false,
   });
+
+  const [toReport, setToReport] = useState<ReviewItem | null>(null);
+  const [reason, setReason] = useState("");
+  const [reported, setReported] = useState(false);
+  const report = useMutation({
+    mutationFn: () => reportMyReview(toReport!.id!, reason),
+    onSuccess: () => setReported(true),
+  });
+  const closeReport = () => {
+    setToReport(null);
+    setReason("");
+    setReported(false);
+    report.reset();
+  };
 
   return (
     <ProShell
@@ -56,11 +71,55 @@ function MyReviewsPage() {
           </Card>
           <div className="space-y-3">
             {q.data.reviews.map((r, i) => (
-              <ReviewCard key={i} review={r} />
+              <ReviewCard key={r.id ?? i} review={r} onReport={setToReport} />
             ))}
           </div>
         </div>
       )}
+
+      <Modal
+        open={!!toReport}
+        onOpenChange={(o) => { if (!o) closeReport(); }}
+        title={reported ? "Report received" : "Report this review"}
+      >
+        {reported ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Thanks — our team will take a look. Reviews that break our rules are removed.
+            </p>
+            <div className="mt-5 flex justify-end">
+              <Button className="rounded-xl" onClick={closeReport}>Done</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Tell us why this {toReport?.rating}★ review from{" "}
+              <strong>{toReport?.author}</strong> should be looked at — e.g. it's fake, from a
+              competitor, or abusive.
+            </p>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              placeholder="What's wrong with this review?"
+              className="mt-3 w-full rounded-xl border border-input bg-background p-3 text-sm"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={closeReport}>
+                Cancel
+              </Button>
+              <Button
+                className="rounded-xl"
+                disabled={reason.trim().length < 3 || report.isPending}
+                onClick={() => report.mutate()}
+              >
+                {report.isPending ? "Sending…" : "Report review"}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
     </ProShell>
   );
 }

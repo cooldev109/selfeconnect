@@ -1,4 +1,4 @@
-import { Star, BadgeCheck, ShieldQuestion } from "lucide-react";
+import { Star, BadgeCheck, ShieldQuestion, ShieldCheck, Flag } from "lucide-react";
 import type { ReviewItem, RatingBreakdown } from "@/lib/reviews";
 
 export function StarRow({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
@@ -69,7 +69,14 @@ export function RatingSummary({
   );
 }
 
-export function ReviewCard({ review }: { review: ReviewItem }) {
+export function ReviewCard({
+  review,
+  onReport,
+}: {
+  review: ReviewItem;
+  /** When set, shows a "report" affordance on standalone (reportable) reviews. */
+  onReport?: (review: ReviewItem) => void;
+}) {
   const initial = (review.author?.[0] ?? "?").toUpperCase();
   return (
     <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-soft">
@@ -83,6 +90,10 @@ export function ReviewCard({ review }: { review: ReviewItem }) {
             {review.paidOnPlatform ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
                 <BadgeCheck className="h-3.5 w-3.5" /> Paid on SelfeConnect
+              </span>
+            ) : review.verifiedJob ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
+                <ShieldCheck className="h-3.5 w-3.5" /> Verified Job Review
               </span>
             ) : review.hired ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
@@ -118,6 +129,16 @@ export function ReviewCard({ review }: { review: ReviewItem }) {
             <p className="mt-2 text-sm leading-relaxed text-foreground/90">{review.comment}</p>
           )}
         </div>
+        {onReport && review.id && (
+          <button
+            type="button"
+            onClick={() => onReport(review)}
+            title="Report this review"
+            className="shrink-0 rounded-lg p-1.5 text-muted-foreground/60 hover:bg-muted hover:text-destructive"
+          >
+            <Flag className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );

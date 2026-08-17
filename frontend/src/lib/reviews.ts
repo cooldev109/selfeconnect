@@ -2,12 +2,15 @@ import { api } from "./api";
 
 // A review as shown on a professional's profile / their "My reviews" page.
 export interface ReviewItem {
+  /** Review id — present for standalone reviews (reportable), null for rated tips. */
+  id?: string | null;
   rating: number;
   comment: string | null;
   author: string;
   date: string;
   verified: boolean; // left by a registered SelfeConnect customer
   hired: boolean; // linked to a job they hired for on the platform
+  verifiedJob?: boolean; // linked job was completed on-platform — a "Verified Job Review"
   paidOnPlatform?: boolean; // the linked job was paid through the platform
 }
 
@@ -45,3 +48,10 @@ export const createAnonymousReview = (
 
 // The signed-in professional's own received reviews + rating breakdown.
 export const getMyReviews = () => api<MyReviews>("/me/reviews");
+
+// A professional flags a review on their profile as fake/abusive.
+export const reportMyReview = (id: string, reason: string) =>
+  api<{ ok: true; alreadyReported?: boolean }>(`/me/reviews/${id}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });

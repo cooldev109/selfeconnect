@@ -7,6 +7,7 @@ import { SESSION_COOKIE } from '../auth/auth.guard';
 import {
   CreateReviewDto,
   CreateAnonymousReviewDto,
+  ReportReviewDto,
 } from './dto/create-review.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
@@ -68,5 +69,27 @@ export class ReviewsController {
   @UseGuards(AuthGuard)
   mine(@CurrentUser() u: AuthUser) {
     return this.pros.myReviews(u.id);
+  }
+
+  // A professional flags a review on their own profile as fake/abusive.
+  @Post('me/reviews/:id/report')
+  @UseGuards(AuthGuard)
+  reportAsPro(
+    @CurrentUser() u: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ReportReviewDto,
+  ) {
+    return this.reviews.report(id, 'professional', u.id, dto.reason);
+  }
+
+  // A customer flags a review as fake/abusive.
+  @Post('reviews/:id/report')
+  @UseGuards(CustomerAuthGuard)
+  reportAsCustomer(
+    @CurrentCustomer() c: CustomerUser,
+    @Param('id') id: string,
+    @Body() dto: ReportReviewDto,
+  ) {
+    return this.reviews.report(id, 'customer', c.id, dto.reason);
   }
 }

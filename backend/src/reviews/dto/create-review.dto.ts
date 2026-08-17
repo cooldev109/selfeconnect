@@ -5,6 +5,7 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 export class CreateReviewDto {
@@ -45,4 +46,12 @@ export class CreateAnonymousReviewDto {
   @IsString()
   @MaxLength(120)
   authorName?: string;
+}
+
+// M3.3 — a reason attached when someone reports a review.
+export class ReportReviewDto {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(500)
+  reason!: string;
 }
