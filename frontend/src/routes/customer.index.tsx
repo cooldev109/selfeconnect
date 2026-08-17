@@ -13,6 +13,7 @@ import {
   Users,
   Play,
   CircleCheck,
+  Scale,
   X,
   MessageSquare,
   BadgeCheck,
@@ -23,6 +24,8 @@ import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
 import { ChatThread } from "@/components/ChatThread";
 import { TipPaymentModal } from "@/components/TipPaymentModal";
+import { RaiseDisputeModal } from "@/components/RaiseDisputeModal";
+import { raiseJobDispute } from "@/lib/disputes";
 import {
   listMyJobs,
   updateJob,
@@ -223,6 +226,7 @@ function JobCard({ job }: { job: Job }) {
   const qc = useQueryClient();
   const [picking, setPicking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [disputing, setDisputing] = useState(false);
   const [reason, setReason] = useState("");
   const done = () => qc.invalidateQueries({ queryKey: ["my-jobs"] });
 
@@ -371,6 +375,16 @@ function JobCard({ job }: { job: Job }) {
               >
                 <Star className="mr-1 h-3.5 w-3.5" /> Leave a review
               </Link>
+            )}
+
+            {(job.status === "hired" || job.status === "in_progress" || isDone) && (
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg px-3 text-xs text-muted-foreground"
+                onClick={() => setDisputing(true)}
+              >
+                <Scale className="mr-1 h-3.5 w-3.5" /> Raise a dispute
+              </Button>
             )}
 
             {isActive && (
@@ -644,6 +658,13 @@ function JobCard({ job }: { job: Job }) {
           </div>
         )}
       </CardContent>
+
+      <RaiseDisputeModal
+        open={disputing}
+        onClose={() => setDisputing(false)}
+        jobTitle={job.title}
+        onSubmit={(reason, detail) => raiseJobDispute(job.id, { reason, detail })}
+      />
     </Card>
   );
 }

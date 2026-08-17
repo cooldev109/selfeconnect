@@ -16,6 +16,7 @@ import { ProsModule } from './pros/pros.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { VerificationModule } from './verification/verification.module';
+import { DisputesModule } from './disputes/disputes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -38,6 +39,7 @@ import { AppService } from './app.service';
     ReviewsModule,
     NotificationsModule,
     VerificationModule,
+    DisputesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

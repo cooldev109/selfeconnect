@@ -25,6 +25,7 @@ import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CancellationPolicyRouteImport } from './routes/cancellation-policy'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
@@ -43,6 +44,7 @@ import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminQuotesRouteImport } from './routes/admin.quotes'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
+import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -130,6 +132,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CancellationPolicyRoute = CancellationPolicyRouteImport.update({
+  id: '/cancellation-policy',
+  path: '/cancellation-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -222,6 +229,11 @@ const AdminDriversRoute = AdminDriversRouteImport.update({
   path: '/drivers',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDisputesRoute = AdminDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
@@ -268,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -287,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/disputes': typeof AdminDisputesRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/quotes': typeof AdminQuotesRoute
@@ -311,6 +325,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -330,6 +345,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/disputes': typeof AdminDisputesRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/quotes': typeof AdminQuotesRoute
@@ -355,6 +371,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -374,6 +391,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/disputes': typeof AdminDisputesRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/quotes': typeof AdminQuotesRoute
@@ -401,6 +419,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/admin'
+    | '/cancellation-policy'
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
@@ -420,6 +439,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/categories'
     | '/admin/customers'
+    | '/admin/disputes'
     | '/admin/drivers'
     | '/admin/jobs'
     | '/admin/quotes'
@@ -444,6 +464,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/cancellation-policy'
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
@@ -463,6 +484,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/categories'
     | '/admin/customers'
+    | '/admin/disputes'
     | '/admin/drivers'
     | '/admin/jobs'
     | '/admin/quotes'
@@ -487,6 +509,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/admin'
+    | '/cancellation-policy'
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
@@ -506,6 +529,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/categories'
     | '/admin/customers'
+    | '/admin/disputes'
     | '/admin/drivers'
     | '/admin/jobs'
     | '/admin/quotes'
@@ -532,6 +556,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CancellationPolicyRoute: typeof CancellationPolicyRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -673,6 +698,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cancellation-policy': {
+      id: '/cancellation-policy'
+      path: '/cancellation-policy'
+      fullPath: '/cancellation-policy'
+      preLoaderRoute: typeof CancellationPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -799,6 +831,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDriversRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/disputes': {
+      id: '/admin/disputes'
+      path: '/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AdminDisputesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/customers': {
       id: '/admin/customers'
       path: '/customers'
@@ -862,6 +901,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminDisputesRoute: typeof AdminDisputesRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminQuotesRoute: typeof AdminQuotesRoute
@@ -876,6 +916,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminDisputesRoute: AdminDisputesRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminQuotesRoute: AdminQuotesRoute,
@@ -907,6 +948,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
+  CancellationPolicyRoute: CancellationPolicyRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

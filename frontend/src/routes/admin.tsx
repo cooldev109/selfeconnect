@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   FileText,
   LineChart,
+  Scale,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { me, logout, type AuthDriver } from "@/lib/auth";
@@ -51,6 +52,7 @@ const ITEMS = [
   { title: "Quotes", url: "/admin/quotes", icon: FileText },
   { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Verifications", url: "/admin/verifications", icon: ShieldCheck },
+  { title: "Disputes", url: "/admin/disputes", icon: Scale },
   { title: "Services", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/transactions", icon: Receipt },
 ] as const;

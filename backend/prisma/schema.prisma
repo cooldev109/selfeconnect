@@ -315,6 +315,7 @@ model Job {
   messages Message[]
   payments Tip[]
   reviews  Review[]
+  disputes Dispute[]
 
   @@index([categoryId])
   @@index([status])
@@ -391,6 +392,47 @@ model ReviewReport {
   @@index([reviewId])
 }
 
+// M3.5 — a dispute raised on a job by the customer or the hired professional
+// (work not done, no-show, payment problem, …). An admin reviews and resolves.
+model Dispute {
+  id    String @id @default(uuid())
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  raisedByKind ReporterKind
+  raisedById   String // Driver or Customer id, per raisedByKind
+  reason       String // short category, e.g. "work_not_completed"
+  detail       String
+
+  status          DisputeStatus @default(open)
+  resolutionNotes String?
+  resolvedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([jobId])
+}
+
+// M3.5 — an abuse report against a professional, a customer, or a job posting.
+// Broader than a review report (ReviewReport): the general "report" tool.
+model AbuseReport {
+  id         String           @id @default(uuid())
+  targetType ReportTargetType
+  targetId   String // Driver.publicId, Customer.id, or Job.id per targetType
+
+  reporterKind ReporterKind
+  reporterId   String
+  reason       String
+
+  status    ReportStatus @default(open)
+  createdAt DateTime     @default(now())
+
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
 // M3 — a document-backed trust check a professional submits for admin review.
 // Each approved row becomes a granular badge on their public profile. Email and
 // phone are self-serve (Driver.emailVerifiedAt / phoneVerifiedAt) and live
@@ -460,6 +502,27 @@ enum NotificationKind {
   message
   hired
   verification // M3: a verification was approved or rejected
+  dispute // M3.5: a dispute was raised on, or resolved for, a job
+}
+
+// M3.5 — trust & safety.
+enum DisputeStatus {
+  open // awaiting an admin decision
+  resolved // upheld / sorted in the raiser's favour
+  rejected // dismissed after review
+}
+
+// What an abuse report points at.
+enum ReportTargetType {
+  driver
+  customer
+  job
+}
+
+enum ReportStatus {
+  open
+  actioned // admin took action (e.g. removed content, warned a user)
+  dismissed
 }
 
 model Notification {

@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock } from "lucide-react";
-import { Badge, Button, Card, CardContent } from "@/components/shared";
+import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock, Flag } from "lucide-react";
+import { Badge, Button, Card, CardContent, Modal } from "@/components/shared";
+import { reportAsCustomer } from "@/lib/disputes";
 import { BrowseShell } from "@/components/BrowseShell";
 import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
@@ -31,6 +32,13 @@ function ProProfilePage() {
   });
 
   const [reviewing, setReviewing] = useState(search.review === "1");
+  const [reporting, setReporting] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDone, setReportDone] = useState(false);
+  const report = useMutation({
+    mutationFn: () => reportAsCustomer({ targetType: "driver", targetId: publicId, reason: reportReason }),
+    onSuccess: () => setReportDone(true),
+  });
 
   if (q.isLoading) {
     return (
@@ -217,8 +225,60 @@ function ProProfilePage() {
               </div>
             )}
           </div>
+
+          {customer && (
+            <div className="pt-1 text-center">
+              <button
+                type="button"
+                onClick={() => { setReporting(true); setReportDone(false); setReportReason(""); }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Flag className="h-3.5 w-3.5" /> Report this professional
+              </button>
+            </div>
+          )}
         </div>
       )}
+
+      <Modal
+        open={reporting}
+        onOpenChange={(o) => { if (!o) setReporting(false); }}
+        title={reportDone ? "Report received" : "Report this professional"}
+      >
+        {reportDone ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Thanks — our team will review this professional. We may remove content or suspend accounts that break our rules.
+            </p>
+            <div className="mt-5 flex justify-end">
+              <Button className="rounded-xl" onClick={() => setReporting(false)}>Done</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Tell us why you're reporting {p?.name} — e.g. the profile looks fake, or their conduct.
+            </p>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={3}
+              placeholder="What's the problem?"
+              className="mt-3 w-full rounded-xl border border-input bg-background p-3 text-sm"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={() => setReporting(false)}>Cancel</Button>
+              <Button
+                className="rounded-xl"
+                disabled={reportReason.trim().length < 3 || report.isPending}
+                onClick={() => report.mutate()}
+              >
+                {report.isPending ? "Sending…" : "Report"}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
     </BrowseShell>
   );
 }
