@@ -24,7 +24,6 @@ import {
 } from "recharts";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { useMe } from "@/hooks/useDriver";
 import { useTips } from "@/hooks/useTips";
 import { useQuery } from "@tanstack/react-query";
@@ -141,11 +140,6 @@ function DashboardPage() {
       subtitle="Your payments, tips, ratings and weekly performance."
     >
       <div className="space-y-6">
-        {/* Guided onboarding — one ordered checklist with a progress bar,
-            replacing the old single-line "finish setup" nudge. Hides itself
-            once the professional is fully set up. */}
-        {driver && account && <OnboardingChecklist driver={driver} account={account} />}
-
         {/* Hero earnings card */}
         <section className="animate-fade-up">
           <div className="relative overflow-hidden rounded-3xl border border-border bg-mesh shadow-soft">
@@ -233,20 +227,18 @@ function DashboardPage() {
               {/* Buttons stack full-width on mobile, sit inline on wider
                   screens — three of them overflow a phone row otherwise. */}
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                {paymentCount > 0 && (
-                  <Button
-                    variant="outline"
-                    className="justify-center rounded-xl"
-                    onClick={() => setShowPayments((v) => !v)}
-                    aria-expanded={showPayments}
-                    title="See each payment individually"
-                  >
-                    {showPayments ? "Hide" : "View payments"}
-                    <ChevronDown
-                      className={`ml-1.5 h-4 w-4 transition-transform ${showPayments ? "rotate-180" : ""}`}
-                    />
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  className="justify-center rounded-xl"
+                  onClick={() => setShowPayments((v) => !v)}
+                  aria-expanded={showPayments}
+                  title="See each payment individually"
+                >
+                  {showPayments ? "Hide" : "View payments"}
+                  <ChevronDown
+                    className={`ml-1.5 h-4 w-4 transition-transform ${showPayments ? "rotate-180" : ""}`}
+                  />
+                </Button>
                 {account?.stripeOnboarded && (
                   <Button
                     variant="outline"
@@ -271,6 +263,12 @@ function DashboardPage() {
 
             {/* Individual payments — the list the professional can open in the
                 dashboard instead of the spreadsheet. */}
+            {showPayments && paymentCount === 0 && (
+              <div className="border-t border-border/60 px-6 py-6 text-center text-sm text-muted-foreground">
+                No payments received yet. Payments customers make to you through your QR will appear
+                here.
+              </div>
+            )}
             {showPayments && paymentCount > 0 && (
               <div className="border-t border-border/60 px-6 py-2">
                 <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-border/50 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">

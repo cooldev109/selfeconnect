@@ -53,6 +53,14 @@ export async function run(sharedBrowser) {
     await proPage.getByRole("button", { name: "Update quote" }).click();
     await proPage.waitForTimeout(1400);
     ok("editing updates the quote to £95 server-side", sql(`select amount from "Quote" where "jobId"='${jobId}';`) === "9500");
+
+    // ---- #5 checklist moved to Account (not the Payments tab) ----
+    await proPage.goto(`${BASE}/account`, { waitUntil: "networkidle" });
+    ok("'Finish setting up' checklist is on the Account page", await proPage.getByText(/Finish setting up/i).first().isVisible());
+    await proPage.goto(`${BASE}/dashboard`, { waitUntil: "networkidle" });
+    ok("checklist is NOT on the Payments & tips dashboard", !(await proPage.getByText(/Finish setting up/i).first().isVisible().catch(() => false)));
+    // ---- #6 'View payments' button is present even with zero payments ----
+    ok("'View payments' button is present on the dashboard", await proPage.getByRole("button", { name: /View payments/ }).first().isVisible());
     await proCtx.close();
 
     // ---- #3 profile link on the quote + #1 chat timestamp ----

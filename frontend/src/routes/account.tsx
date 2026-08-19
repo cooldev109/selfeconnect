@@ -5,6 +5,8 @@ import { z } from "zod";
 import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck, Sparkles } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { useMe } from "@/hooks/useDriver";
 import { logout, changePassword } from "@/lib/auth";
 import {
   getAccount,
@@ -41,6 +43,7 @@ const contactSchema = z.object({
 function AccountPage() {
   const navigate = useNavigate();
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
+  const { data: driver } = useMe();
 
   const [showCancel, setShowCancel] = useState(false);
   const [email, setEmail] = useState("");
@@ -162,6 +165,10 @@ function AccountPage() {
       subtitle="Manage your subscription, payouts and contact details."
     >
       <div className="mx-auto max-w-2xl space-y-6">
+        {/* Guided setup checklist — lives here (not on the Payments tab) and
+            hides itself once the professional is fully set up. */}
+        {driver && <OnboardingChecklist driver={driver} account={accountQ.data} />}
+
         {/* Subscription */}
         <Card className="rounded-2xl">
           <CardContent className="p-6">
