@@ -18,6 +18,7 @@ import {
   MessageSquare,
   BadgeCheck,
   CreditCard,
+  UserRound,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
@@ -432,6 +433,13 @@ function JobCard({ job }: { job: Job }) {
                       {q.categories.join(" · ")}
                       {q.distanceMiles != null && ` · ${q.distanceMiles} mi away`}
                     </p>
+                    <Link
+                      to="/customer/pros/$publicId"
+                      params={{ publicId: q.publicId }}
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    >
+                      <UserRound className="h-3 w-3" /> View profile
+                    </Link>
                   </div>
                   <Button
                     className="h-8 shrink-0 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
@@ -480,6 +488,15 @@ function JobCard({ job }: { job: Job }) {
             </div>
             {chatWith && (
               <div className="mt-2">
+                <div className="mb-1.5 flex justify-end">
+                  <Link
+                    to="/customer/pros/$publicId"
+                    params={{ publicId: chatWith }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <UserRound className="h-3 w-3" /> View profile
+                  </Link>
+                </div>
                 <ChatThread
                   queryKey={["job-thread", job.id, chatWith]}
                   fetchMessages={() => jobMessages(job.id, chatWith)}
@@ -538,13 +555,19 @@ function JobCard({ job }: { job: Job }) {
                   </div>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-lg px-3 text-xs"
-                  onClick={() => setPaying(true)}
-                >
-                  <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay through SelfeConnect
-                </Button>
+                <div>
+                  <Button
+                    variant="outline"
+                    className="h-9 rounded-lg px-3 text-xs"
+                    onClick={() => setPaying(true)}
+                  >
+                    <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay through SelfeConnect
+                  </Button>
+                  <p className="mt-1.5 max-w-md text-xs text-muted-foreground">
+                    You can pay {job.hiredDriverName ?? "the professional"} you hired directly
+                    through SelfeConnect, if agreed with them. 100% goes to the professional.
+                  </p>
+                </div>
               )}
             </div>
           )}

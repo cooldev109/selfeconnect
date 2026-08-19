@@ -165,6 +165,13 @@ function JobCard({
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  // Open the form pre-filled with the pro's existing quote so they can revise
+  // the price/pitch after speaking with the customer (re-submitting updates it).
+  const openEdit = () => {
+    setAmount(job.myQuote?.amount != null ? String(job.myQuote.amount / 100) : "");
+    setMessage(job.myQuote?.message ?? "");
+    setQuoteOpen(true);
+  };
   const submitQuote = () => {
     const trimmed = message.trim();
     if (trimmed.length < 3) return;
@@ -229,6 +236,8 @@ function JobCard({
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
                   </>
+                ) : job.myQuote ? (
+                  "Update quote"
                 ) : (
                   "Send quote"
                 )}
@@ -254,13 +263,24 @@ function JobCard({
               <p className="mt-1 text-muted-foreground">{job.contact.addressLine}</p>
             )}
             {job.myQuote ? (
-              <p className="mt-3 border-t border-primary/15 pt-2 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">
-                  Your quote
-                  {job.myQuote.amount != null ? `: ${fmtGbp(job.myQuote.amount)}` : ""}
-                </span>{" "}
-                — {job.myQuote.message}
-              </p>
+              !quoteOpen && (
+                <div className="mt-3 flex items-start justify-between gap-2 border-t border-primary/15 pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      Your quote
+                      {job.myQuote.amount != null ? `: ${fmtGbp(job.myQuote.amount)}` : ""}
+                    </span>{" "}
+                    — {job.myQuote.message}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openEdit}
+                    className="shrink-0 text-xs font-semibold text-primary hover:underline"
+                  >
+                    Edit
+                  </button>
+                </div>
+              )
             ) : (
               !quoteOpen && (
                 <button

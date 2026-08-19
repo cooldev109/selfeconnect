@@ -4,6 +4,18 @@ import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/shared";
 import type { ChatMessage } from "@/lib/jobs";
 
+// Time under each bubble: just the time for today's messages, date + time for
+// older ones — so a thread that spans days stays readable.
+function fmtMsgTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const today = new Date().toDateString() === d.toDateString();
+  return today
+    ? time
+    : `${d.toLocaleDateString([], { day: "numeric", month: "short" })} · ${time}`;
+}
+
 // A self-contained chat thread: a scrollable message list plus an input. It
 // polls every few seconds so the other side's replies appear without a manual
 // refresh — no websockets needed. `isMine` decides which side a bubble sits on,
@@ -73,7 +85,7 @@ export function ChatThread({
           messages.map((m) => {
             const mine = isMine(m);
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <div
                   className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-sm ${
                     mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
@@ -81,6 +93,9 @@ export function ChatThread({
                 >
                   <p className="whitespace-pre-line break-words">{m.body}</p>
                 </div>
+                <span className="mt-0.5 px-1 text-[10px] text-muted-foreground">
+                  {fmtMsgTime(m.createdAt)}
+                </span>
               </div>
             );
           })
