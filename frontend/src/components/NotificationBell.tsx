@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, FileText, MessageSquare, BadgeCheck } from "lucide-react";
+import { Bell, FileText, MessageSquare, BadgeCheck, ShieldCheck, Scale } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import type { AppNotification } from "@/lib/notifications";
 
@@ -8,6 +8,8 @@ const ICON = {
   quote: FileText,
   message: MessageSquare,
   hired: BadgeCheck,
+  verification: ShieldCheck,
+  dispute: Scale,
 } as const;
 
 // The header notification bell: an unread badge, and a dropdown of recent
@@ -74,7 +76,10 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-border bg-popover shadow-elevated">
+        // Anchor left on mobile (the bell wraps to the left of the header there)
+        // and right on desktop, with the width clamped to the viewport, so the
+        // panel is never cut off whichever side the bell ends up on.
+        <div className="absolute left-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border bg-popover shadow-elevated lg:left-auto lg:right-0">
           <div className="border-b border-border/60 px-4 py-3">
             <p className="text-sm font-semibold text-foreground">Notifications</p>
           </div>
