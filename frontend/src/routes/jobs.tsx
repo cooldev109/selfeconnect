@@ -4,6 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, MapPin, Lock, Mail, Phone, Sparkles, Clock } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { ContactActions } from "@/components/ContactActions";
+import { JobPhotos } from "@/components/JobPhotos";
 import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { CategorySelect } from "@/components/CategoryPicker";
@@ -203,6 +204,8 @@ function JobCard({
             <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
           </span>
         </div>
+
+        <JobPhotos photos={job.photos} />
 
         {/* The quote form — shared between the pre-unlock and post-unlock states. */}
         {quoteOpen && (

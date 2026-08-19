@@ -111,9 +111,13 @@ export interface ProJob {
   id: string;
   title: string;
   description: string;
+  /** Photos the customer attached to the job. */
+  photos: string[];
   categorySlug: string;
   categoryName: string;
   postcode: string;
+  addressLine: string | null;
+  timing: string | null;
   distanceMiles: number | null;
   workingDays: string[];
   workingHours: string | null;

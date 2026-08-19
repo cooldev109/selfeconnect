@@ -419,9 +419,14 @@ export class JobsService {
       id: j.id,
       title: j.title,
       description: j.description,
+      // Photos the customer attached — the pro needs to see these to quote
+      // accurately, on both the job board and their "My jobs" pipeline.
+      photos: j.photos ?? [],
       categorySlug: j.category.slug,
       categoryName: j.category.name,
       postcode: j.postcode,
+      addressLine: j.addressLine ?? null,
+      timing: j.timing ?? null,
       distanceMiles,
       workingDays: j.workingDays,
       workingHours: j.workingHours ?? null,

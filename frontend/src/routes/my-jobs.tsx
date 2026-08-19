@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { ChatThread } from "@/components/ChatThread";
+import { JobPhotos } from "@/components/JobPhotos";
 import {
   proMyJobs,
   proJobMessages,
@@ -123,7 +124,14 @@ function MyJobsPage() {
 }
 
 function ProJobCard({ job }: { job: ProJob }) {
-  const badge = STATUS_BADGE[job.status ?? "open"];
+  // Only a submitted quote counts as "Quoted". Unlocking contact alone shows
+  // "Contacted" — the pro reached out but hasn't sent a price yet.
+  const badge =
+    (job.status ?? "open") === "open"
+      ? job.myQuote
+        ? { label: "Quoted", cls: "bg-[#E1F5EE] text-primary" }
+        : { label: "Contacted", cls: "bg-secondary text-foreground" }
+      : STATUS_BADGE[job.status ?? "open"];
   const [chatOpen, setChatOpen] = useState(false);
   return (
     <Card className="rounded-2xl">
@@ -138,6 +146,10 @@ function ProJobCard({ job }: { job: ProJob }) {
           )}
         </div>
 
+        {/* The full job the customer posted — description, details and photos —
+            carried through from the board so nothing is lost in "My jobs". */}
+        <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{job.description}</p>
+
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{job.categoryName}</span>
           <span className="inline-flex items-center gap-1">
@@ -145,10 +157,24 @@ function ProJobCard({ job }: { job: ProJob }) {
             {job.distanceMiles != null && ` · ${job.distanceMiles} mi`}
           </span>
           {job.budget && <span>{job.budget}</span>}
+          {job.workingHours && <span>{job.workingHours}</span>}
+          {job.timing && <span>{job.timing}</span>}
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
           </span>
         </div>
+
+        <JobPhotos photos={job.photos} />
+
+        {/* The pro's own quote on this job, when they've sent one. */}
+        {job.myQuote && (
+          <p className="mt-3 rounded-xl border border-primary/15 bg-[#E1F5EE]/40 px-3 py-2 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              Your quote{job.myQuote.amount != null ? `: £${(job.myQuote.amount / 100).toFixed(2)}` : ""}
+            </span>{" "}
+            — {job.myQuote.message}
+          </p>
+        )}
 
         {/* Contact — already unlocked, so the pro can reach the customer. */}
         {job.contact && (
