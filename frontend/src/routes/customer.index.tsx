@@ -22,7 +22,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
-import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
+import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
 import { ChatThread } from "@/components/ChatThread";
 import { TipPaymentModal } from "@/components/TipPaymentModal";
@@ -229,8 +229,10 @@ function JobCard({ job }: { job: Job }) {
   const qc = useQueryClient();
   const [picking, setPicking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
   const [disputing, setDisputing] = useState(false);
   const [reason, setReason] = useState("");
+  const navigate = useNavigate();
   const done = () => qc.invalidateQueries({ queryKey: ["my-jobs"] });
 
   const interestedQ = useQuery({
@@ -263,6 +265,22 @@ function JobCard({ job }: { job: Job }) {
   const advance = useMutation({
     mutationFn: (status: JobStatus) => updateJob(job.id, { status }),
     onSuccess: done,
+  });
+  // Completing a job takes the customer straight to the review page for the pro
+  // they hired, so they can review while it's fresh.
+  const markComplete = useMutation({
+    mutationFn: () => updateJob(job.id, { status: "completed" }),
+    onSuccess: () => {
+      setConfirmComplete(false);
+      done();
+      if (job.hiredDriverPublicId) {
+        navigate({
+          to: "/customer/pros/$publicId",
+          params: { publicId: job.hiredDriverPublicId },
+          search: { review: "1", jobId: job.id },
+        });
+      }
+    },
   });
   const cancel = useMutation({
     mutationFn: () =>
@@ -371,8 +389,8 @@ function JobCard({ job }: { job: Job }) {
             {(job.status === "hired" || job.status === "in_progress") && (
               <Button
                 className="h-9 rounded-lg bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-600/90"
-                onClick={() => advance.mutate("completed")}
-                disabled={advance.isPending}
+                onClick={() => setConfirmComplete(true)}
+                disabled={markComplete.isPending}
               >
                 <CircleCheck className="mr-1 h-3.5 w-3.5" /> Mark complete
               </Button>
@@ -676,7 +694,9 @@ function JobCard({ job }: { job: Job }) {
         {/* Cancel the job (open / hired / in_progress → cancelled). */}
         {cancelling && (
           <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-            <p className="text-sm font-medium text-foreground">Cancel this job?</p>
+            <p className="text-sm font-medium text-foreground">
+              Are you sure you want to cancel this job?
+            </p>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -711,6 +731,29 @@ function JobCard({ job }: { job: Job }) {
         jobTitle={job.title}
         onSubmit={(reason, detail) => raiseJobDispute(job.id, { reason, detail })}
       />
+
+      <Modal
+        open={confirmComplete}
+        onOpenChange={(o) => { if (!o) setConfirmComplete(false); }}
+        title="Mark job as complete?"
+      >
+        <p className="text-sm text-muted-foreground">
+          Are you sure the job is completed? We'll then invite you to review{" "}
+          {job.hiredDriverName ?? "the professional"}.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={() => setConfirmComplete(false)}>
+            No
+          </Button>
+          <Button
+            className="rounded-xl bg-emerald-600 text-white hover:bg-emerald-600/90"
+            disabled={markComplete.isPending}
+            onClick={() => markComplete.mutate()}
+          >
+            {markComplete.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, it's complete"}
+          </Button>
+        </div>
+      </Modal>
     </Card>
   );
 }
