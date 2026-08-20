@@ -49,6 +49,8 @@ export interface AdminSubscription {
   currentPeriodEnd: string | null;
   stripeOnboarded: boolean;
   hasStripeSubscription: boolean;
+  complimentary: boolean;
+  complimentaryUntil: string | null;
   joinDate: string;
 }
 

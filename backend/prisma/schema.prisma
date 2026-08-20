@@ -121,6 +121,10 @@ model Driver {
   // When set + still active, the sub is cancelled but paid until this date.
   subscriptionCancelAtPeriodEnd Boolean            @default(false)
   subscriptionCurrentPeriodEnd  DateTime?
+  // Admin-granted complimentary (free) access for launch pros — full access
+  // until this date without a Stripe subscription. Lazily flipped back to
+  // inactive once it lapses; then they subscribe normally to continue.
+  complimentaryUntil            DateTime?
   // One of the first N professionals to subscribe — they keep the launch rate
   // for as long as the subscription stays live. Set when checkout is started;
   // the spot is only counted as taken once the subscription actually exists.

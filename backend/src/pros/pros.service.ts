@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../geo/geo.service';
+import { expireLapsedComplimentary } from '../billing/complimentary';
 import {
   computeVerificationBadges,
   type VerificationBadges,
@@ -189,6 +190,8 @@ export class ProsService {
     postcode?: string;
     radiusMiles?: number;
   }) {
+    // Drop any lapsed complimentary pros before listing active ones.
+    await expireLapsedComplimentary(this.prisma);
     let origin: { latitude: number; longitude: number } | null = null;
     if (opts.postcode) {
       origin = await this.geo.geocode(opts.postcode.trim());

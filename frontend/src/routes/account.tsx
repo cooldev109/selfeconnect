@@ -98,6 +98,15 @@ function AccountPage() {
 
   const active = !!accountQ.data?.isActive;
   const onboarded = !!accountQ.data?.stripeOnboarded;
+  // Admin-granted free launch access — no Stripe subscription behind it.
+  const comp = !!accountQ.data?.complimentary;
+  const compUntil = accountQ.data?.complimentaryUntil
+    ? new Date(accountQ.data.complimentaryUntil).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
   // Cancelled but still within the paid period → "Active until <date>".
   const endsOn =
     active && accountQ.data?.cancelAtPeriodEnd && accountQ.data?.currentPeriodEnd
@@ -191,14 +200,28 @@ function AccountPage() {
                 </p>
               </div>
               <Badge
-                className={`rounded-full ${active ? "bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]" : "bg-muted text-muted-foreground hover:bg-muted"}`}
+                className={`rounded-full ${comp ? "bg-violet-100 text-violet-700 hover:bg-violet-100" : active ? "bg-[#E1F5EE] text-primary hover:bg-[#E1F5EE]" : "bg-muted text-muted-foreground hover:bg-muted"}`}
               >
-                {endsOn ? `Active until ${endsOn}` : active ? "Active" : "Inactive"}
+                {comp ? "Complimentary" : endsOn ? `Active until ${endsOn}` : active ? "Active" : "Inactive"}
               </Badge>
             </div>
 
+            {comp && compUntil && (
+              <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm">
+                <p className="font-semibold text-violet-800">Complimentary Access — Expires {compUntil}</p>
+                <p className="mt-0.5 text-violet-700/80">
+                  You have free access to all paid features until then. After it expires, subscribe
+                  to continue.
+                </p>
+              </div>
+            )}
+
             <div className="mt-5 flex flex-wrap items-center gap-3">
-              {active ? (
+              {comp ? (
+                <span className="text-sm text-muted-foreground">
+                  No subscription needed while your complimentary access is active.
+                </span>
+              ) : active ? (
                 <>
                   <Button
                     type="button"

@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { PrismaService } from '../prisma/prisma.service';
+import { expireLapsedComplimentary } from '../billing/complimentary';
 import { GeoService } from '../geo/geo.service';
 import { MailService } from '../mail/mail.service';
 import { AccountAccessService } from '../mail/account-access.service';
@@ -505,6 +506,8 @@ export class JobsService {
     driverId: string,
     opts: { radiusMiles?: number; categorySlug?: string },
   ) {
+    // Expire lapsed complimentary access so a comped pro loses the board too.
+    await expireLapsedComplimentary(this.prisma);
     const driver = await this.prisma.driver.findUnique({
       where: { id: driverId },
       include: { categories: { select: { id: true, slug: true } } },

@@ -11,7 +11,7 @@ import {
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AdminGuard } from './admin.guard';
-import { SetSubscriptionDto } from './dto/set-subscription.dto';
+import { SetSubscriptionDto, GrantComplimentaryDto } from './dto/set-subscription.dto';
 
 // All admin endpoints require an authenticated admin (AuthGuard then AdminGuard).
 @Controller('admin')
@@ -71,6 +71,12 @@ export class AdminController {
   @Patch('subscriptions/:id')
   setSubscription(@Param('id') id: string, @Body() dto: SetSubscriptionDto) {
     return this.admin.setSubscriptionActive(id, dto.isActive);
+  }
+
+  // Grant (or, with months = 0, revoke) complimentary free access.
+  @Post('subscriptions/:id/complimentary')
+  complimentary(@Param('id') id: string, @Body() dto: GrantComplimentaryDto) {
+    return this.admin.grantComplimentary(id, dto.months);
   }
 
   // ---- Job postings ----

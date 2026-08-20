@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PricingService } from '../billing/pricing.service';
+import { expireLapsedComplimentary } from '../billing/complimentary';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -194,6 +195,7 @@ export class AdminService {
   // ---- Subscriptions ----
 
   async getSubscriptions() {
+    await expireLapsedComplimentary(this.prisma);
     const drivers = await this.prisma.driver.findMany({
       where: { role: 'driver' },
       orderBy: { createdAt: 'desc' },
@@ -208,6 +210,12 @@ export class AdminService {
       currentPeriodEnd: d.subscriptionCurrentPeriodEnd?.toISOString() ?? null,
       stripeOnboarded: d.stripeOnboarded,
       hasStripeSubscription: !!d.stripeSubscriptionId,
+      // Complimentary (free) access — a future comp date and no Stripe sub.
+      complimentary:
+        !!d.complimentaryUntil &&
+        d.complimentaryUntil > new Date() &&
+        !d.stripeSubscriptionId,
+      complimentaryUntil: d.complimentaryUntil?.toISOString() ?? null,
       joinDate: d.createdAt.toISOString(),
     }));
   }
@@ -225,9 +233,39 @@ export class AdminService {
       data: {
         isActive,
         subscriptionStatus: isActive ? 'active' : 'canceled',
+        // Turning access off also ends any complimentary period.
+        ...(isActive ? {} : { complimentaryUntil: null }),
       },
     });
     return { ok: true, id: updated.publicId, isActive: updated.isActive };
+  }
+
+  // Grant a professional free ("complimentary") access for a number of months —
+  // for launch pros. `months = 0` revokes it immediately.
+  async grantComplimentary(publicId: string, months: number) {
+    const driver = await this.prisma.driver.findUnique({ where: { publicId } });
+    if (!driver) throw new NotFoundException('driver_not_found');
+    if (driver.role !== 'driver') throw new ForbiddenException('forbidden');
+
+    if (months <= 0) {
+      const updated = await this.prisma.driver.update({
+        where: { id: driver.id },
+        data: { isActive: false, subscriptionStatus: 'canceled', complimentaryUntil: null },
+      });
+      return { ok: true, id: updated.publicId, complimentaryUntil: null };
+    }
+
+    const until = new Date();
+    until.setMonth(until.getMonth() + months);
+    const updated = await this.prisma.driver.update({
+      where: { id: driver.id },
+      data: { isActive: true, subscriptionStatus: 'active', complimentaryUntil: until },
+    });
+    return {
+      ok: true,
+      id: updated.publicId,
+      complimentaryUntil: updated.complimentaryUntil?.toISOString() ?? null,
+    };
   }
 
   // ---- Job postings ----

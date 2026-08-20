@@ -1,3 +1,4 @@
+import { expireLapsedComplimentary } from './complimentary';
 import {
   ConflictException,
   Inject,
@@ -24,6 +25,8 @@ export class BillingService {
   ) {}
 
   async getAccount(driverId: string) {
+    // Flip any lapsed complimentary access before reading this pro's status.
+    await expireLapsedComplimentary(this.prisma);
     const d = await this.prisma.driver.findUnique({ where: { id: driverId } });
     if (!d) throw new NotFoundException('not_found');
     const plan = await this.pricing.planForAccount(d);
@@ -41,6 +44,13 @@ export class BillingService {
       currentPeriodEnd: d.subscriptionCurrentPeriodEnd
         ? d.subscriptionCurrentPeriodEnd.toISOString()
         : null,
+      // Complimentary (free launch) access — active when the comp date is still
+      // in the future and the pro has no Stripe subscription of their own.
+      complimentary:
+        !!d.complimentaryUntil &&
+        d.complimentaryUntil > new Date() &&
+        !d.stripeSubscriptionId,
+      complimentaryUntil: d.complimentaryUntil ? d.complimentaryUntil.toISOString() : null,
     };
   }
 

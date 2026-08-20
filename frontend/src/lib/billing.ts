@@ -12,6 +12,9 @@ export interface AccountInfo {
   stripeOnboarded: boolean;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: string | null;
+  /** Admin-granted free launch access (no Stripe subscription). */
+  complimentary: boolean;
+  complimentaryUntil: string | null;
 }
 
 export const getAccount = () => api<AccountInfo>("/me/account");
