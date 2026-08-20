@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock, Flag } from "lucide-react";
 import { Badge, Button, Card, CardContent, Modal } from "@/components/shared";
@@ -33,6 +33,10 @@ function ProProfilePage() {
   });
 
   const [reviewing, setReviewing] = useState(search.review === "1");
+  // Arriving via "Leave a review" on a completed job (?review=1) opens the form.
+  useEffect(() => {
+    if (search.review === "1") setReviewing(true);
+  }, [search.review]);
   const [reporting, setReporting] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDone, setReportDone] = useState(false);
@@ -167,6 +171,16 @@ function ProProfilePage() {
             </div>
           </div>
 
+          {/* The review form opens right under the hero (next to the "Write a
+              review" button), not below the gallery further down the page. */}
+          {reviewing && (
+            <ReviewForm
+              publicId={publicId}
+              jobId={search.jobId}
+              onDone={() => setReviewing(false)}
+            />
+          )}
+
           {p.galleryPhotos.length > 0 && (
             <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
               <div className="p-6">
@@ -190,14 +204,6 @@ function ProProfilePage() {
                 </div>
               </div>
             </div>
-          )}
-
-          {reviewing && (
-            <ReviewForm
-              publicId={publicId}
-              jobId={search.jobId}
-              onDone={() => setReviewing(false)}
-            />
           )}
 
           {/* Reviews */}

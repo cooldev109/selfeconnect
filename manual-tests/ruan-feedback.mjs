@@ -78,6 +78,18 @@ export async function run(sharedBrowser) {
     ok("the chat message shows in the thread", await custPage.getByText("Hello, when suits you?").first().isVisible());
     const hasTime = await custPage.locator("text=/\\b\\d{1,2}:\\d{2}\\b/").first().isVisible().catch(() => false);
     ok("the chat message shows a time", hasTime);
+
+    // #15 — the review form opens right under the hero, above the gallery.
+    sql(`update "Driver" set "galleryPhotos"=ARRAY['https://x/a.webp']::text[] where id='${pro.id}'`);
+    await custPage.goto(`${BASE}/customer/pros/${pro.publicId}`, { waitUntil: "networkidle" });
+    await custPage.getByRole("button", { name: /Write a review/ }).first().click();
+    await custPage.waitForTimeout(500);
+    const pos = await custPage.evaluate(() => {
+      const svc = [...document.querySelectorAll("*")].find((e) => e.childNodes.length === 1 && e.textContent?.trim() === "How was the service?");
+      const g = [...document.querySelectorAll("h2")].find((e) => e.textContent?.includes("Recent work"));
+      return { f: svc ? Math.round(svc.getBoundingClientRect().top) : null, g: g ? Math.round(g.getBoundingClientRect().top) : null };
+    });
+    ok("review form opens above the gallery, not below it (#15)", pos.f != null && pos.g != null && pos.f < pos.g, JSON.stringify(pos));
     await custCtx.close();
   } catch (e) {
     ok("no unexpected error", false, (e?.message || String(e)).split("\n")[0]);
