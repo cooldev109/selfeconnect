@@ -134,16 +134,19 @@ export class RealStripeGateway implements StripeGateway {
     currency: string;
     connectedAccountId: string;
     metadata?: Record<string, string>;
+    receiptEmail?: string;
   }) {
     // Direct charge: created ON the pro's connected account (Stripe-Account
     // header), so they're the merchant of record and bear Stripe's fee. Card +
     // wallets only (no redirect methods), for a one-tap inline payment.
+    // `receipt_email` tells Stripe to email the customer a receipt on success.
     const pi = await this.stripe.paymentIntents.create(
       {
         amount: i.amount,
         currency: i.currency,
         automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
         metadata: i.metadata,
+        ...(i.receiptEmail ? { receipt_email: i.receiptEmail } : {}),
       },
       { stripeAccount: i.connectedAccountId },
     );
@@ -152,6 +155,20 @@ export class RealStripeGateway implements StripeGateway {
       clientSecret: pi.client_secret ?? '',
       connectedAccountId: i.connectedAccountId,
     };
+  }
+
+  async getReceiptUrl(i: { paymentIntentId: string; connectedAccountId: string }) {
+    // The charge lives on the connected account (direct charge), so retrieve
+    // with its Stripe-Account header and read the hosted receipt URL.
+    const pi = await this.stripe.paymentIntents.retrieve(
+      i.paymentIntentId,
+      { expand: ['latest_charge'] },
+      { stripeAccount: i.connectedAccountId },
+    );
+    const charge = pi.latest_charge;
+    const receiptUrl =
+      charge && typeof charge !== 'string' ? (charge.receipt_url ?? null) : null;
+    return { receiptUrl };
   }
   constructWebhookEvent(
     payload: string | Buffer,

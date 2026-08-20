@@ -65,6 +65,11 @@ export async function run() {
     const after = await req(`/jobs/${job.id}`, { cookie: cust.cookie });
     ok("job now reads paidOnPlatform", after.body?.paidOnPlatform === true);
 
+    // Receipt endpoint: owner gets a { receiptUrl } shape (null in mock, a
+    // Stripe-hosted URL in real mode); a non-owner can't read it.
+    const receipt = await req(`/jobs/${job.id}/receipt`, { cookie: cust.cookie });
+    ok("owner can request the payment receipt", receipt.ok && "receiptUrl" in (receipt.body ?? {}), `HTTP ${receipt.status} ${JSON.stringify(receipt.body)}`);
+
     // Leave a review linked to the job → it's marked paid on the public profile.
     const review = await req("/reviews", { method: "POST", cookie: cust.cookie, body: { driverPublicId: pro.publicId, jobId: job.id, rating: 5, comment: "Great job, paid easily through the app." } });
     ok("customer leaves a review for the job (2xx)", review.ok, `HTTP ${review.status} ${JSON.stringify(review.body)}`);

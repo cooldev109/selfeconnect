@@ -44,6 +44,11 @@ export class MockStripeGateway implements StripeGateway {
       connectedAccountId: i.connectedAccountId,
     };
   }
+
+  // No real Stripe in mock mode → no hosted receipt.
+  async getReceiptUrl() {
+    return { receiptUrl: null };
+  }
   constructWebhookEvent(payload: string | Buffer): WebhookEvent {
     const parsed = JSON.parse(payload.toString());
     if (!parsed || typeof parsed !== 'object' || typeof parsed.type !== 'string') {

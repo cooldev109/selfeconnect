@@ -989,6 +989,8 @@ export class JobsService {
       currency: 'gbp',
       connectedAccountId: pro.stripeAccountId,
       metadata: { driverId: pro.id, jobId, type: 'payment' },
+      // Stripe emails the customer a receipt for the successful payment.
+      receiptEmail: customer?.email,
     });
 
     const tip = await this.prisma.tip.create({
@@ -1024,5 +1026,41 @@ export class JobsService {
       connectedAccountId: intent.connectedAccountId,
       mock: this.stripe.isMock,
     };
+  }
+
+  // The Stripe-hosted receipt for a job the customer paid through the platform.
+  // Returns { receiptUrl: null } when nothing has been paid yet (or in mock).
+  async getJobReceipt(customerId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+
+    // The most recent successful platform payment on this job.
+    const payment = await this.prisma.tip.findFirst({
+      where: { jobId, type: 'payment', status: 'succeeded' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        stripePaymentIntentId: true,
+        driver: { select: { stripeAccountId: true } },
+      },
+    });
+    if (
+      !payment?.stripePaymentIntentId ||
+      !payment.driver.stripeAccountId
+    ) {
+      return { receiptUrl: null };
+    }
+
+    try {
+      return await this.stripe.getReceiptUrl({
+        paymentIntentId: payment.stripePaymentIntentId,
+        connectedAccountId: payment.driver.stripeAccountId,
+      });
+    } catch {
+      // A transient Stripe error shouldn't break the page — no receipt link.
+      return { receiptUrl: null };
+    }
   }
 }

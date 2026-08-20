@@ -98,6 +98,10 @@ export const payForJob = (id: string, amount: number) =>
     body: JSON.stringify({ amount }),
   });
 
+// The Stripe-hosted receipt for a job the customer paid through the platform.
+export const getJobReceipt = (id: string) =>
+  api<{ receiptUrl: string | null }>(`/jobs/${id}/receipt`);
+
 export const jobInterestedPros = (id: string) => api<InterestedPro[]>(`/jobs/${id}/interested`);
 
 // ---- Professional job board ----

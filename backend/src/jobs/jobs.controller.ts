@@ -91,6 +91,12 @@ export class JobsController {
     return this.jobs.payForJob(c.id, id, dto.amount);
   }
 
+  // The Stripe-hosted receipt for a job the customer paid through the platform.
+  @Get(':id/receipt')
+  receipt(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
+    return this.jobs.getJobReceipt(c.id, id);
+  }
+
   @Patch(':id')
   update(
     @CurrentCustomer() c: CustomerUser,

@@ -56,11 +56,20 @@ export interface StripeGateway {
     currency: string;
     connectedAccountId: string;
     metadata?: Record<string, string>;
+    // Set → Stripe emails the customer a receipt for a successful charge.
+    receiptEmail?: string;
   }): Promise<{
     paymentIntentId: string;
     clientSecret: string;
     connectedAccountId: string;
   }>;
+
+  // The Stripe-hosted receipt page for a completed direct charge (null until
+  // the charge has succeeded, or in mock mode).
+  getReceiptUrl(input: {
+    paymentIntentId: string;
+    connectedAccountId: string;
+  }): Promise<{ receiptUrl: string | null }>;
 
   constructWebhookEvent(
     payload: string | Buffer,

@@ -19,6 +19,7 @@ import {
   BadgeCheck,
   CreditCard,
   UserRound,
+  Receipt,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
@@ -37,6 +38,7 @@ import {
   jobMessages,
   sendJobMessage,
   payForJob,
+  getJobReceipt,
   type Job,
   type JobStatus,
 } from "@/lib/jobs";
@@ -280,6 +282,15 @@ function JobCard({ job }: { job: Job }) {
   const [payAmount, setPayAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [payAccount, setPayAccount] = useState<string | null>(null);
+  const [receiptMsg, setReceiptMsg] = useState<string | null>(null);
+  const receipt = useMutation({
+    mutationFn: () => getJobReceipt(job.id),
+    onSuccess: (r) => {
+      if (r.receiptUrl) window.open(r.receiptUrl, "_blank", "noopener");
+      else setReceiptMsg("Receipt not available yet — check your email.");
+    },
+    onError: () => setReceiptMsg("Couldn't open the receipt."),
+  });
   const pay = useMutation({
     mutationFn: (pence: number) => payForJob(job.id, pence),
     onSuccess: (res) => {
@@ -517,9 +528,21 @@ function JobCard({ job }: { job: Job }) {
             job.status === "completed") && (
             <div className="mt-4">
               {job.paidOnPlatform ? (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary">
-                  <BadgeCheck className="h-4 w-4" /> Paid on SelfeConnect
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary">
+                    <BadgeCheck className="h-4 w-4" /> Paid on SelfeConnect
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => receipt.mutate()}
+                    disabled={receipt.isPending}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <Receipt className="h-3.5 w-3.5" />
+                    {receipt.isPending ? "Opening…" : "View receipt"}
+                  </button>
+                  {receiptMsg && <span className="text-xs text-muted-foreground">{receiptMsg}</span>}
+                </div>
               ) : paying ? (
                 <div className="rounded-xl border border-border bg-secondary/40 p-4">
                   <p className="text-sm font-medium text-foreground">
