@@ -200,27 +200,32 @@ function ProJobCard({ job }: { job: ProJob }) {
         )}
 
         {/* Chat with the customer about this job. */}
-        <div className="mt-3">
-          <Button
-            variant="outline"
-            className="h-9 rounded-lg px-3 text-xs"
-            onClick={() => setChatOpen((o) => !o)}
-          >
-            <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-            {chatOpen ? "Hide messages" : "Message customer"}
-          </Button>
-          {chatOpen && (
-            <div className="mt-2">
-              <ChatThread
-                queryKey={["pro-thread", job.id]}
-                fetchMessages={() => proJobMessages(job.id)}
-                sendMessage={(b) => proSendJobMessage(job.id, b)}
-                isMine={(m) => !m.fromCustomer}
-                placeholder="Message the customer…"
-              />
-            </div>
-          )}
-        </div>
+        {/* Chat is only available while the job is active — the customer's
+            side hides it once the job is completed/cancelled, so messaging a
+            closed job would reach no one. */}
+        {STAGE_OF[job.status ?? "open"] === "active" && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              className="h-9 rounded-lg px-3 text-xs"
+              onClick={() => setChatOpen((o) => !o)}
+            >
+              <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+              {chatOpen ? "Hide messages" : "Message customer"}
+            </Button>
+            {chatOpen && (
+              <div className="mt-2">
+                <ChatThread
+                  queryKey={["pro-thread", job.id]}
+                  fetchMessages={() => proJobMessages(job.id)}
+                  sendMessage={(b) => proSendJobMessage(job.id, b)}
+                  isMine={(m) => !m.fromCustomer}
+                  placeholder="Message the customer…"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

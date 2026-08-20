@@ -59,6 +59,10 @@ type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 // How far a professional will realistically travel for a job alert.
 const NOTIFY_RADIUS_MILES = 30;
 
+// Chat is only open while the job is live. Once it's completed or cancelled the
+// customer's side hides the thread, so messaging a closed job reaches no one.
+const MESSAGEABLE_STATUSES: JobStatus[] = ['open', 'hired', 'in_progress'];
+
 @Injectable()
 export class JobsService {
   private readonly log = new Logger(JobsService.name);
@@ -846,26 +850,27 @@ export class JobsService {
 
   async proSendMessage(driverId: string, jobId: string, body: string) {
     await this.assertProEngaged(driverId, jobId);
-    const m = await this.prisma.message.create({
-      data: { jobId, driverId, fromCustomer: false, body: body.trim() },
-    });
-    // Notify the customer they have a new message.
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      select: { customerId: true, title: true },
+      select: { customerId: true, title: true, status: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    if (!MESSAGEABLE_STATUSES.includes(job.status)) {
+      throw new BadRequestException('job_closed');
+    }
+    const m = await this.prisma.message.create({
+      data: { jobId, driverId, fromCustomer: false, body: body.trim() },
     });
     const driver = await this.prisma.driver.findUnique({
       where: { id: driverId },
       select: { name: true, company: true },
     });
-    if (job) {
-      await this.notifyMessageOnce(
-        { customerId: job.customerId },
-        jobId,
-        `New message from ${driver?.company || driver?.name || 'a professional'}`,
-        job.title,
-      );
-    }
+    await this.notifyMessageOnce(
+      { customerId: job.customerId },
+      jobId,
+      `New message from ${driver?.company || driver?.name || 'a professional'}`,
+      job.title,
+    );
     return this.shapeMessage(m);
   }
 
@@ -932,14 +937,18 @@ export class JobsService {
     body: string,
   ) {
     const { driverId } = await this.assertCustomerThread(customerId, jobId, proPublicId);
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { title: true, status: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    if (!MESSAGEABLE_STATUSES.includes(job.status)) {
+      throw new BadRequestException('job_closed');
+    }
     const m = await this.prisma.message.create({
       data: { jobId, driverId, fromCustomer: true, body: body.trim() },
     });
     // Notify the pro they have a new message.
-    const job = await this.prisma.job.findUnique({
-      where: { id: jobId },
-      select: { title: true },
-    });
     const customer = await this.prisma.customer.findUnique({
       where: { id: customerId },
       select: { name: true, companyName: true },

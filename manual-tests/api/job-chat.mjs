@@ -83,6 +83,14 @@ export async function run() {
     const empty = await req(`/pro/jobs/${job.id}/messages`, { method: "POST", cookie: pro.cookie, body: { body: "" } });
     ok("an empty message is rejected (400)", empty.status === 400, `HTTP ${empty.status}`);
 
+    // Once the job is completed, chat closes on both sides (the customer's UI
+    // hides the thread, so a message would reach no one).
+    sql(`update "Job" set status='completed' where id='${job.id}';`);
+    const proAfter = await req(`/pro/jobs/${job.id}/messages`, { method: "POST", cookie: pro.cookie, body: { body: "still there?" } });
+    ok("a pro can't message a completed job (400)", proAfter.status === 400, `HTTP ${proAfter.status}`);
+    const custAfter = await req(`/jobs/${job.id}/messages`, { method: "POST", cookie: cust.cookie, body: { pro: pro.publicId, body: "hello?" } });
+    ok("a customer can't message a completed job (400)", custAfter.status === 400, `HTTP ${custAfter.status}`);
+
     // Auth boundaries.
     const custOnProEndpoint = await req(`/pro/jobs/${job.id}/messages`, { cookie: cust.cookie });
     ok("a customer can't use the pro chat endpoint (401/403)", custOnProEndpoint.status === 401 || custOnProEndpoint.status === 403, `HTTP ${custOnProEndpoint.status}`);
