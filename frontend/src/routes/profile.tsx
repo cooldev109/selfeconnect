@@ -36,6 +36,13 @@ function ProfilePage() {
   const [bio, setBio] = useState("");
   const [postcode, setPostcode] = useState("");
   const [categorySlugs, setCategorySlugs] = useState<string[]>([]);
+  const [socials, setSocials] = useState({
+    website: "",
+    instagram: "",
+    facebook: "",
+    tiktok: "",
+    linkedin: "",
+  });
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -48,6 +55,7 @@ function ProfilePage() {
       setBio(driver.bio);
       setPostcode(driver.postcode);
       setCategorySlugs(driver.categorySlugs);
+      if (driver.socials) setSocials(driver.socials);
     }
   }, [driver]);
 
@@ -238,7 +246,7 @@ function ProfilePage() {
     setSaving(true);
     setSaveError(null);
     try {
-      await updateMe({ name, company, bio, postcode, categorySlugs });
+      await updateMe({ name, company, bio, postcode, categorySlugs, ...socials });
       setSavedAt(Date.now());
     } catch (err) {
       if (
@@ -463,6 +471,36 @@ function ProfilePage() {
                   className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
                 />
               </label>
+
+              <div>
+                <span className="mb-1.5 block text-sm font-medium text-foreground">
+                  Social links <span className="text-muted-foreground">(optional)</span>
+                </span>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Paste the full link to each — they appear on your public profile.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(
+                    [
+                      ["website", "https://your-website.com"],
+                      ["instagram", "https://instagram.com/you"],
+                      ["facebook", "https://facebook.com/you"],
+                      ["tiktok", "https://tiktok.com/@you"],
+                      ["linkedin", "https://linkedin.com/in/you"],
+                    ] as const
+                  ).map(([key, ph]) => (
+                    <input
+                      key={key}
+                      type="url"
+                      value={socials[key]}
+                      onChange={(e) => setSocials((s) => ({ ...s, [key]: e.target.value }))}
+                      placeholder={ph}
+                      maxLength={200}
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  ))}
+                </div>
+              </div>
 
               {saveError && (
                 <p className="text-sm text-destructive" role="alert">

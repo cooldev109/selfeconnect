@@ -49,4 +49,30 @@ export class UpdateDriverDto {
   @ArrayMaxSize(3)
   @IsString({ each: true })
   categorySlugs?: string[];
+
+  // Optional social links (stored as entered). Empty string clears the link.
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  instagram?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  facebook?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  tiktok?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  linkedin?: string;
 }

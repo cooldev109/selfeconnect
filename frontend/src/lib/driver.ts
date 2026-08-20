@@ -28,6 +28,11 @@ export function updateMe(input: {
   bio?: string;
   postcode?: string;
   categorySlugs?: string[];
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  linkedin?: string;
 }) {
   return api<Driver>("/me", { method: "PATCH", body: JSON.stringify(input) });
 }

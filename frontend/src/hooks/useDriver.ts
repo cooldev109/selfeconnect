@@ -2,6 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 // Shape consumed across the UI (unchanged from the original mock interface).
+export interface Socials {
+  website: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  linkedin: string;
+}
+
 export interface Driver {
   id: string;
   name: string;
@@ -19,6 +27,7 @@ export interface Driver {
   bio: string;
   postcode: string;
   galleryPhotos: string[];
+  socials: Socials;
   categorySlugs: string[];
   categoryNames: string[];
 }

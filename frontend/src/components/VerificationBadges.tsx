@@ -1,13 +1,6 @@
 import { Award, BadgeCheck, Mail, Phone, ShieldCheck } from "lucide-react";
 import type { VerificationBadges as Badges } from "@/lib/verification";
 
-function fmtDate(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 type Pill = { key: string; label: string; icon: typeof ShieldCheck; strong?: boolean };
 
 function pillsFor(b: Badges, keys: Set<string>): Pill[] {
@@ -18,11 +11,7 @@ function pillsFor(b: Badges, keys: Set<string>): Pill[] {
     // identity implies verifiedPro today, but keep it independent for the future
     out.push({ key: "identity", label: "Identity verified", icon: BadgeCheck, strong: true });
   if (b.insurance && keys.has("insurance"))
-    out.push({
-      key: "insurance",
-      label: b.insuranceExpiresAt ? `Insurance checked · to ${fmtDate(b.insuranceExpiresAt)}` : "Insurance checked",
-      icon: ShieldCheck,
-    });
+    out.push({ key: "insurance", label: "Insurance checked", icon: ShieldCheck });
   if (b.qualification && keys.has("qualification"))
     out.push({
       key: "qualification",

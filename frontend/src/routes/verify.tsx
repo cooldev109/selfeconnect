@@ -79,6 +79,9 @@ function DocCard({
   const [reference, setReference] = useState(state.reference ?? "");
   const [expiresAt, setExpiresAt] = useState(state.expiresAt ? state.expiresAt.slice(0, 10) : "");
   const [error, setError] = useState<string | null>(null);
+  // Lets a pro re-open the form to replace an already-submitted or approved
+  // document (e.g. renewed insurance). Re-submitting sends it back for review.
+  const [replacing, setReplacing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const submit = useMutation({
@@ -90,12 +93,14 @@ function DocCard({
       }),
     onSuccess: () => {
       setFile(null);
+      setReplacing(false);
       onDone();
     },
     onError: (e) => setError(e instanceof Error ? e.message : "Upload failed"),
   });
 
-  const canShowForm = state.status === "none" || state.status === "rejected";
+  const canShowForm =
+    state.status === "none" || state.status === "rejected" || replacing;
 
   return (
     <Card className="rounded-2xl">
@@ -122,6 +127,18 @@ function DocCard({
           <p className="rounded-lg bg-destructive/5 px-3 py-2 text-sm text-destructive">
             {state.reviewerNotes}
           </p>
+        )}
+
+        {(state.status === "pending" || state.status === "verified") && !replacing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setReplacing(true)}
+            className="w-full gap-2 sm:w-auto"
+          >
+            <Upload className="h-4 w-4" />
+            {state.status === "verified" ? "Replace document" : "Update document"}
+          </Button>
         )}
 
         {canShowForm && (
@@ -160,14 +177,25 @@ function DocCard({
               {file && <span className="truncate text-sm text-muted-foreground">{file.name}</span>}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button
-              type="button"
-              disabled={!file || submit.isPending}
-              onClick={() => submit.mutate()}
-              className="w-full sm:w-auto"
-            >
-              {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit for review"}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                disabled={!file || submit.isPending}
+                onClick={() => submit.mutate()}
+                className="w-full sm:w-auto"
+              >
+                {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit for review"}
+              </Button>
+              {replacing && (
+                <button
+                  type="button"
+                  onClick={() => { setReplacing(false); setFile(null); setError(null); }}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         )}
       </CardContent>

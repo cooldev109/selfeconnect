@@ -34,8 +34,17 @@ export type DriverShape = {
   bio: string;
   postcode: string;
   galleryPhotos: string[];
+  socials: Socials;
   categorySlugs: string[];
   categoryNames: string[];
+};
+
+export type Socials = {
+  website: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  linkedin: string;
 };
 
 @Injectable()
@@ -68,6 +77,13 @@ export class DriversService {
       bio: driver.bio ?? '',
       postcode: driver.postcode ?? '',
       galleryPhotos: driver.galleryPhotos,
+      socials: {
+        website: driver.website ?? '',
+        instagram: driver.instagram ?? '',
+        facebook: driver.facebook ?? '',
+        tiktok: driver.tiktok ?? '',
+        linkedin: driver.linkedin ?? '',
+      },
       categorySlugs: categories.map((c) => c.slug),
       categoryNames: categories.map((c) => c.name),
     };
@@ -100,6 +116,14 @@ export class DriversService {
       city: dto.city,
       bio: dto.bio,
     };
+
+    // Social links: an empty string clears the link; undefined leaves it alone.
+    const clean = (v?: string) => (v === undefined ? undefined : v.trim() || null);
+    if (dto.website !== undefined) data.website = clean(dto.website);
+    if (dto.instagram !== undefined) data.instagram = clean(dto.instagram);
+    if (dto.facebook !== undefined) data.facebook = clean(dto.facebook);
+    if (dto.tiktok !== undefined) data.tiktok = clean(dto.tiktok);
+    if (dto.linkedin !== undefined) data.linkedin = clean(dto.linkedin);
 
     // Re-geocode when the postcode changes (reject invalid).
     if (dto.postcode !== undefined) {

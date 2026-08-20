@@ -1,6 +1,7 @@
 import { api } from "./api";
 import type { ReviewItem, RatingBreakdown } from "./reviews";
 import type { VerificationBadges } from "./verification";
+import type { Socials } from "@/hooks/useDriver";
 
 export interface ProSearchResult {
   publicId: string;
@@ -34,6 +35,7 @@ export interface ProProfile {
   contactLocked: boolean;
   reviews: ReviewItem[];
   badges: VerificationBadges;
+  socials: Socials;
 }
 
 export const browsePros = (opts: { category?: string; postcode?: string; radius?: number }) => {

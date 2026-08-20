@@ -8,6 +8,7 @@ import { BrowseShell } from "@/components/BrowseShell";
 import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
 import { VerificationBadges } from "@/components/VerificationBadges";
+import { SocialLinks } from "@/components/SocialLinks";
 import { getProProfile } from "@/lib/pros";
 import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
@@ -128,6 +129,7 @@ function ProProfilePage() {
               {p.bio && (
                 <p className="max-w-prose text-sm leading-relaxed text-foreground/90">{p.bio}</p>
               )}
+              <SocialLinks socials={p.socials} />
 
               {p.contact ? (
                 <div className={p.bio ? "mt-5 border-t border-border pt-5" : ""}>

@@ -103,6 +103,14 @@ model Driver {
   latitude  Float?
   longitude Float?
 
+  // Social links (optional) — shown on the public profile so customers can
+  // check a pro's socials. Stored as the professional enters them (a URL).
+  website   String?
+  instagram String?
+  facebook  String?
+  tiktok    String?
+  linkedin  String?
+
   // Stripe / billing
   stripeAccountId               String?            @unique
   stripeCustomerId              String?            @unique

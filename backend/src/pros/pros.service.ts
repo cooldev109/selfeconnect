@@ -313,6 +313,13 @@ export class ProsService {
       reviewCount: summary.reviewCount,
       breakdown: summary.breakdown,
       badges: computeVerificationBadges(d),
+      socials: {
+        website: d.website ?? '',
+        instagram: d.instagram ?? '',
+        facebook: d.facebook ?? '',
+        tiktok: d.tiktok ?? '',
+        linkedin: d.linkedin ?? '',
+      },
       // Never serialise the email/phone for an anonymous visitor — hiding it in
       // the UI alone would still ship it in the JSON.
       contact: opts.includeContact
