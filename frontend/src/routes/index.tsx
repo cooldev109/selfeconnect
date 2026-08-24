@@ -315,6 +315,31 @@ function Home() {
     }
   };
 
+  // Reveal-on-scroll: content rises + fades in as it enters the viewport.
+  // Mirrors the rail's rAF/matchMedia approach — anyone asking for less motion
+  // just sees everything already in place.
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>(".reveal");
+    if (!els.length) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      els.forEach((el) => el.classList.add("in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.14, rootMargin: "0px 0px -8% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ─────────────────────────────────────────────── */}
@@ -357,14 +382,19 @@ function Home() {
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-mesh opacity-60" />
+        <div className="hero-aurora pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+          <span className="a1" />
+          <span className="a2" />
+          <span className="a3" />
+        </div>
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:items-stretch lg:py-20">
           <div className="animate-fade-up lg:flex lg:flex-col lg:justify-center">
-            <span className="inline-flex w-fit items-center gap-1.5 self-start rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
+            <span className="shine inline-flex w-fit items-center gap-1.5 self-start rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Reviewed &amp; recommended by real customers
             </span>
             <h1 className="mt-6 text-[2.6rem] font-extrabold tracking-tight text-foreground font-display sm:text-[3.4rem]">
-              Find a trusted <span className="text-primary">professional</span> near you.
+              Find a trusted <span className="grad-accent">professional</span> near you.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
               Plumbers, electricians, cleaners, man and van and local professionals across many
@@ -438,7 +468,7 @@ function Home() {
           The list comes from the API, so it can never drift from reality. */}
       <section className="border-y border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-          <div className="text-center">
+          <div className="reveal text-center">
             <p className="eyebrow text-primary">Browse by service</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
               Whatever you need doing.
@@ -451,7 +481,7 @@ function Home() {
           </div>
 
           {/* A single rail of image cards that flows left and right. */}
-          <div className="relative mt-10">
+          <div className="reveal relative mt-10">
             <button
               type="button"
               aria-label="Scroll services left"
@@ -578,14 +608,14 @@ function Home() {
 
       {/* ── Two ways in ────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-        <div className="text-center">
+        <div className="reveal text-center">
           <p className="eyebrow text-primary">Two ways in</p>
           <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
             Whether you need the work, or need it done.
           </h2>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-2">
+        <div className="reveal mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-2">
           <PathCard
             icon={Search}
             title="I need a professional"
@@ -621,7 +651,7 @@ function Home() {
       {/* ── For customers: how hiring works ────────────────────── */}
       <section id="how-it-works" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-          <div className="text-center">
+          <div className="reveal text-center">
             <p className="eyebrow text-primary">For customers</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
               Hiring someone, without the guesswork.
@@ -632,7 +662,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
+          <div className="reveal mt-14 grid items-center gap-12 lg:grid-cols-2">
             <ol className="space-y-7">
               <Numbered
                 n={1}
@@ -664,7 +694,7 @@ function Home() {
       {/* ── For professionals: find work + build reputation ─────── */}
       <section id="professionals" className="scroll-mt-20">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-          <div className="text-center">
+          <div className="reveal text-center">
             <p className="eyebrow text-primary">For professionals</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
               Two ways SelfeConnect pays for itself.
@@ -676,7 +706,7 @@ function Home() {
           </div>
 
           {/* Pillar 1 — the job board */}
-          <div className="mt-14 grid items-center gap-14 lg:grid-cols-2">
+          <div className="reveal mt-14 grid items-center gap-14 lg:grid-cols-2">
             <div>
               <span className="eyebrow text-muted-foreground">01 — Find work</span>
               <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
@@ -711,7 +741,7 @@ function Home() {
 
       {/* ── Pillar 2 — reputation (the QR half) ────────────────── */}
       <section id="reputation" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
+        <div className="reveal mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
           <div>
             <span className="eyebrow text-muted-foreground">02 — Build reputation</span>
             <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
@@ -789,7 +819,7 @@ function Home() {
       <section id="pricing" className="scroll-mt-20 bg-ink">
         <div className="relative mx-auto max-w-6xl overflow-hidden px-6 py-20 sm:py-24">
           <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-          <div className="relative grid items-center gap-12 lg:grid-cols-[1fr_auto]">
+          <div className="reveal relative grid items-center gap-12 lg:grid-cols-[1fr_auto]">
             <div>
               <p className="eyebrow text-primary">Professional subscription</p>
               <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-ink-foreground font-display sm:text-4xl">
@@ -1046,7 +1076,7 @@ function Home() {
 
       {/* ── Closing CTA ────────────────────────────────────────── */}
       <section className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center sm:py-24">
+        <div className="reveal mx-auto max-w-3xl px-6 py-20 text-center sm:py-24">
           <Sparkles className="mx-auto h-7 w-7 text-primary" />
           <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
             Start building the reputation you've already earned.

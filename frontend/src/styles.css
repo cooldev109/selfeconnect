@@ -203,3 +203,71 @@
 @utility shadow-elevated {
   box-shadow: var(--shadow-elevated);
 }
+
+/* ── Landing-page motion ─────────────────────────────────────────────
+   Ambient effects for the marketing hero + sections. Brand hue (168) is
+   kept; the aurora glow uses a brighter mint of the same hue for punch. */
+
+/* Slow-drifting aurora behind the hero. Three soft blobs, layered over the
+   static bg-mesh, each on its own long, offset loop so the field never
+   repeats visibly. */
+.hero-aurora span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  will-change: transform;
+}
+.hero-aurora .a1 {
+  width: 42rem; height: 42rem; left: -9rem; top: -11rem;
+  background: radial-gradient(circle at center, oklch(0.72 0.13 168 / 0.42), transparent 62%);
+  animation: aurora-1 22s ease-in-out infinite;
+}
+.hero-aurora .a2 {
+  width: 36rem; height: 36rem; right: -8rem; top: -7rem;
+  background: radial-gradient(circle at center, oklch(0.78 0.1 205 / 0.34), transparent 62%);
+  animation: aurora-2 27s ease-in-out infinite;
+}
+.hero-aurora .a3 {
+  width: 30rem; height: 30rem; left: 42%; bottom: -13rem;
+  background: radial-gradient(circle at center, oklch(0.8 0.14 168 / 0.3), transparent 60%);
+  animation: aurora-3 31s ease-in-out infinite;
+}
+@keyframes aurora-1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(4rem,2rem) scale(1.1); } }
+@keyframes aurora-2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-3rem,3rem) scale(1.12); } }
+@keyframes aurora-3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-3rem,-2rem) scale(0.92); } }
+
+/* A highlight that sweeps across a pill/button now and then. */
+.shine { position: relative; overflow: hidden; }
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, oklch(1 0 0 / 0.55) 48%, transparent 62%);
+  transform: translateX(-120%);
+  animation: shine-sweep 4s 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shine-sweep { 0% { transform: translateX(-120%); } 55%,100% { transform: translateX(220%); } }
+
+/* A headline accent word: brand-green text with a brighter mint highlight
+   drifting slowly across it. */
+.grad-accent {
+  background: linear-gradient(96deg, var(--primary) 0%, oklch(0.75 0.14 168) 48%, var(--primary) 96%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: grad-shimmer 6s linear infinite;
+}
+@keyframes grad-shimmer { to { background-position: 220% center; } }
+
+/* Reveal-on-scroll: content rises + fades in as it enters the viewport
+   (the `.in` class is added by an IntersectionObserver). */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-aurora span, .grad-accent { animation: none !important; }
+  .shine::after { display: none !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
