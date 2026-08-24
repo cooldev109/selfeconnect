@@ -36,7 +36,7 @@ import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
-import { ChooseProDemo } from "@/components/ChooseProDemo";
+import { MarketplaceTour } from "@/components/MarketplaceTour";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
@@ -686,7 +686,7 @@ function Home() {
               />
             </ol>
 
-            <ChooseProDemo />
+            <MarketplaceTour />
           </div>
         </div>
       </section>
