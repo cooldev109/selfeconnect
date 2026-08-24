@@ -36,8 +36,9 @@ import { run as m3 } from "./m3-trust.mjs";
 import { run as ruan } from "./ruan-feedback.mjs";
 import { run as proJobView } from "./pro-job-view.mjs";
 import { run as jobActions } from "./job-actions.mjs";
+import { run as jobDetail } from "./customer-job-detail.mjs";
 
-const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions };
+const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions, jobDetail };
 const pick = process.argv.slice(2).map((s) => s.toLowerCase());
 const phases = pick.length ? pick.filter((k) => ALL[k]) : Object.keys(ALL);
 

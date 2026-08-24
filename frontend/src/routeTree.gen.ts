@@ -52,6 +52,7 @@ import { Route as TipDriverIdIndexRouteImport } from './routes/tip.$driverId.ind
 import { Route as TipDriverIdSuccessRouteImport } from './routes/tip.$driverId.success'
 import { Route as CustomerProsPublicIdRouteImport } from './routes/customer.pros.$publicId'
 import { Route as CustomerJobsNewRouteImport } from './routes/customer.jobs.new'
+import { Route as CustomerJobsJobIdRouteImport } from './routes/customer.jobs.$jobId'
 import { Route as CustomerJobsJobIdEditRouteImport } from './routes/customer.jobs.$jobId.edit'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -269,10 +270,15 @@ const CustomerJobsNewRoute = CustomerJobsNewRouteImport.update({
   path: '/customer/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CustomerJobsJobIdEditRoute = CustomerJobsJobIdEditRouteImport.update({
-  id: '/customer/jobs/$jobId/edit',
-  path: '/customer/jobs/$jobId/edit',
+const CustomerJobsJobIdRoute = CustomerJobsJobIdRouteImport.update({
+  id: '/customer/jobs/$jobId',
+  path: '/customer/jobs/$jobId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerJobsJobIdEditRoute = CustomerJobsJobIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => CustomerJobsJobIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/customer/': typeof CustomerIndexRoute
+  '/customer/jobs/$jobId': typeof CustomerJobsJobIdRouteWithChildren
   '/customer/jobs/new': typeof CustomerJobsNewRoute
   '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/customer/signup': typeof CustomerSignupRoute
   '/admin': typeof AdminIndexRoute
   '/customer': typeof CustomerIndexRoute
+  '/customer/jobs/$jobId': typeof CustomerJobsJobIdRouteWithChildren
   '/customer/jobs/new': typeof CustomerJobsNewRoute
   '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/customer/': typeof CustomerIndexRoute
+  '/customer/jobs/$jobId': typeof CustomerJobsJobIdRouteWithChildren
   '/customer/jobs/new': typeof CustomerJobsNewRoute
   '/customer/pros/$publicId': typeof CustomerProsPublicIdRoute
   '/tip/$driverId/success': typeof TipDriverIdSuccessRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/tip/$driverId'
     | '/admin/'
     | '/customer/'
+    | '/customer/jobs/$jobId'
     | '/customer/jobs/new'
     | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/customer/signup'
     | '/admin'
     | '/customer'
+    | '/customer/jobs/$jobId'
     | '/customer/jobs/new'
     | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/tip/$driverId'
     | '/admin/'
     | '/customer/'
+    | '/customer/jobs/$jobId'
     | '/customer/jobs/new'
     | '/customer/pros/$publicId'
     | '/tip/$driverId/success'
@@ -579,9 +591,9 @@ export interface RootRouteChildren {
   CustomerSignupRoute: typeof CustomerSignupRoute
   TipDriverIdRoute: typeof TipDriverIdRouteWithChildren
   CustomerIndexRoute: typeof CustomerIndexRoute
+  CustomerJobsJobIdRoute: typeof CustomerJobsJobIdRouteWithChildren
   CustomerJobsNewRoute: typeof CustomerJobsNewRoute
   CustomerProsPublicIdRoute: typeof CustomerProsPublicIdRoute
-  CustomerJobsJobIdEditRoute: typeof CustomerJobsJobIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -887,12 +899,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/jobs/$jobId': {
+      id: '/customer/jobs/$jobId'
+      path: '/customer/jobs/$jobId'
+      fullPath: '/customer/jobs/$jobId'
+      preLoaderRoute: typeof CustomerJobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer/jobs/$jobId/edit': {
       id: '/customer/jobs/$jobId/edit'
-      path: '/customer/jobs/$jobId/edit'
+      path: '/edit'
       fullPath: '/customer/jobs/$jobId/edit'
       preLoaderRoute: typeof CustomerJobsJobIdEditRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CustomerJobsJobIdRoute
     }
   }
 }
@@ -943,6 +962,17 @@ const TipDriverIdRouteWithChildren = TipDriverIdRoute._addFileChildren(
   TipDriverIdRouteChildren,
 )
 
+interface CustomerJobsJobIdRouteChildren {
+  CustomerJobsJobIdEditRoute: typeof CustomerJobsJobIdEditRoute
+}
+
+const CustomerJobsJobIdRouteChildren: CustomerJobsJobIdRouteChildren = {
+  CustomerJobsJobIdEditRoute: CustomerJobsJobIdEditRoute,
+}
+
+const CustomerJobsJobIdRouteWithChildren =
+  CustomerJobsJobIdRoute._addFileChildren(CustomerJobsJobIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -971,9 +1001,9 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerSignupRoute: CustomerSignupRoute,
   TipDriverIdRoute: TipDriverIdRouteWithChildren,
   CustomerIndexRoute: CustomerIndexRoute,
+  CustomerJobsJobIdRoute: CustomerJobsJobIdRouteWithChildren,
   CustomerJobsNewRoute: CustomerJobsNewRoute,
   CustomerProsPublicIdRoute: CustomerProsPublicIdRoute,
-  CustomerJobsJobIdEditRoute: CustomerJobsJobIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

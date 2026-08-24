@@ -64,9 +64,11 @@ export async function run(sharedBrowser) {
     await proCtx.close();
 
     // ---- #3 profile link on the quote + #1 chat timestamp ----
+    // Quotes + chat now live on the dedicated job detail page (opened from the
+    // clickable My-jobs summary rows).
     const custCtx = await ctxFor(browser, cust.cookie, "sc_customer");
     const custPage = await custCtx.newPage();
-    await custPage.goto(`${BASE}/customer`, { waitUntil: "networkidle" });
+    await custPage.goto(`${BASE}/customer/jobs/${jobId}`, { waitUntil: "networkidle" });
     const profileLink = custPage.getByRole("link", { name: /View profile/ }).first();
     ok("quote shows a 'View profile' link", await profileLink.isVisible());
     const href = await profileLink.getAttribute("href");

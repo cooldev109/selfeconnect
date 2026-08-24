@@ -7,6 +7,7 @@ import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { ChatThread } from "@/components/ChatThread";
 import { JobPhotos } from "@/components/JobPhotos";
+import { JobStatusBadge } from "@/components/JobStatusBadge";
 import {
   proMyJobs,
   proJobMessages,
@@ -36,13 +37,12 @@ const STAGE_OF: Record<JobStatus, Stage> = {
   cancelled: "cancelled",
 };
 
-const STATUS_BADGE: Record<JobStatus, { label: string; cls: string }> = {
-  open: { label: "Quoted", cls: "bg-[#E1F5EE] text-primary" },
-  hired: { label: "Hired", cls: "bg-blue-100 text-blue-700" },
-  in_progress: { label: "In progress", cls: "bg-amber-100 text-amber-800" },
-  completed: { label: "Completed", cls: "bg-muted text-muted-foreground" },
-  closed: { label: "Completed", cls: "bg-muted text-muted-foreground" },
-  cancelled: { label: "Cancelled", cls: "bg-destructive/10 text-destructive" },
+// The pro's engagement with an open job: a submitted quote counts as "Quoted";
+// unlocking contact alone shows "Contacted" (reached out, no price yet). Once
+// the job leaves "open", its lifecycle status carries the colour instead.
+const ENGAGEMENT = {
+  quoted: { label: "Quoted", cls: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
+  contacted: { label: "Contacted", cls: "bg-sky-100 text-sky-800", dot: "bg-sky-500" },
 };
 
 function MyJobsPage() {
@@ -124,23 +124,26 @@ function MyJobsPage() {
 }
 
 function ProJobCard({ job }: { job: ProJob }) {
-  // Only a submitted quote counts as "Quoted". Unlocking contact alone shows
-  // "Contacted" — the pro reached out but hasn't sent a price yet.
-  const badge =
-    (job.status ?? "open") === "open"
-      ? job.myQuote
-        ? { label: "Quoted", cls: "bg-[#E1F5EE] text-primary" }
-        : { label: "Contacted", cls: "bg-secondary text-foreground" }
-      : STATUS_BADGE[job.status ?? "open"];
+  const status = job.status ?? "open";
+  const engagement = status === "open" ? (job.myQuote ? ENGAGEMENT.quoted : ENGAGEMENT.contacted) : null;
   const [chatOpen, setChatOpen] = useState(false);
   return (
     <Card className="rounded-2xl">
       <CardContent className="p-5">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold text-foreground">{job.title}</h3>
-          <Badge className={`rounded-full border-0 ${badge.cls}`}>{badge.label}</Badge>
+          {engagement ? (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${engagement.cls}`}
+            >
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${engagement.dot}`} aria-hidden />
+              {engagement.label}
+            </span>
+          ) : (
+            <JobStatusBadge status={status} />
+          )}
           {job.hired && (
-            <Badge className="rounded-full border-0 bg-blue-100 text-blue-700">
+            <Badge className="rounded-full border-0 bg-violet-100 text-violet-800">
               <BadgeCheck className="mr-1 h-3.5 w-3.5" /> They hired you
             </Badge>
           )}

@@ -44,6 +44,11 @@ export async function run(sharedBrowser) {
     const p = await ctx.newPage();
     await p.goto(`${BASE}/customer`, { waitUntil: "networkidle" });
 
+    // Jobs are now compact summary rows that open a dedicated detail page.
+    await p.getByText("Fix the tap").first().click();
+    await p.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
+    ok("a job row opens its detail page", /\/customer\/jobs\//.test(p.url()), p.url());
+
     // #20 — "Mark complete" asks for confirmation first.
     await p.getByRole("button", { name: /Mark complete/ }).first().click();
     await p.getByText(/Are you sure the job is completed\?/).waitFor({ timeout: 6000 });
@@ -57,8 +62,10 @@ export async function run(sharedBrowser) {
     ok("customer is taken to the review page (#19)", p.url().includes(`/customer/pros/${pro.publicId}`), p.url());
     ok("the review form is open", await p.getByText(/How was the service\?/).first().isVisible());
 
-    // #20 — "Cancel" asks for confirmation too.
+    // #20 — "Cancel" asks for confirmation too (on the open job's detail page).
     await p.goto(`${BASE}/customer`, { waitUntil: "networkidle" });
+    await p.getByText("Paint a fence").first().click();
+    await p.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
     await p.getByRole("button", { name: /^Cancel$/ }).first().click();
     ok("'Cancel' shows a confirmation (#20)", await p.getByText(/Are you sure you want to cancel this job\?/).first().isVisible());
     await ctx.close();
