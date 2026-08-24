@@ -45,6 +45,43 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
+/**
+ * "Message" — opens the device's SMS app on mobile (sms:), and on desktop,
+ * where sms: does nothing, copies the number and confirms, so it never looks
+ * broken.
+ */
+function MessageButton({
+  phone,
+  className,
+  iconCls,
+}: {
+  phone: string;
+  className: string;
+  iconCls: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const onClick = async () => {
+    try {
+      await navigator.clipboard.writeText(phone);
+    } catch {
+      const el = document.createElement("textarea");
+      el.value = phone;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      el.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+  return (
+    <a href={`sms:${phone}`} onClick={onClick} className={className} title="Text this number">
+      {copied ? <Check className={iconCls} /> : <MessageSquare className={iconCls} />}
+      {copied ? "Number copied" : "Message"}
+    </a>
+  );
+}
+
 export function ContactActions({
   email,
   phone,
@@ -78,17 +115,15 @@ export function ContactActions({
             </a>
             <CopyButton value={phone} label="phone number" />
           </span>
-          {/* Opens the device's own messaging app with the number ready. */}
-          <a
-            href={`sms:${phone}`}
+          <MessageButton
+            phone={phone}
+            iconCls={icon}
             className={`${pill} ${
               size === "lg"
                 ? "border border-border text-foreground hover:bg-secondary"
                 : "text-primary hover:underline"
             }`}
-          >
-            <MessageSquare className={icon} /> Text
-          </a>
+          />
         </>
       )}
       <span className="inline-flex items-center gap-1.5">
