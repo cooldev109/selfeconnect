@@ -245,6 +245,19 @@
 @keyframes tour-click { 0% { opacity: 0.6; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.6); } }
 @keyframes tab-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .tour-click { border: 2px solid var(--primary); }
+/* A labelled packet handing off between the customer and pro phones. */
+@keyframes packet-r {
+  0% { opacity: 0; transform: translateX(-30px) scale(0.7); }
+  22% { opacity: 1; transform: translateX(-14px) scale(1); }
+  78% { opacity: 1; transform: translateX(14px) scale(1); }
+  100% { opacity: 0; transform: translateX(30px) scale(0.7); }
+}
+@keyframes packet-l {
+  0% { opacity: 0; transform: translateX(30px) scale(0.7); }
+  22% { opacity: 1; transform: translateX(14px) scale(1); }
+  78% { opacity: 1; transform: translateX(-14px) scale(1); }
+  100% { opacity: 0; transform: translateX(-30px) scale(0.7); }
+}
 @media (prefers-reduced-motion: reduce) {
   .tour-click { display: none !important; }
 }
