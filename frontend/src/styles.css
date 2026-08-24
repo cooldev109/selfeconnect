@@ -240,6 +240,15 @@
    ground into the aurora so it blends in rather than sitting as a hard box. */
 .hero-illus { mix-blend-mode: multiply; }
 
+/* Marketplace tour — the self-playing product demo. */
+@keyframes tour-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes tour-click { 0% { opacity: 0.6; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes tab-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.tour-click { border: 2px solid var(--primary); }
+@media (prefers-reduced-motion: reduce) {
+  .tour-click { display: none !important; }
+}
+
 /* A highlight that sweeps across a pill/button now and then. */
 .shine { position: relative; overflow: hidden; }
 .shine::after {
