@@ -8,6 +8,11 @@ import {
   Check,
   Bell,
   Briefcase,
+  House,
+  User,
+  Wifi,
+  BatteryMedium,
+  SignalHigh,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import avatarSam from "@/assets/avatar-sam.jpg";
@@ -158,15 +163,44 @@ function Phone({
         <span className="text-[10px] font-bold text-foreground">{label}</span>
         <span className="rounded-full bg-secondary px-1.5 text-[8px] font-semibold text-muted-foreground">{role}</span>
       </div>
-      <div className="pointer-events-none w-full max-w-[190px] select-none rounded-[1.9rem] bg-ink p-1.5 shadow-elevated">
-        <div className="relative aspect-[9/12.5] overflow-hidden rounded-[1.55rem] bg-background">
-          <div className="absolute left-1/2 top-1 z-30 h-3 w-12 -translate-x-1/2 rounded-b-lg bg-ink" />
-          <div className="flex h-full flex-col px-2 pb-2 pt-4">
-            <div className="flex items-center gap-1 pb-1.5">
-              <LogoMark className="h-3 w-3" />
-              <span className="font-display text-[8.5px] font-bold text-foreground">SelfeConnect</span>
+      <div className="relative w-full max-w-[192px] select-none">
+        {/* Side buttons */}
+        <span className="absolute -left-[2px] top-[22%] h-6 w-[3px] rounded-l-sm bg-slate-500/70" />
+        <span className="absolute -left-[2px] top-[34%] h-9 w-[3px] rounded-l-sm bg-slate-500/70" />
+        <span className="absolute -right-[2px] top-[28%] h-11 w-[3px] rounded-r-sm bg-slate-500/70" />
+        {/* Metallic bezel */}
+        <div className="pointer-events-none rounded-[2.2rem] bg-gradient-to-b from-slate-500 via-ink to-[oklch(0.18_0.03_250)] p-[5px] shadow-[0_20px_38px_-12px_oklch(0.26_0.03_250/0.5)] ring-1 ring-white/10">
+          <div className="relative aspect-[9/13] overflow-hidden rounded-[1.85rem] bg-background ring-1 ring-black/15">
+            {/* Dynamic island */}
+            <div className="absolute left-1/2 top-1.5 z-30 h-3.5 w-14 -translate-x-1/2 rounded-full bg-[oklch(0.16_0.03_250)]" />
+            {/* Screen sheen */}
+            <div className="pointer-events-none absolute inset-0 z-20 rounded-[1.85rem] bg-gradient-to-tr from-transparent via-transparent to-white/10" />
+            <div className="flex h-full flex-col px-2.5 pb-2 pt-1.5">
+              {/* Status bar */}
+              <div className="flex items-center justify-between px-1 text-[7px] font-bold text-foreground/70">
+                <span className="tabular-nums">9:41</span>
+                <span className="flex items-center gap-0.5">
+                  <SignalHigh className="h-2 w-2" />
+                  <Wifi className="h-2 w-2" />
+                  <BatteryMedium className="h-2.5 w-2.5" />
+                </span>
+              </div>
+              {/* App header */}
+              <div className="mt-1 flex items-center gap-1 pb-1.5">
+                <LogoMark className="h-3 w-3" />
+                <span className="font-display text-[8.5px] font-bold text-foreground">SelfeConnect</span>
+              </div>
+              <div className="flex-1">{children}</div>
+              {/* Bottom tab bar */}
+              <div className="mt-1.5 flex items-center justify-around border-t border-border/60 pt-1.5 text-muted-foreground/70">
+                <House className="h-3 w-3 text-primary" />
+                <Briefcase className="h-3 w-3" />
+                <MessageSquare className="h-3 w-3" />
+                <User className="h-3 w-3" />
+              </div>
+              {/* Home indicator */}
+              <div className="mx-auto mt-1.5 h-1 w-10 rounded-full bg-foreground/25" />
             </div>
-            {children}
           </div>
         </div>
       </div>
