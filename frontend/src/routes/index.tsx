@@ -380,14 +380,14 @@ function Home() {
       </header>
 
       {/* ── Hero ───────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 z-0 bg-mesh opacity-60" />
-        <div className="hero-aurora pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+      <section className="relative isolate overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-mesh opacity-60" />
+        <div className="hero-aurora pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
           <span className="a1" />
           <span className="a2" />
           <span className="a3" />
         </div>
-        <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:items-stretch lg:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:items-stretch lg:py-20">
           <div className="animate-fade-up lg:flex lg:flex-col lg:justify-center">
             <span className="shine inline-flex w-fit items-center gap-1.5 self-start rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
@@ -456,7 +456,7 @@ function Home() {
               alt="SelfeConnect connects people with reviewed local professionals — plumbers, electricians, gardeners, cleaners and painters — through one app, matched by service and postcode."
               width={1122}
               height={1206}
-              className="h-auto w-full select-none"
+              className="hero-illus h-auto w-full select-none"
               draggable={false}
             />
           </div>

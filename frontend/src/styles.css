@@ -236,6 +236,10 @@
 @keyframes aurora-2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-3rem,3rem) scale(1.12); } }
 @keyframes aurora-3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-3rem,-2rem) scale(0.92); } }
 
+/* The hero illustration is a white-background JPG; multiply drops its white
+   ground into the aurora so it blends in rather than sitting as a hard box. */
+.hero-illus { mix-blend-mode: multiply; }
+
 /* A highlight that sweeps across a pill/button now and then. */
 .shine { position: relative; overflow: hidden; }
 .shine::after {
