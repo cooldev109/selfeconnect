@@ -580,17 +580,17 @@ function Home() {
           <PathCard
             icon={Search}
             title="I need a professional"
-            body="Search reviewed local pros by service and area, or post a job for free and let them come to you."
+            body="Tell us what you need and connect with local professionals ready to help."
             points={[
-              "Search by service & postcode",
-              "Read real, verified reviews",
-              "Contact them directly — no middleman",
+              "Post your job for free",
+              "Hear from local professionals",
+              "Check profiles and real reviews",
+              "Contact professionals directly — no middleman",
             ]}
-            cta="Find a professional"
-            to="/customer/signup"
+            cta="Post a job for free"
+            to="/post-a-job"
             variant="outline"
-            secondary={{ cta: "Or post a job for free", to: "/post-a-job" }}
-            footer={{ text: "Have an account?", link: "Log in", to: "/customer/login" }}
+            footer={{ text: "Already have an account?", link: "Log in", to: "/customer/login" }}
           />
           <PathCard
             icon={Briefcase}
