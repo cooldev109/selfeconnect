@@ -30,6 +30,8 @@ import {
   HardHat,
   Bug,
   Dog,
+  Fence,
+  Flame,
 } from "lucide-react";
 import { usePricing, gbp } from "@/hooks/usePricing";
 import { Logo, LogoMark } from "@/components/Logo";
@@ -51,8 +53,6 @@ import svcHandyman from "@/assets/svc-handyman.jpg";
 import svcRoofer from "@/assets/svc-roofer.jpg";
 import svcRemovals from "@/assets/svc-removals.jpg";
 import svcMechanic from "@/assets/svc-mechanic.jpg";
-import svcHairdresser from "@/assets/svc-hairdresser.jpg";
-import svcTrainer from "@/assets/svc-personal-trainer.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -74,8 +74,9 @@ const FEATURED: { slug: string; name: string }[] = [
   { slug: "roofer", name: "Roofer" },
   { slug: "removals", name: "Removals" },
   { slug: "mechanic", name: "Mechanic" },
-  { slug: "hairdresser", name: "Hairdresser" },
-  { slug: "personal-trainer", name: "Personal Trainer" },
+  { slug: "fencing", name: "Fencing & Decking" },
+  { slug: "builder", name: "Builder" },
+  { slug: "gas-engineer", name: "Heating & Gas Engineer" },
 ];
 const FEATURED_SLUGS = FEATURED.map((f) => f.slug);
 
@@ -94,8 +95,6 @@ const SERVICE_PHOTOS: Record<string, string> = {
   roofer: svcRoofer,
   removals: svcRemovals,
   mechanic: svcMechanic,
-  hairdresser: svcHairdresser,
-  "personal-trainer": svcTrainer,
 };
 
 const SERVICE_ICONS: Record<string, typeof Wrench> = {
@@ -115,6 +114,8 @@ const SERVICE_ICONS: Record<string, typeof Wrench> = {
   tutor: GraduationCap,
   locksmith: KeyRound,
   builder: HardHat,
+  fencing: Fence,
+  "gas-engineer": Flame,
   "pest-control": Bug,
   "dog-walker": Dog,
 };
