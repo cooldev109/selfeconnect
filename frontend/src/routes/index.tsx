@@ -385,7 +385,7 @@ function Home() {
               Reviewed &amp; recommended by real customers
             </span>
             <h1 className="mt-6 text-[2.6rem] font-extrabold tracking-tight text-foreground font-display sm:text-[3.4rem]">
-              Find a trusted <span className="grad-accent">professional</span> near you.
+              Get your job done by a trusted <span className="grad-accent">professional</span>.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
               Plumbers, electricians, cleaners, man and van and local professionals across many
