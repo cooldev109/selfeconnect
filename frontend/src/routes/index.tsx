@@ -826,16 +826,16 @@ function Home() {
                 One flat fee. No commission. No lead fees.
               </h2>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted">
-                Everything for one price — find work, collect reviews, build your reputation,
-                receive payments, and accept tips. We never take a percentage of your payments or
-                tips, and we never charge you for a lead that goes nowhere.
+                Everything you need in one subscription — find local work, collect reviews, build
+                your reputation, receive payments and connect directly with customers. No credits,
+                no pay-per-lead charges and no commission.
               </p>
               <ul className="mt-7 grid gap-3 sm:grid-cols-2">
                 {[
-                  "Browse & unlock nearby jobs",
+                  "Local jobs matched to your trade and area",
                   "Your own QR code & public profile",
                   "Unlimited customer reviews",
-                  "Keep 100% of every payment and tip",
+                  "Receive payments & tips directly — no commission*",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-ink-foreground/90">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -843,6 +843,7 @@ function Home() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-4 text-xs text-ink-muted">*Standard payment processing fees apply.</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-8 text-center backdrop-blur">
@@ -935,9 +936,8 @@ function Home() {
           <AccordionItem value="cost-to-customer">
             <AccordionTrigger>What does it cost me as a customer?</AccordionTrigger>
             <AccordionContent>
-              Nothing. Searching is free, posting a job is free, and we take no commission on what
-              you pay your professional — you agree the price with them directly and pay them
-              directly.
+              Nothing. Posting a job is free, and SelfeConnect takes no commission on what you pay
+              your professional. You agree the price and payment method directly with them.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="who-pays">
@@ -1055,12 +1055,13 @@ function Home() {
             <AccordionTrigger>Is there really no commission?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Yes. We charge a flat fee of {gbp(pricing.amountGbp)}/month and never take a
-                percentage of your payments or tips. We also never charge per lead.
+                Yes. We charge professionals a flat subscription fee of{" "}
+                {gbp(pricing.standardAmountGbp)}/month and never take a percentage of their payments
+                or tips. We also never charge per lead.
               </p>
               <p className="mt-3">
-                You keep 100% of every payment and tip, minus only the standard processing fee
-                charged by our payment partner.
+                SelfeConnect charges no commission. Standard payment processing fees may apply when
+                payments are made through our payment partner.
               </p>
             </AccordionContent>
           </AccordionItem>
