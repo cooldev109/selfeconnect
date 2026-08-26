@@ -11,6 +11,7 @@ import {
   QrCode,
   Star,
   Lock,
+  CreditCard,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -658,11 +659,11 @@ function Home() {
           <div className="reveal text-center">
             <p className="eyebrow text-primary">For professionals</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
-              Two ways SelfeConnect pays for itself.
+              More opportunities. No lead fees.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-              Win work you'd never have heard about — and turn the customers you already have into
-              the reviews that win you the next ones.
+              Find local jobs, connect directly with customers and build a reputation that helps
+              bring you more work.
             </p>
           </div>
 
@@ -671,22 +672,22 @@ function Home() {
             <div>
               <span className="eyebrow text-muted-foreground">01 — Find work</span>
               <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
-                Local jobs, on your dashboard the day they're posted.
+                Local jobs that match your trade and area.
               </h3>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Customers post jobs in your trades and near your postcode. You see them the moment
-                they land, nearest first, and unlock the customer's details when you want the job.
+                Customers post jobs on SelfeConnect and professionals in the right trade and
+                location can see new opportunities as they appear.
               </p>
               <ul className="mt-6 space-y-4">
                 <Feature
                   icon={Briefcase}
-                  title="Nearest first, in your trades only"
-                  body="Filter by distance and service, so you're not wading through work you'd never take."
+                  title="Jobs that are relevant to you"
+                  body="See jobs based on your trade and location, so you can focus on the work that suits you."
                 />
                 <Feature
                   icon={Lock}
-                  title="Unlock the contact, not a lead fee"
-                  body="Your subscription unlocks every job. We never charge per lead, and we never sell the same job to eight of your competitors."
+                  title="No pay-per-lead charges"
+                  body="Your subscription gives you access to local job opportunities. No credits, no lead fees and no commission on the work you win."
                 />
               </ul>
             </div>
@@ -704,30 +705,29 @@ function Home() {
       <section id="reputation" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
         <div className="reveal mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
           <div>
-            <span className="eyebrow text-muted-foreground">02 — Build reputation</span>
+            <span className="eyebrow text-muted-foreground">02 — Build your reputation</span>
             <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
-              The reviews you earn offline win you work online.
+              Turn the work you already do into a stronger profile.
             </h3>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Hand your QR code to the customers you already have. They rate you in seconds — no
-              app, no payment required — and those reviews build the public profile that new
-              customers see when they search.
+              Share your QR code with your existing customers and collect reviews that build your
+              SelfeConnect profile and help future customers choose you with confidence.
             </p>
             <ul className="mt-7 space-y-4">
               <Feature
                 icon={QrCode}
-                title="Collect reviews from day one"
-                body="Your QR works with the customers you have today — you don't need to wait for the platform to find you any."
+                title="Build your reputation from day one"
+                body="Your QR code works with the customers you already have, so you can start building your profile straight away."
               />
               <Feature
                 icon={Star}
-                title="Rating without a tip"
-                body="Customers can leave a review without paying a penny. Tipping is optional — and entirely theirs to choose."
+                title="Simple for your customers"
+                body="Customers can leave a review quickly and easily. No app or payment required."
               />
               <Feature
                 icon={ShieldCheck}
-                title="Verified, not anonymous"
-                body="Reviews from customers who hired you on SelfeConnect are marked as verified, so they carry real weight."
+                title="Verified reviews stand out"
+                body="Reviews from customers who hired you through SelfeConnect are marked as verified, helping customers recognise genuine platform experiences."
               />
             </ul>
           </div>
@@ -771,6 +771,45 @@ function Home() {
             </div>
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Example profile — this is the real SelfeConnect layout.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pillar 3 — get paid ────────────────────────────────── */}
+      <section id="get-paid" className="scroll-mt-20">
+        <div className="reveal mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 sm:py-24 lg:grid-cols-2">
+          <div>
+            <span className="eyebrow text-muted-foreground">03 — Get paid</span>
+            <h3 className="mt-2 text-2xl font-bold text-foreground font-display sm:text-3xl">
+              Give your customers an easier way to pay.
+            </h3>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              Your SelfeConnect QR code can also be used to receive payments and tips, giving your
+              customers a simple and convenient way to pay you.
+            </p>
+            <ul className="mt-6 space-y-4">
+              <Feature
+                icon={CreditCard}
+                title="More ways for customers to pay"
+                body="Customers can pay securely by debit or credit card, Apple Pay or Google Pay."
+              />
+              <Feature
+                icon={ShieldCheck}
+                title="No commission from SelfeConnect"
+                body="SelfeConnect does not take a percentage of your payments or tips. Standard processing fees charged by the payment provider apply."
+              />
+              <Feature
+                icon={Check}
+                title="Completely optional"
+                body="Using SelfeConnect for payments is optional. The price, payment method and payment arrangements are always agreed directly between you and your customer."
+              />
+            </ul>
+          </div>
+          <div>
+            <PaymentPreview />
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Example payment screen — this is the real SelfeConnect layout.
             </p>
           </div>
         </div>
@@ -1112,6 +1151,45 @@ function Home() {
 // ── Product previews ──────────────────────────────────────────────
 // The marketplace is the half of the product a QR photo can't show. These
 // render the real UI so it's visible, and are labelled as examples.
+
+function PaymentPreview() {
+  return (
+    <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-elevated">
+      <div className="relative bg-ink p-6 text-center">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
+        <div className="relative">
+          <img
+            src={proTradesman}
+            alt=""
+            className="mx-auto h-14 w-14 rounded-2xl object-cover ring-2 ring-white/15"
+          />
+          <p className="mt-3 font-display text-lg font-bold text-ink-foreground">Pay Sam Rivers</p>
+          <p className="text-sm text-ink-muted">Plumber · Electrician</p>
+          <p className="mt-3 font-display text-4xl font-extrabold tabular-nums text-ink-foreground">
+            £120
+          </p>
+        </div>
+      </div>
+      <div className="space-y-2.5 bg-card p-5">
+        <div className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground">
+          <CreditCard className="h-4 w-4" /> Pay by card
+        </div>
+        <div className="flex gap-2.5">
+          <div className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink text-sm font-semibold text-ink-foreground">
+            Apple Pay
+          </div>
+          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border bg-background text-sm font-semibold text-foreground">
+            Google Pay
+          </div>
+        </div>
+        <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" /> 100% goes to Sam — no commission ·
+          Secure payments by Stripe
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function JobBoardPreview() {
   return (
