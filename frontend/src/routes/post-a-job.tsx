@@ -8,6 +8,12 @@ import { customerLogin, customerMe, customerSignup } from "@/lib/customer-auth";
 import { ApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/post-a-job")({
+  // The homepage hero can start the flow with the service + postcode already
+  // chosen; carry them in so the wizard opens pre-filled.
+  validateSearch: (search: Record<string, unknown>) => ({
+    category: typeof search.category === "string" ? search.category : undefined,
+    postcode: typeof search.postcode === "string" ? search.postcode : undefined,
+  }),
   head: () => ({ meta: [{ title: "Post a job — SelfeConnect" }] }),
   component: PostAJobPage,
 });
@@ -18,6 +24,7 @@ export const Route = createFileRoute("/post-a-job")({
 function PostAJobPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { category, postcode } = Route.useSearch();
 
   // A 401 here is the normal logged-out case, not an error — don't redirect.
   const meQ = useQuery({
@@ -64,6 +71,8 @@ function PostAJobPage() {
           ) : (
             <PostJobWizard
               requireAccount={!authed}
+              initialCategorySlug={category}
+              initialPostcode={postcode}
               onSubmit={async (input, account) => {
                 // Logged-out: create the account (or log in) before posting.
                 if (account) {

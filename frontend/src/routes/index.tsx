@@ -7,6 +7,7 @@ import {
   Briefcase,
   Search,
   Check,
+  Plus,
   ArrowRight,
   QrCode,
   Star,
@@ -167,9 +168,18 @@ function Home() {
     });
   };
 
-  const handleHeroSearch = (e: React.FormEvent) => {
+  // The hero is job-first: it starts the "post a job" flow, carrying the
+  // service + postcode into the wizard, which gates account sign-up/login at the
+  // final step before the job actually posts.
+  const handleHeroPost = (e: React.FormEvent) => {
     e.preventDefault();
-    runSearch(heroService, heroPostcode.trim());
+    navigate({
+      to: "/post-a-job",
+      search: {
+        category: heroService || undefined,
+        postcode: heroPostcode.trim() || undefined,
+      },
+    });
   };
 
   // Every service card is a live control, not decoration.
@@ -398,20 +408,20 @@ function Home() {
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
               Plumbers, electricians, cleaners, man and van and local professionals across many
-              services. Search by service and postcode, read real reviews, and get in touch
-              directly.
+              services. Post a job, find a professional, read real reviews, and get in touch
+              directly. No middleman.
             </p>
 
             {/* Primary action */}
             <form
-              onSubmit={handleHeroSearch}
+              onSubmit={handleHeroPost}
               className="mt-8 rounded-2xl border border-border/70 bg-card p-3 shadow-elevated"
             >
               <div className="grid gap-2 sm:grid-cols-[1.2fr_1fr_auto]">
                 <CategorySelect
                   value={heroService}
                   onChange={setHeroService}
-                  placeholder="What do you need?"
+                  placeholder="What do you need done?"
                 />
                 <PostcodeInput
                   value={heroPostcode}
@@ -421,7 +431,7 @@ function Home() {
                   className="h-11 rounded-xl"
                 />
                 <Button type="submit" className="h-11 rounded-xl px-6 text-sm font-semibold">
-                  <Search className="mr-1.5 h-4 w-4" /> Search
+                  <Plus className="mr-1.5 h-4 w-4" /> Post a job
                 </Button>
               </div>
             </form>

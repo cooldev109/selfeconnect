@@ -72,11 +72,16 @@ export interface GuestAccount {
 export function PostJobWizard({
   onSubmit,
   requireAccount = false,
+  initialCategorySlug = "",
+  initialPostcode = "",
 }: {
   // When requireAccount is set, `account` is provided (a logged-out visitor
   // creating their account inline); otherwise the customer is already signed in.
   onSubmit: (input: JobInput, account?: GuestAccount) => Promise<void>;
   requireAccount?: boolean;
+  // Optional pre-fill when the flow is started from the homepage hero.
+  initialCategorySlug?: string;
+  initialPostcode?: string;
 }) {
   const [step, setStep] = useState(0);
 
@@ -85,7 +90,7 @@ export function PostJobWizard({
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPassword, setGuestPassword] = useState("");
 
-  const [categorySlug, setCategorySlug] = useState("");
+  const [categorySlug, setCategorySlug] = useState(initialCategorySlug);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
@@ -93,7 +98,7 @@ export function PostJobWizard({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const [postcode, setPostcode] = useState("");
+  const [postcode, setPostcode] = useState(initialPostcode);
   const [timing, setTiming] = useState("");
   const [addressLine, setAddressLine] = useState("");
   const [workingDays, setWorkingDays] = useState<string[]>([]);
