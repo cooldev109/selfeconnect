@@ -7,7 +7,6 @@ import {
   Briefcase,
   Search,
   Check,
-  Plus,
   ArrowRight,
   QrCode,
   Star,
@@ -35,13 +34,11 @@ import {
 import { usePricing, gbp } from "@/hooks/usePricing";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button, Input } from "@/components/shared";
-import { CategorySelect } from "@/components/CategoryPicker";
-import { PostcodeInput } from "@/components/PostcodeInput";
+import { PostJobFlow } from "@/components/PostJobFlow";
 import { MarketplaceTour } from "@/components/MarketplaceTour";
 import { RatingSummary, ReviewCard, StarRow } from "@/components/Reviews";
 import { getCategories } from "@/lib/categories";
 import { api } from "@/lib/api";
-import heroImg from "@/assets/hero.jpg";
 import proTradesman from "@/assets/pro-tradesman.jpg";
 // Browse-by-service photography (Pexels licence: commercial use, no attribution)
 import svcPlumber from "@/assets/svc-plumber.jpg";
@@ -141,8 +138,6 @@ function Home() {
   const [proId, setProId] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
-  const [heroService, setHeroService] = useState("");
-  const [heroPostcode, setHeroPostcode] = useState("");
   const navigate = useNavigate();
 
   // The real service list — so the page can never advertise a service we
@@ -165,20 +160,6 @@ function Home() {
     navigate({
       to: "/customer/search",
       search: { category: category || undefined, postcode: postcode || undefined },
-    });
-  };
-
-  // The hero is job-first: it starts the "post a job" flow, carrying the
-  // service + postcode into the wizard, which gates account sign-up/login at the
-  // final step before the job actually posts.
-  const handleHeroPost = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({
-      to: "/post-a-job",
-      search: {
-        category: heroService || undefined,
-        postcode: heroPostcode.trim() || undefined,
-      },
     });
   };
 
@@ -412,31 +393,7 @@ function Home() {
               directly. No middleman.
             </p>
 
-            {/* Primary action */}
-            <form
-              onSubmit={handleHeroPost}
-              className="mt-8 rounded-2xl border border-border/70 bg-card p-3 shadow-elevated"
-            >
-              <div className="grid gap-2 sm:grid-cols-[1.2fr_1fr_auto]">
-                <CategorySelect
-                  value={heroService}
-                  onChange={setHeroService}
-                  placeholder="What do you need done?"
-                />
-                <PostcodeInput
-                  value={heroPostcode}
-                  onChange={setHeroPostcode}
-                  placeholder="Your postcode"
-                  ariaLabel="Your postcode"
-                  className="h-11 rounded-xl"
-                />
-                <Button type="submit" className="h-11 rounded-xl px-6 text-sm font-semibold">
-                  <Plus className="mr-1.5 h-4 w-4" /> Post a job
-                </Button>
-              </div>
-            </form>
-
-            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5 text-primary" /> Free to search
               </span>
@@ -456,19 +413,22 @@ function Home() {
             </p>
           </div>
 
-          {/* A single illustration of the whole product: local professionals of
-              every trade, matched to customers through the app, with ratings and
-              a verified badge. It already contains its own review card, so no
-              overlay is layered on it. */}
+          {/* The job-posting wizard lives right on the homepage: a visitor can
+              describe their job and post it here, creating an account (or logging
+              in) at the final step before it goes live. */}
           <div className="mx-auto w-full max-w-md animate-fade-up lg:max-w-none lg:self-center">
-            <img
-              src={heroImg}
-              alt="SelfeConnect connects people with reviewed local professionals — plumbers, electricians, gardeners, cleaners and painters — through one app, matched by service and postcode."
-              width={1122}
-              height={1206}
-              className="hero-illus h-auto w-full select-none"
-              draggable={false}
-            />
+            <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-elevated sm:p-6">
+              <div className="mb-5">
+                <p className="eyebrow text-primary">Post a job — it's free</p>
+                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-foreground">
+                  Tell us what you need done
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Local professionals in that trade can quote. No middleman.
+                </p>
+              </div>
+              <PostJobFlow />
+            </div>
           </div>
         </div>
       </section>
