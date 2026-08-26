@@ -154,17 +154,10 @@ function Home() {
   const rest = allServices.filter((c) => !FEATURED_SLUGS.includes(c.slug));
   const [showAllServices, setShowAllServices] = useState(false);
 
-  // Anyone may search — no account, no wall. The sign-up is asked for later,
-  // at the point it actually buys something (seeing contact details).
-  const runSearch = (category?: string, postcode?: string) => {
-    navigate({
-      to: "/customer/search",
-      search: { category: category || undefined, postcode: postcode || undefined },
-    });
-  };
-
-  // Every service card is a live control, not decoration.
-  const goToService = (slug: string) => runSearch(slug);
+  // Every service card is a live control: clicking one starts a job post with
+  // that category already selected — the customer just fills in the rest.
+  const goToService = (slug: string) =>
+    navigate({ to: "/post-a-job", search: { category: slug, postcode: undefined } });
 
   // ── The service rail ──────────────────────────────────────────────
   // Drifts right-to-left on its own, but stays a normal scroll container so
@@ -439,14 +432,11 @@ function Home() {
       <section className="border-y border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
           <div className="reveal text-center">
-            <p className="eyebrow text-primary">Browse by service</p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
               Whatever you need doing.
             </h2>
-            <p className="mx-auto mt-3 text-base text-muted-foreground">
-              {totalServices > 0
-                ? `${totalServices} services, one platform. Pick one to see who's near you.`
-                : "Over 50 services, one platform. Pick one to see who's near you."}
+            <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground">
+              Tell us what you need. We'll connect you with local professionals ready to help.
             </p>
           </div>
 
