@@ -595,11 +595,11 @@ function Home() {
           <PathCard
             icon={Briefcase}
             title="I am a professional"
-            body="Find local jobs, collect reviews from every customer, and keep 100% of your tips and payments."
+            body="Find local jobs, build your reputation and grow your business — with no commission."
             points={[
-              "Find local jobs in your trade or let customers find you.",
-              "Your own QR code for reviews, payments, and tips.",
-              `${gbp(pricing.amountGbp)}/month — no commission, no lead fees`,
+              "Find local jobs in your trade or let customers find you",
+              "Your own QR code for reviews, payments and tips",
+              `Just ${gbp(pricing.standardAmountGbp)}/month — no commission, no lead fees`,
             ]}
             cta="Join as a professional"
             to="/signup"
@@ -615,11 +615,11 @@ function Home() {
           <div className="reveal text-center">
             <p className="eyebrow text-primary">For customers</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground font-display sm:text-4xl">
-              Hiring someone, without the guesswork.
+              Tell us what you need. Find the right professional.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-              Free to search, free to post a job, and no one takes a cut of what you pay your
-              professional.
+              Post your job for free and connect with local professionals — no middleman, no
+              commission.
             </p>
           </div>
 
@@ -627,23 +627,23 @@ function Home() {
             <ol className="space-y-7">
               <Numbered
                 n={1}
-                title="Search, or post the job"
-                body="Search by service and postcode to see who's nearby — or describe the job once, for free, and let professionals in that trade find you."
+                title="Post your job"
+                body="Tell us what you need, where you need it and a few details about the job. It's completely free to post."
               />
               <Numbered
                 n={2}
-                title="Compare on real reviews"
-                body="Every professional has a public profile with their rating, their star breakdown, and reviews from customers who actually hired them."
+                title="Hear from local professionals"
+                body="Professionals in the right trade and area can see your job and get in touch with you."
               />
               <Numbered
                 n={3}
-                title="Contact them directly"
-                body="Call or email them yourself. There's no middleman, no bidding war, and we never take a percentage of the price you agree."
+                title="Choose who's right for you"
+                body="Check profiles, experience and reviews, then contact the professional directly. No middleman and no commission."
               />
               <Numbered
                 n={4}
                 title="Leave a review afterwards"
-                body="Mark the job as filled, then rate the professional you hired — free, no tip required. That's what helps the next customer choose."
+                body="Once the job is complete, leave a review to share your experience and help other customers choose with confidence."
               />
             </ol>
 
