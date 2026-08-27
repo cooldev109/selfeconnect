@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Building2, CheckCircle2, KeyRound } from "lucide-react";
-import { Button, Card, CardContent, Input } from "@/components/shared";
+import { User, Building2, CheckCircle2 } from "lucide-react";
+import { Button, Input } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
+import { DashCard } from "@/components/DashKit";
 import { PostcodeInput } from "@/components/PostcodeInput";
 import { useRequireCustomer } from "@/lib/useRequireCustomer";
 import { customerUpdateMe } from "@/lib/customer-auth";
@@ -130,13 +131,9 @@ function CustomerAccountPage() {
       title="Account"
       subtitle="Manage your contact details and password."
     >
-      <div className="mx-auto max-w-2xl space-y-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h2 className="text-base font-semibold text-foreground">
-              Your details
-            </h2>
-            <form onSubmit={onSave} noValidate className="mt-5 space-y-4">
+      <div className="mx-auto max-w-2xl space-y-5">
+        <DashCard title="Your details">
+            <form onSubmit={onSave} noValidate className="space-y-4">
               <div className="flex gap-2">
                 <TypeButton
                   active={type === "person"}
@@ -217,15 +214,10 @@ function CustomerAccountPage() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </DashCard>
 
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <KeyRound className="h-4 w-4 text-primary" /> Password
-            </h2>
-            <form onSubmit={onChangePassword} noValidate className="mt-5 space-y-4">
+        <DashCard title="Password">
+            <form onSubmit={onChangePassword} noValidate className="space-y-4">
               <Labeled label="Current password">
                 <Input
                   type="password"
@@ -271,8 +263,7 @@ function CustomerAccountPage() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </DashCard>
       </div>
     </CustomerShell>
   );
