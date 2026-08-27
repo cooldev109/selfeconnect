@@ -76,10 +76,10 @@ export function NotificationBell({
       </button>
 
       {open && (
-        // Anchor left on mobile (the bell wraps to the left of the header there)
-        // and right on desktop, with the width clamped to the viewport, so the
-        // panel is never cut off whichever side the bell ends up on.
-        <div className="absolute left-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border bg-popover shadow-elevated lg:left-auto lg:right-0">
+        // The bell lives at the top-right of the header, so anchor the panel to
+        // the right edge (it opens down-and-left) and clamp its width to the
+        // viewport — that way it never spills off the right on a narrow phone.
+        <div className="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border bg-popover shadow-elevated">
           <div className="border-b border-border/60 px-4 py-3">
             <p className="text-sm font-semibold text-foreground">Notifications</p>
           </div>

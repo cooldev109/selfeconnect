@@ -131,7 +131,7 @@ export function DashboardShell({
                 )}
                 {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
                 {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
                 {bell}
               </div>
