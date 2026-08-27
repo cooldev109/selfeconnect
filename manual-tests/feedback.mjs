@@ -153,7 +153,8 @@ const ae = track(ap);
 await R.step("[dashboard] renders real content after signup (crash fix)", async () => {
   ae.length = 0; await ap.goto(BASE + "/dashboard", { waitUntil: "networkidle" });
   const t = await render(ap, ae);
-  if (!has(t, "you've earned in tips") && !has(t, "finish setup")) throw new Error("dashboard content missing");
+  // /dashboard is now the redesigned "Payments & tips" page.
+  if (!has(t, "total received") && !has(t, "recent transactions")) throw new Error("dashboard content missing");
 });
 await R.step("[profile] 'Hand it to customers' pro tip + image; back-to-dashboard + logo link", async () => {
   ae.length = 0; await ap.goto(BASE + "/profile", { waitUntil: "networkidle" });
@@ -165,7 +166,9 @@ await R.step("[profile] 'Hand it to customers' pro tip + image; back-to-dashboar
 await R.step("[account] back link + change password works end-to-end", async () => {
   ae.length = 0; await ap.goto(BASE + "/account", { waitUntil: "networkidle" });
   await render(ap, ae);
-  await ap.getByRole("link", { name: /Back to dashboard/i }).waitFor({ timeout: 5000 });
+  // The standalone "Back to dashboard" link is gone — navigation now lives in
+  // the persistent side-nav (the "Dashboard" link).
+  await ap.getByRole("link", { name: /Dashboard/i }).first().waitFor({ timeout: 5000 });
   // wrong current -> error
   await ap.locator('input[autocomplete="current-password"]').fill("wrongpass");
   await ap.locator('input[autocomplete="new-password"]').fill("newsecret123");
@@ -181,7 +184,8 @@ await R.step("[account] back link + change password works end-to-end", async () 
   await ap.locator('input[type="email"]').fill(email);
   await ap.locator('input[type="password"]').fill("newsecret123");
   await ap.getByRole("button", { name: /Log in/i }).click();
-  await ap.waitForURL(/\/dashboard$/, { timeout: 12000 });
+  // Login now lands a professional on the /home dashboard.
+  await ap.waitForURL(/\/(home|dashboard)$/, { timeout: 12000 });
 });
 
 // ============ REAL PAYMENT PIPELINE ============
