@@ -104,7 +104,7 @@ export async function signupDriver(ctx, { email, name = "MT Driver", photo }) {
   await p.getByRole("button", { name: /Create account/i }).click();
   // Signup lands on /jobs since the marketplace launch. Callers still expect
   // the dashboard, so go there once the account exists.
-  await p.waitForURL(/\/(jobs|dashboard)$/, { timeout: 20000 });
+  await p.waitForURL(/\/(home|jobs|dashboard)$/, { timeout: 20000 });
   await p.goto(BASE + "/dashboard", { waitUntil: "networkidle" });
   return p;
 }

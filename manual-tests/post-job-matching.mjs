@@ -76,7 +76,7 @@ try {
   await page.fill('input[placeholder*="M1 1AE"]', "RG1 8EQ");
   await page.getByText("Plumber", { exact: true }).first().click();
   await page.getByRole("button", { name: /Create account/i }).click();
-  await page.waitForURL(/\/(jobs|dashboard)/, { timeout: 20000 });
+  await page.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
   const proId = sql(`select id from "Driver" where email='${PRO}';`);
   ok("matching pro account created", proId.length > 0);
   sql(`update "Driver" set "isActive"=true where id='${proId}';`);

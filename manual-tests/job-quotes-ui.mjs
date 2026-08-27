@@ -53,7 +53,7 @@ try {
   const proCtx = await browser.newContext({ viewport: { width: 1000, height: 1100 } });
   const pp = await proCtx.newPage(); pp.setDefaultTimeout(30000);
   await login(pp, "/login", PRO, "/auth/login");
-  await pp.waitForURL(/\/(jobs|dashboard)/, { timeout: 20000 });
+  await pp.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
   await pp.goto(`${WEB}/jobs`, { waitUntil: "networkidle" });
   await pp.getByText(TITLE).first().waitFor({ state: "visible" });
   await pp.getByRole("button", { name: /Send a quote/i }).first().click();
@@ -72,7 +72,9 @@ try {
   await login(cp, "/customer/login", CUST, "/customer/auth/login");
   await cp.waitForURL(/\/customer(\/|$)/, { timeout: 20000 });
   await cp.getByText(TITLE).first().waitFor({ state: "visible" });
-  // The quotes list loads asynchronously — wait for it before asserting.
+  // My-jobs shows compact rows now; open the job's detail page to see quotes.
+  await cp.getByText(TITLE).first().click();
+  await cp.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
   await cp.getByText(/quote received/i).first().waitFor({ state: "visible" });
   ok("customer sees a quote received", await cp.getByText(/1 quote received/i).isVisible());
   ok("quote shows the price (£120)", await cp.getByText(/£120/).first().isVisible());

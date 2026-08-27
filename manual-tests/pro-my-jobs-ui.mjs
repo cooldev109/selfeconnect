@@ -63,7 +63,7 @@ try {
     page.waitForResponse((r) => r.url().includes("/auth/login") && r.request().method() === "POST"),
     page.getByRole("button", { name: /^Log in/i }).click(),
   ]);
-  await page.waitForURL(/\/(jobs|dashboard)/, { timeout: 20000 });
+  await page.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
 
   await page.goto(`${WEB}/my-jobs`, { waitUntil: "networkidle" });
   await page.getByText(TITLE).first().waitFor({ state: "visible" });

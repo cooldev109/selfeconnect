@@ -55,7 +55,7 @@ try {
   const proCtx = await browser.newContext({ viewport: { width: 1000, height: 1100 } });
   const pp = await proCtx.newPage(); pp.setDefaultTimeout(30000);
   await login(pp, "/login", PRO, "/auth/login");
-  await pp.waitForURL(/\/(jobs|dashboard)/, { timeout: 20000 });
+  await pp.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
   await pp.goto(`${WEB}/my-jobs`, { waitUntil: "networkidle" });
   await pp.getByText(TITLE).first().waitFor({ state: "visible" });
   await pp.getByRole("button", { name: /Message customer/i }).first().click();

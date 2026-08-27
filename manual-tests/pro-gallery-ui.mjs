@@ -37,7 +37,7 @@ try {
   await pp.fill('input[placeholder*="M1 1AE"]', "RG1 8EQ");
   await pp.getByText("Plumber", { exact: true }).first().click();
   await pp.getByRole("button", { name: /Create account/i }).click();
-  await pp.waitForURL(/\/(jobs|dashboard)/, { timeout: 20000 });
+  await pp.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
   const proId = sql(`select id from "Driver" where email='${PRO}';`);
   const publicId = sql(`select "publicId" from "Driver" where email='${PRO}';`);
   ok("pro account created", proId.length > 0);
