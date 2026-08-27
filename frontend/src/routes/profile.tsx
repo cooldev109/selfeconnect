@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
-import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
+import { Badge, Button, Input } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
+import { DashCard } from "@/components/DashKit";
 import { CategoryMultiSelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
 import { useMe } from "@/hooks/useDriver";
@@ -267,128 +268,77 @@ function ProfilePage() {
 
   return (
     <ProShell title="Profile & QR" subtitle="Your public profile, services and tipping QR code.">
-      <div className="mx-auto max-w-2xl space-y-6">
-        {/* Identity card */}
-        <Card className="rounded-2xl">
-          <CardContent className="flex flex-col items-center p-6 text-center">
-            <img
-              src={photo}
-              alt={name}
-              className="h-24 w-24 rounded-full border-4 border-primary/20 object-cover"
-            />
-            <Badge className="mt-4 gap-1 rounded-full bg-[#E1F5EE] px-3 py-1 text-primary hover:bg-[#E1F5EE]">
-              <BadgeCheck className="h-3.5 w-3.5" />
-              Profile created
-            </Badge>
-            <h2 className="mt-3 text-xl font-bold text-foreground">{name}</h2>
-            <p className="mt-4 text-sm text-muted-foreground">Your unique professional ID:</p>
-            <div className="mt-2 rounded-full bg-foreground px-6 py-2 text-2xl font-extrabold tracking-[0.25em] text-background">
-              {driver.id}
-            </div>
-            <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              This QR code is yours. Print it once and share it with every customer you work for.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="space-y-5">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_1fr]">
+          {/* Identity + QR */}
+          <div className="space-y-4 lg:sticky lg:top-4">
+            <DashCard title="Your QR code">
+              <div className="flex flex-col items-center text-center">
+                <img
+                  src={photo}
+                  alt={name}
+                  className="h-20 w-20 rounded-full border-4 border-primary/20 object-cover"
+                />
+                <Badge className="mt-3 gap-1 rounded-full bg-[#E1F5EE] px-3 py-1 text-primary hover:bg-[#E1F5EE]">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Profile created
+                </Badge>
+                <h2 className="mt-2 font-display text-lg font-bold text-foreground">{name}</h2>
+                <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Your unique professional ID
+                </p>
+                <div className="mt-1.5 rounded-full bg-foreground px-5 py-1.5 text-xl font-extrabold tracking-[0.25em] text-background">
+                  {driver.id}
+                </div>
 
-        {/* QR Code card */}
-        <Card className="rounded-2xl">
-          <CardContent className="flex flex-col items-center p-6">
-            <div ref={qrRef} className="rounded-2xl bg-white p-4 ring-1 ring-border">
-              <QRCodeCanvas value={tipUrl} size={224} level="H" marginSize={2} fgColor="#0F172A" />
-            </div>
+                <div ref={qrRef} className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-border">
+                  <QRCodeCanvas value={tipUrl} size={196} level="H" marginSize={2} fgColor="#0F172A" />
+                </div>
 
-            <div className="mt-5 w-full max-w-xs space-y-3">
-              {/* Full printable flyer (the SelfeConnect leaflet) */}
-              <Button
-                type="button"
-                onClick={downloadFlyer}
-                className="h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <FileText className="mr-1.5 h-4 w-4" />
-                Download flyer (PDF)
-              </Button>
-              {/* QR-code-only outputs */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={downloadPng}
-                  className="h-11 rounded-xl border-primary/30 text-primary hover:bg-[#E1F5EE]"
-                >
-                  <Download className="mr-1.5 h-4 w-4" />
-                  QR (PNG)
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={downloadPdf}
-                  className="h-11 rounded-xl border-primary/30 text-primary hover:bg-[#E1F5EE]"
-                >
-                  <FileText className="mr-1.5 h-4 w-4" />
-                  QR (PDF)
-                </Button>
+                <div className="mt-5 w-full space-y-3">
+                  {/* Full printable flyer (the SelfeConnect leaflet) */}
+                  <Button
+                    type="button"
+                    onClick={downloadFlyer}
+                    className="h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <FileText className="mr-1.5 h-4 w-4" />
+                    Download flyer (PDF)
+                  </Button>
+                  {/* QR-code-only outputs */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={downloadPng}
+                      className="h-11 rounded-xl border-primary/30 text-primary hover:bg-[#E1F5EE]"
+                    >
+                      <Download className="mr-1.5 h-4 w-4" />
+                      QR (PNG)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={downloadPdf}
+                      className="h-11 rounded-xl border-primary/30 text-primary hover:bg-[#E1F5EE]"
+                    >
+                      <FileText className="mr-1.5 h-4 w-4" />
+                      QR (PDF)
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex w-full items-center gap-2 rounded-xl bg-secondary px-4 py-3 text-xs text-muted-foreground">
+                  <Link2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate font-mono">{tipUrl}</span>
+                </div>
               </div>
-            </div>
+            </DashCard>
+          </div>
 
-            <div className="mt-5 flex w-full items-center gap-2 rounded-xl bg-secondary px-4 py-3 text-xs text-muted-foreground">
-              <Link2 className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate font-mono">{tipUrl}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Where to put it */}
-        <Card className="overflow-hidden rounded-2xl border-border/60">
-          <CardContent className="grid gap-0 p-0 md:grid-cols-2">
-            <div className="flex gap-px bg-border/60">
-              <img
-                src={professionalsFlyer}
-                alt="A professional handing a SelfeConnect QR flyer to a happy customer"
-                loading="lazy"
-                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
-              />
-              <img
-                src={scanQr}
-                alt="A tradesman handing his SelfeConnect QR code to a customer"
-                loading="lazy"
-                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
-              />
-            </div>
-            <div className="p-6">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
-                <Lightbulb className="h-3.5 w-3.5" /> Pro tip
-              </span>
-              <h3 className="mt-3 text-lg font-bold text-foreground font-display">
-                Where to show your QR
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Professionals who show their code in <strong>two visible spots</strong> get more
-                reviews and tips. Hand the printed flyer to your customer and keep it on display
-                where they can see it.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-foreground">
-                <li className="flex items-start gap-2">
-                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Hand it to customers
-                </li>
-                <li className="flex items-start gap-2">
-                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On display where customers
-                  can see it
-                </li>
-                <li className="flex items-start gap-2">
-                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for quick
-                  handovers
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Editable details */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h3 className="text-base font-semibold text-foreground">Edit your details</h3>
-            <form onSubmit={onSave} className="mt-5 space-y-5">
+          {/* Editable details */}
+          <DashCard title="Edit your profile">
+            <form onSubmit={onSave} className="space-y-5">
               <div className="flex items-center gap-4">
                 <button
                   type="button"
@@ -519,12 +469,56 @@ function ProfilePage() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-
-        <div className="mt-6">
-          <WorkGallery photos={driver.galleryPhotos ?? []} />
+          </DashCard>
         </div>
+
+        {/* Where to put it */}
+        <DashCard bodyClassName="p-0">
+          <div className="grid gap-0 md:grid-cols-2">
+            <div className="flex gap-px bg-border/60">
+              <img
+                src={professionalsFlyer}
+                alt="A professional handing a SelfeConnect QR flyer to a happy customer"
+                loading="lazy"
+                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
+              />
+              <img
+                src={scanQr}
+                alt="A tradesman handing his SelfeConnect QR code to a customer"
+                loading="lazy"
+                className="aspect-square w-1/2 object-cover md:aspect-auto md:h-full"
+              />
+            </div>
+            <div className="p-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-hover">
+                <Lightbulb className="h-3.5 w-3.5" /> Pro tip
+              </span>
+              <h3 className="mt-3 font-display text-lg font-bold text-foreground">
+                Where to show your QR
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Professionals who show their code in <strong>two visible spots</strong> get more
+                reviews and tips. Hand the printed flyer to your customer and keep it on display
+                where they can see it.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-foreground">
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> Hand it to customers
+                </li>
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On display where customers
+                  can see it
+                </li>
+                <li className="flex items-start gap-2">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" /> On your phone for quick
+                  handovers
+                </li>
+              </ul>
+            </div>
+          </div>
+        </DashCard>
+
+        <WorkGallery photos={driver.galleryPhotos ?? []} />
       </div>
     </ProShell>
   );
