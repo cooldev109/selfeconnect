@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MapPin, Search as SearchIcon } from "lucide-react";
-import { Badge, Button, Card, CardContent, Input } from "@/components/shared";
+import { Button } from "@/components/shared";
 import { BrowseShell } from "@/components/BrowseShell";
+import { DashCard } from "@/components/DashKit";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { PostcodeInput } from "@/components/PostcodeInput";
 import { StarRow } from "@/components/Reviews";
@@ -71,178 +72,152 @@ function SearchPage() {
       title="Find a professional"
       subtitle="Search reviewed professionals by service and location. Free — no account needed to look."
     >
-      <Card className="rounded-2xl">
-        <CardContent className="p-5">
-          <form
-            onSubmit={apply}
-            className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
-          >
-            <div className="block">
-              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Service
-              </span>
-              <CategorySelect
-                value={category}
-                onChange={setCategory}
-                allLabel="All services"
-              />
-            </div>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Your postcode
-              </span>
-              <PostcodeInput
-                value={postcode}
-                onChange={setPostcode}
-                ariaLabel="Your postcode"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Within
-              </span>
-              <select
-                value={radius}
-                onChange={(e) => setRadius(Number(e.target.value))}
-                className="h-11 rounded-xl border border-input bg-background px-3 text-sm"
-              >
-                {RADII.map((r) => (
-                  <option key={r} value={r}>
-                    {r} mi
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button
-              type="submit"
-              className="h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+      <DashCard>
+        <form
+          onSubmit={apply}
+          className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
+        >
+          <div className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Service
+            </span>
+            <CategorySelect value={category} onChange={setCategory} allLabel="All services" />
+          </div>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Your postcode
+            </span>
+            <PostcodeInput value={postcode} onChange={setPostcode} ariaLabel="Your postcode" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Within</span>
+            <select
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="h-11 rounded-xl border border-input bg-background px-3 text-sm"
             >
-              <SearchIcon className="mr-2 h-4 w-4" /> Search
-            </Button>
-          </form>
-          {badPostcode ? (
-            <p className="mt-2 text-xs text-destructive">
-              Enter a valid UK postcode.
-            </p>
-          ) : (
-            <p id="postcode-help" className="mt-2 text-xs text-muted-foreground">
-              Enter where <em>you</em> are — we'll show professionals near you,
-              nearest first.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+              {RADII.map((r) => (
+                <option key={r} value={r}>
+                  {r} mi
+                </option>
+              ))}
+            </select>
+          </label>
+          <Button
+            type="submit"
+            className="h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <SearchIcon className="mr-2 h-4 w-4" /> Search
+          </Button>
+        </form>
+        {badPostcode ? (
+          <p className="mt-2 text-xs text-destructive">Enter a valid UK postcode.</p>
+        ) : (
+          <p id="postcode-help" className="mt-2 text-xs text-muted-foreground">
+            Enter where <em>you</em> are — we'll show professionals near you, nearest first.
+          </p>
+        )}
+      </DashCard>
 
       {prosQ.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
       ) : pros.length === 0 && !badPostcode ? (
-        <Card className="mt-6 rounded-2xl border-dashed">
-          <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                No professionals here yet
-              </p>
-              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                Nobody matches your search in this area yet. Try a different
-                service or a wider radius — or post your job and let
-                professionals come to you.
-              </p>
+        <div className="mt-5">
+          <DashCard>
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div>
+                <p className="text-sm font-semibold text-foreground">No professionals here yet</p>
+                <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                  Nobody matches your search in this area yet. Try a different service or a wider
+                  radius — or post your job and let professionals come to you.
+                </p>
+              </div>
+              <Button asChild className="rounded-xl">
+                <Link to={customer ? "/customer/jobs/new" : "/customer/signup"}>
+                  {customer ? "Post a job — let professionals find you" : "Sign up free & post a job"}
+                </Link>
+              </Button>
             </div>
-            {customer ? (
-              <Button
-                asChild
-                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Link to="/customer/jobs/new">
-                  Post a job — let professionals find you
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                asChild
-                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Link to="/customer/signup">
-                  Sign up free &amp; post a job
-                </Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          </DashCard>
+        </div>
       ) : (
-        <div className="mt-6 space-y-3">
-          {pros.map((p) => (
-            <Card key={p.publicId} className="rounded-2xl">
-              <CardContent className="flex items-center gap-4 p-4">
-                <img
-                  src={
-                    p.photoUrl ||
-                    "https://api.dicebear.com/7.x/initials/svg?seed=" +
-                      encodeURIComponent(p.name)
-                  }
-                  alt={p.name}
-                  className="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="truncate font-semibold text-foreground">
-                      {p.name}
-                    </h3>
-                    {p.distanceMiles != null && (
-                      <Badge className="rounded-full bg-secondary text-muted-foreground hover:bg-secondary">
-                        <MapPin className="mr-1 h-3 w-3" /> {p.distanceMiles} mi
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <StarRow value={p.avgRating} className="h-3.5 w-3.5" />
-                    <span>
-                      {p.avgRating.toFixed(1)} ({p.reviewCount})
-                    </span>
-                  </div>
-                  <VerificationBadges
-                    badges={p.badges}
-                    only={["verifiedPro", "insurance", "qualification"]}
-                    size="sm"
-                    className="mt-1.5"
+        <>
+          {pros.length > 0 && (
+            <p className="mb-3 mt-5 text-sm text-muted-foreground">
+              {pros.length} professional{pros.length === 1 ? "" : "s"}
+              {applied.postcode ? " near you" : ""}
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {pros.map((p) => (
+              <div
+                key={p.publicId}
+                className="flex flex-col rounded-2xl border border-border/60 bg-card p-4 shadow-soft"
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={
+                      p.photoUrl ||
+                      "https://api.dicebear.com/7.x/initials/svg?seed=" +
+                        encodeURIComponent(p.name)
+                    }
+                    alt={p.name}
+                    className="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
                   />
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {p.categories.join(" · ")}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate font-semibold text-foreground">{p.name}</h3>
+                      {p.distanceMiles != null && (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          <MapPin className="mr-1 h-3 w-3" /> {p.distanceMiles} mi
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                      <StarRow value={p.avgRating} className="h-3.5 w-3.5" />
+                      <span>
+                        {p.avgRating.toFixed(1)} ({p.reviewCount})
+                      </span>
+                    </div>
+                    <VerificationBadges
+                      badges={p.badges}
+                      only={["verifiedPro", "insurance", "qualification"]}
+                      size="sm"
+                      className="mt-1.5"
+                    />
+                  </div>
                 </div>
+                <p className="mt-3 line-clamp-1 text-xs text-muted-foreground">
+                  {p.categories.join(" · ")}
+                </p>
                 <Link
                   to="/customer/pros/$publicId"
                   params={{ publicId: p.publicId }}
-                  className="inline-flex h-9 shrink-0 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   View profile
                 </Link>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
 
           {/* Look all you like. The account is only asked for at the point it
               actually buys you something. */}
           {!customer && pros.length > 0 && (
             <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-[#E1F5EE] p-6 text-center">
-              <p className="text-sm font-semibold text-foreground">
-                Ready to get in touch?
-              </p>
+              <p className="text-sm font-semibold text-foreground">Ready to get in touch?</p>
               <p className="max-w-md text-sm text-muted-foreground">
-                Create a free account to see their phone number and email, post a
-                job, and leave a review. It takes a minute and costs nothing.
+                Create a free account to see their phone number and email, post a job, and leave a
+                review. It takes a minute and costs nothing.
               </p>
-              <Button
-                asChild
-                className="mt-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              >
+              <Button asChild className="mt-1 rounded-xl">
                 <Link to="/customer/signup">Sign up free</Link>
               </Button>
             </div>
           )}
-        </div>
+        </>
       )}
     </BrowseShell>
   );
