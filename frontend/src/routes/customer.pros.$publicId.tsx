@@ -2,9 +2,10 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock, Flag } from "lucide-react";
-import { Badge, Button, Card, CardContent, Modal } from "@/components/shared";
+import { Button, Modal } from "@/components/shared";
 import { reportAsCustomer } from "@/lib/disputes";
 import { BrowseShell } from "@/components/BrowseShell";
+import { DashCard } from "@/components/DashKit";
 import { useCustomer } from "@/lib/useCustomer";
 import { StarRow, RatingSummary, ReviewCard } from "@/components/Reviews";
 import { VerificationBadges } from "@/components/VerificationBadges";
@@ -67,11 +68,11 @@ function ProProfilePage() {
       </Link>
 
       {!p ? (
-        <Card className="rounded-2xl">
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
+        <DashCard>
+          <p className="py-6 text-center text-sm text-muted-foreground">
             This professional could not be found.
-          </CardContent>
-        </Card>
+          </p>
+        </DashCard>
       ) : (
         <div className="mx-auto max-w-3xl space-y-6">
           {/* Profile hero — the deep ink band gives a hired professional the
@@ -182,45 +183,39 @@ function ProProfilePage() {
           )}
 
           {p.galleryPhotos.length > 0 && (
-            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="p-6">
-                <h2 className="mb-3 text-lg font-semibold text-foreground">Recent work</h2>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {p.galleryPhotos.map((url) => (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block aspect-square overflow-hidden rounded-xl border border-border"
-                    >
-                      <img
-                        src={url}
-                        alt="Work by this professional"
-                        className="h-full w-full object-cover transition hover:scale-105"
-                      />
-                    </a>
-                  ))}
-                </div>
+            <DashCard title="Recent work">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {p.galleryPhotos.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block aspect-square overflow-hidden rounded-xl border border-border"
+                  >
+                    <img
+                      src={url}
+                      alt="Work by this professional"
+                      className="h-full w-full object-cover transition hover:scale-105"
+                    />
+                  </a>
+                ))}
               </div>
-            </div>
+            </DashCard>
           )}
 
           {/* Reviews */}
           {p.reviewCount > 0 && (
-            <Card className="rounded-2xl">
-              <CardContent className="p-6">
-                <RatingSummary
-                  avgRating={p.avgRating}
-                  reviewCount={p.reviewCount}
-                  breakdown={p.breakdown}
-                  verifiedCount={p.verifiedCount}
-                />
-              </CardContent>
-            </Card>
+            <DashCard>
+              <RatingSummary
+                avgRating={p.avgRating}
+                reviewCount={p.reviewCount}
+                breakdown={p.breakdown}
+                verifiedCount={p.verifiedCount}
+              />
+            </DashCard>
           )}
-          <div>
-            <h2 className="mb-3 text-lg font-semibold text-foreground">Reviews</h2>
+          <DashCard title="Reviews">
             {p.reviews.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No reviews yet — be the first to leave one.
@@ -232,7 +227,7 @@ function ProProfilePage() {
                 ))}
               </div>
             )}
-          </div>
+          </DashCard>
 
           {customer && (
             <div className="pt-1 text-center">
@@ -322,8 +317,8 @@ function ReviewForm({
 
   if (done) {
     return (
-      <Card className="rounded-2xl border-primary/30 bg-[#E1F5EE]/40">
-        <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
+      <div className="rounded-2xl border border-primary/30 bg-[#E1F5EE]/40 p-6">
+        <div className="flex flex-col items-center gap-2 text-center">
           <Star className="h-7 w-7 fill-amber-400 text-amber-400" />
           <p className="text-sm font-semibold text-foreground">Thanks for your review!</p>
           <p className="text-xs text-muted-foreground">
@@ -332,14 +327,14 @@ function ReviewForm({
           <Button variant="outline" className="mt-2 rounded-xl" onClick={onDone}>
             Close
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="rounded-2xl border-primary/30">
-      <CardContent className="p-6">
+    <div className="rounded-2xl border border-primary/30 bg-card p-6 shadow-soft">
+      <div>
         <h2 className="text-base font-semibold text-foreground">Leave a review</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">How was the service?</p>
 
@@ -409,7 +404,7 @@ function ReviewForm({
             )}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
