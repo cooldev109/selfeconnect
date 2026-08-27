@@ -57,27 +57,43 @@ try {
   ]);
   await page.waitForURL(/\/customer(\/|$)/, { timeout: 20000 });
 
-  // Active tab shows the open job.
+  // Active tab shows the open job. The lifecycle actions live on the job's own
+  // page now, so the list rows are clickable summaries — open the job to act.
   await page.getByText(TITLE).first().waitFor({ state: "visible" });
   ok("job shows under Active as Open", await page.getByText("Open").first().isVisible());
   ok("Active tab counts 1", await page.getByRole("tab", { name: /Active \(1\)/ }).isVisible());
+  const openJob = async () => {
+    await page.getByText(TITLE).first().click();
+    await page.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
+  };
 
   // Open → Hired (off-platform / just mark hired). "Start work" only exists in
   // the hired state, so its appearance is proof the transition landed.
+  await openJob();
   await page.getByRole("button", { name: /I've found my professional/i }).click();
   await page.getByRole("button", { name: /Just mark this job as hired/i }).click();
   const startWork = page.getByRole("button", { name: /Start work/i });
   await startWork.waitFor({ state: "visible" });
-  ok("job is now Hired (Start work available, still Active)", await startWork.isVisible());
+  ok("job is now Hired (Start work available)", await startWork.isVisible());
+
+  // A hired job stays under Active on the dashboard.
+  await page.goto(`${WEB}/customer`, { waitUntil: "networkidle" });
   ok("Active tab still counts 1 while hired", await page.getByRole("tab", { name: /Active \(1\)/ }).isVisible());
 
-  // Hired → In progress.
-  await startWork.click();
+  // Hired → In progress, back on the job page.
+  await openJob();
+  await page.getByRole("button", { name: /Start work/i }).click();
   await page.getByText("In progress").first().waitFor({ state: "visible" });
   ok("job moves to In progress", await page.getByText("In progress").first().isVisible());
 
-  // In progress → Completed (leaves the Active tab).
+  // In progress → Completed (leaves the Active tab). Mark complete asks for a
+  // confirmation before it lands.
   await page.getByRole("button", { name: /Mark complete/i }).click();
+  await page.getByRole("button", { name: /Yes, it's complete/i }).click();
+  await page.waitForTimeout(1200);
+
+  // Back on the dashboard the staged tabs have moved it to Completed.
+  await page.goto(`${WEB}/customer`, { waitUntil: "networkidle" });
   await page.getByRole("tab", { name: /Completed \(1\)/ }).waitFor({ state: "visible" });
   ok("Completed tab now counts 1", await page.getByRole("tab", { name: /Completed \(1\)/ }).isVisible());
   ok("Active tab back to 0", await page.getByRole("tab", { name: /Active \(0\)/ }).isVisible());
