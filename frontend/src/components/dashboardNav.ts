@@ -9,11 +9,13 @@ import {
   Settings,
   ClipboardList,
   ShieldCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import type { NavItem } from "@/components/DashboardShell";
 
-// Professional dashboard — "Find work" leads; tips move to a secondary tab.
+// Professional dashboard — the overview leads, then find work.
 export const PRO_NAV: NavItem[] = [
+  { to: "/home", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/jobs", label: "Find work", icon: Briefcase },
   { to: "/my-jobs", label: "My jobs", icon: ClipboardList },
   { to: "/dashboard", label: "Payments & tips", icon: LineChart },

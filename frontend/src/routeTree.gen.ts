@@ -22,6 +22,7 @@ import { Route as PostAJobRouteImport } from './routes/post-a-job'
 import { Route as MyJobsRouteImport } from './routes/my-jobs'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -118,6 +119,11 @@ const LoginRoute = LoginRouteImport.update({
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/my-jobs': typeof MyJobsRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/my-jobs': typeof MyJobsRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/my-jobs': typeof MyJobsRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
+    | '/home'
     | '/jobs'
     | '/login'
     | '/my-jobs'
@@ -478,6 +488,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
+    | '/home'
     | '/jobs'
     | '/login'
     | '/my-jobs'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
+    | '/home'
     | '/jobs'
     | '/login'
     | '/my-jobs'
@@ -572,6 +584,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HomeRoute: typeof HomeRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
   MyJobsRoute: typeof MyJobsRoute
@@ -687,6 +700,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -982,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  HomeRoute: HomeRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
   MyJobsRoute: MyJobsRoute,
