@@ -83,15 +83,15 @@ await R.step("[mobile navbar] fits at 360px (Join button not cut off)", async ()
 });
 
 // ============ LEGAL ============
-await R.step("[terms] official 10-section Terms & Conditions, £5.49, 27 June 2026", async () => {
+await R.step("[terms] official 20-section Terms & Conditions, £9.49, 23 August 2026", async () => {
   pe.length = 0; await p.goto(BASE + "/terms", { waitUntil: "networkidle" });
   const t = await render(p, pe);
-  if (!has(t, "terms & conditions", "professional accounts & subscriptions", "£5.49 per month", "acceptable use", "intellectual property", "last updated: 27 june 2026")) throw new Error("terms content missing");
+  if (!has(t, "terms & conditions", "professional accounts & subscription", "£9.49 per month", "governing law", "intellectual property", "last updated: 23 august 2026")) throw new Error("terms content missing");
 });
-await R.step("[privacy] official 10-section Privacy Policy, 27 June 2026", async () => {
+await R.step("[privacy] official Privacy Policy, 23 August 2026", async () => {
   pe.length = 0; await p.goto(BASE + "/privacy", { waitUntil: "networkidle" });
   const t = await render(p, pe);
-  if (!has(t, "who we are", "information we collect", "cookies & analytics", "data retention", "last updated: 27 june 2026", "support@selfeconnect.com")) throw new Error("privacy content missing");
+  if (!has(t, "who we are", "information we collect", "cookies & analytics", "data retention", "last updated: 23 august 2026", "support@selfeconnect.com")) throw new Error("privacy content missing");
 });
 await R.step("[about/contact] render with content", async () => {
   pe.length = 0; await p.goto(BASE + "/about", { waitUntil: "networkidle" });
