@@ -46,22 +46,13 @@ try {
     (gen_random_uuid(),'${id}',10000,'gbp','payment','succeeded','Sarah', now());`);
 
   await page.goto(`${WEB}/dashboard`, { waitUntil: "networkidle" });
-  const before = await card().innerText();
-  ok("total shows £1052.00", /£1052\.00/.test(before));
-  ok("list is collapsed until opened", !/Judith/.test(before));
-
-  await page.getByRole("button", { name: /View payments/i }).click();
-  await page.getByText("Judith").waitFor({ timeout: 5000 });
-  const after = await card().innerText();
-  ok("Judith £930.00", /Judith/.test(after) && /£930\.00/.test(after));
-  ok("Sarah £100.00", /Sarah/.test(after) && /£100\.00/.test(after));
-  ok("anonymous payment £22.00", /Anonymous/.test(after) && /£22\.00/.test(after));
-  ok("newest first (Sarah before Judith)", after.indexOf("Sarah") < after.indexOf("Judith"));
-  ok("list carries a Total row", /Total/.test(after));
-
-  await page.getByRole("button", { name: /Hide/i }).click();
-  await page.waitForTimeout(300);
-  ok("collapses again on Hide", !/Judith/.test(await card().innerText()));
+  await page.getByText("Recent transactions").waitFor({ timeout: 8000 });
+  const body = await page.locator("body").innerText();
+  ok("Payments total £1,052.00", /£1,052\.00/.test(body));
+  ok("Judith £930.00", /Judith/.test(body) && /£930\.00/.test(body));
+  ok("Sarah £100.00", /Sarah/.test(body) && /£100\.00/.test(body));
+  ok("anonymous payment £22.00", /Anonymous/.test(body) && /£22\.00/.test(body));
+  ok("newest first (Sarah before Judith)", body.indexOf("Sarah") < body.indexOf("Judith"));
 } finally {
   await browser.close();
   sql(`delete from "Driver" where email='${EMAIL}';`);

@@ -24,7 +24,7 @@ export async function run(browser) {
 
   await R.step("new driver dashboard shows the empty state (£0.00)", async () => {
     await page.goto(BASE + "/dashboard", { waitUntil: "networkidle" });
-    await page.getByText("No tips yet").waitFor({ timeout: 8000 });
+    await page.getByText(/No payments or tips yet/i).waitFor({ timeout: 8000 });
     const sum = await page.evaluate(
       (a) => fetch(a + "/me/tips", { credentials: "include" }).then((r) => r.json()),
       API,
@@ -56,16 +56,20 @@ export async function run(browser) {
     if (sum.fiveStarStreak !== 1) throw new Error("streak=" + sum.fiveStarStreak);
   });
 
-  await R.step("dashboard renders the real total + recent tips", async () => {
+  await R.step("dashboard renders the real total + recent transactions", async () => {
     await page.reload({ waitUntil: "networkidle" });
-    await page.getByRole("heading", { level: 1 }).filter({ hasText: "£7.00" }).waitFor({ timeout: 8000 });
+    // Total now lives in the "Total received" stat card, and each tip is a row
+    // in the "Recent transactions" table.
+    await page.getByText("£7.00").first().waitFor({ timeout: 8000 });
+    await page.getByText("Recent transactions").waitFor({ timeout: 8000 });
     await page.getByText("Sarah M.").first().waitFor({ timeout: 8000 });
     await page.getByText("Tom R.").first().waitFor({ timeout: 8000 });
   });
 
-  await R.step("'Customer love' quote shows the real message", async () => {
-    await page.getByText(/Thank you so much for the careful delivery!/).first().waitFor({ timeout: 8000 });
-    await page.getByText(/Sarah M\., Alfama/).waitFor({ timeout: 8000 });
+  await R.step("transactions are typed as tips and drive the avg rating", async () => {
+    // Both seeded rows are tips → "Tip" badge; avg of 4★ + 5★ = 4.5.
+    await page.getByText("Tip").first().waitFor({ timeout: 8000 });
+    await page.getByText("4.5").first().waitFor({ timeout: 8000 });
   });
 
   await ctx.close();

@@ -59,8 +59,10 @@ export async function run(sharedBrowser) {
     ok("'Finish setting up' checklist is on the Account page", await proPage.getByText(/Finish setting up/i).first().isVisible());
     await proPage.goto(`${BASE}/dashboard`, { waitUntil: "networkidle" });
     ok("checklist is NOT on the Payments & tips dashboard", !(await proPage.getByText(/Finish setting up/i).first().isVisible().catch(() => false)));
-    // ---- #6 'View payments' button is present even with zero payments ----
-    ok("'View payments' button is present on the dashboard", await proPage.getByRole("button", { name: /View payments/ }).first().isVisible());
+    // ---- #6 individual payments are listed on the dashboard (no spreadsheet needed) ----
+    // The old "View payments" toggle is gone; the "Recent transactions" table is
+    // always visible, so a pro sees each payment/tip without any extra click.
+    ok("'Recent transactions' list is present on the dashboard", await proPage.getByText(/Recent transactions/i).first().isVisible());
     await proCtx.close();
 
     // ---- #3 profile link on the quote + #1 chat timestamp ----
