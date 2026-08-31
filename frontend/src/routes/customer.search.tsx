@@ -72,7 +72,10 @@ function SearchPage() {
       title="Find a professional"
       subtitle="Search reviewed professionals by service and location. Free — no account needed to look."
     >
-      <DashCard>
+      {/* A plain card (not DashCard) so the Service/Postcode dropdowns can
+          overflow the container instead of being clipped; z-20 keeps them above
+          the results grid below. */}
+      <div className="relative z-20 rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
         <form
           onSubmit={apply}
           className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
@@ -117,7 +120,7 @@ function SearchPage() {
             Enter where <em>you</em> are — we'll show professionals near you, nearest first.
           </p>
         )}
-      </DashCard>
+      </div>
 
       {prosQ.isLoading ? (
         <div className="mt-8 flex justify-center">
