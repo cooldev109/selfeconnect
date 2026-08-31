@@ -32,6 +32,10 @@ export function PostcodeInput({
   // Suppresses the lookup that a programmatic set (pick / geolocate) would
   // otherwise trigger, which would immediately reopen the menu.
   const skipNext = useRef(false);
+  // Only auto-open the menu while the field is actually focused — otherwise a
+  // page that prefills the postcode (profile, account) would pop the menu open
+  // on load without the user ever clicking the field.
+  const focusedRef = useRef(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Debounced type-ahead.
@@ -52,7 +56,8 @@ export function PostcodeInput({
         if (cancelled) return;
         setSuggestions(postcodes);
         setActive(-1);
-        if (postcodes.length) setOpen(true);
+        // Never pop the menu open unless the user is interacting with the field.
+        if (postcodes.length && focusedRef.current) setOpen(true);
       } catch {
         if (!cancelled) setSuggestions([]);
       }
@@ -132,7 +137,13 @@ export function PostcodeInput({
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value.toUpperCase())}
-          onFocus={() => suggestions.length && setOpen(true)}
+          onFocus={() => {
+            focusedRef.current = true;
+            if (suggestions.length) setOpen(true);
+          }}
+          onBlur={() => {
+            focusedRef.current = false;
+          }}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label={ariaLabel}

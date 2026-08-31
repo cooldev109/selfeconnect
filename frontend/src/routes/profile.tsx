@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb } from "lucide-react";
+import { BadgeCheck, Camera, Download, FileText, Link2, Lightbulb, Eye } from "lucide-react";
 import { Badge, Button, Input } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { DashCard } from "@/components/DashKit";
@@ -267,7 +267,17 @@ function ProfilePage() {
   if (!driver) return null;
 
   return (
-    <ProShell title="Profile & QR" subtitle="Your public profile, services and tipping QR code.">
+    <ProShell
+      title="Profile & QR"
+      subtitle="Your public profile, services and tipping QR code."
+      actions={
+        <Button asChild variant="outline" className="rounded-xl">
+          <a href={`/customer/pros/${driver.id}`} target="_blank" rel="noreferrer">
+            <Eye className="mr-1.5 h-4 w-4" /> Preview profile
+          </a>
+        </Button>
+      }
+    >
       <div className="space-y-5">
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_1fr]">
           {/* Identity + QR */}
