@@ -56,13 +56,43 @@ export async function run(sharedBrowser) {
     ok("clicking a job row opens its detail page", /\/customer\/jobs\//.test(p.url()), p.url());
 
     // The detail page carries the full workspace: the quote + a Hire button.
-    const hireBtn = p.getByRole("button", { name: /^Hire$/ }).first();
-    await hireBtn.waitFor({ state: "visible" });
+    await p.getByRole("button", { name: /^Hire$/ }).first().waitFor({ state: "visible" });
     ok("a Hire button is available", true);
     ok("the quote message is shown on the detail page", await p.getByText(/Can do this week/).first().isVisible());
     ok("the quote amount (£80) is shown", await p.getByText(/£80/).first().isVisible());
 
+    // Ruan feedback #1: opening a quoting pro's profile shows "Back to my jobs"
+    // (not "Back to search") and returns to the My jobs page.
+    await p.getByRole("link", { name: /View profile/ }).first().click();
+    await p.waitForURL(/\/customer\/pros\//, { timeout: 10000 });
+    const backText = await p.locator("a", { hasText: /Back to/ }).first().innerText();
+    ok("profile reached from a quote shows 'Back to my jobs'", /back to my jobs/i.test(backText), backText);
+    await p.locator("a", { hasText: /Back to/ }).first().click();
+    await p.waitForURL(/\/customer$/, { timeout: 10000 });
+    ok("'Back to my jobs' returns to the My jobs page", /\/customer$/.test(p.url()), p.url());
+
+    // Ruan feedback #2: the Edit button on an open job opens a working edit form
+    // (previously the URL changed but the form never rendered).
+    await p.getByText("Detail page tap").first().click();
+    await p.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
+    await p.getByRole("link", { name: /^Edit$/ }).first().click();
+    await p.waitForURL(/\/edit$/, { timeout: 10000 });
+    const saveBtn = p.getByRole("button", { name: /Save changes/ });
+    await saveBtn.waitFor({ state: "visible", timeout: 10000 });
+    ok("Edit opens a working edit form (Save changes)", true);
+    const prefilled = await p.evaluate(() =>
+      [...document.querySelectorAll("input,textarea")].some((el) => el.value.includes("Detail page tap")),
+    );
+    ok("Edit prefills the existing job details", prefilled);
+    await saveBtn.click();
+    await p.waitForURL(/\/customer$/, { timeout: 10000 });
+    ok("saving an edit returns to the My jobs page", /\/customer$/.test(p.url()), p.url());
+
     // Hiring from the detail page moves the job to Hired.
+    await p.getByText("Detail page tap").first().click();
+    await p.waitForURL(/\/customer\/jobs\//, { timeout: 10000 });
+    const hireBtn = p.getByRole("button", { name: /^Hire$/ }).first();
+    await hireBtn.waitFor({ state: "visible" });
     await hireBtn.click();
     await p.getByRole("button", { name: /Start work/i }).waitFor({ state: "visible" });
     ok("hiring on the detail page works (Start work appears)", true);

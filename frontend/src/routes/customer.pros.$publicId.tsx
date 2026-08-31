@@ -15,9 +15,12 @@ import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
 
 export const Route = createFileRoute("/customer/pros/$publicId")({
-  validateSearch: (s: Record<string, unknown>): { review?: string; jobId?: string } => ({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { review?: string; jobId?: string; from?: string } => ({
     review: typeof s.review === "string" ? s.review : undefined,
     jobId: typeof s.jobId === "string" ? s.jobId : undefined,
+    from: typeof s.from === "string" ? s.from : undefined,
   }),
   head: () => ({ meta: [{ title: "Professional profile — SelfeConnect" }] }),
   component: ProProfilePage,
@@ -58,13 +61,18 @@ function ProProfilePage() {
 
   const p = q.data;
 
+  // A visitor who reached this profile from one of their jobs (a quote, a
+  // message, or a completed job) should go back to My jobs — not the search page
+  // they may never have used.
+  const fromJobs = search.from === "jobs" || !!search.jobId || search.review === "1";
+
   return (
     <BrowseShell>
       <Link
-        to="/customer/search"
+        to={fromJobs ? "/customer" : "/customer/search"}
         className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to search
+        <ArrowLeft className="h-4 w-4" /> {fromJobs ? "Back to my jobs" : "Back to search"}
       </Link>
 
       {!p ? (

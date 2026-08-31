@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/shared";
 import { CustomerShell } from "@/components/CustomerShell";
+import { DashCard } from "@/components/DashKit";
 import { JobForm } from "@/components/JobForm";
 import { getJob, updateJob } from "@/lib/jobs";
 
-export const Route = createFileRoute("/customer/jobs/$jobId/edit")({
+export const Route = createFileRoute("/customer/jobs/$jobId_/edit")({
   head: () => ({ meta: [{ title: "Edit job — SelfeConnect" }] }),
   component: EditJobPage,
 });
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/customer/jobs/$jobId/edit")({
 function EditJobPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { jobId } = useParams({ from: "/customer/jobs/$jobId/edit" });
+  const { jobId } = useParams({ from: "/customer/jobs/$jobId_/edit" });
   const jobQ = useQuery({
     queryKey: ["job", jobId],
     queryFn: () => getJob(jobId),
@@ -26,8 +26,7 @@ function EditJobPage() {
   return (
     <CustomerShell title="Edit job">
       <div className="mx-auto max-w-2xl">
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
+        <DashCard>
             {jobQ.isLoading ? (
               <div className="flex justify-center py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -58,8 +57,7 @@ function EditJobPage() {
                 This job could not be found.
               </p>
             )}
-          </CardContent>
-        </Card>
+        </DashCard>
       </div>
     </CustomerShell>
   );

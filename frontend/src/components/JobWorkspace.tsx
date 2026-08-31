@@ -350,6 +350,7 @@ export function JobWorkspace({ job }: { job: Job }) {
                     <Link
                       to="/customer/pros/$publicId"
                       params={{ publicId: q.publicId }}
+                      search={{ from: "jobs" }}
                       className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                     >
                       <UserRound className="h-3 w-3" /> View profile
