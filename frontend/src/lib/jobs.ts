@@ -162,6 +162,10 @@ export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
 export const proUnlockJob = (id: string) =>
   api<ProJob>(`/pro/jobs/${id}/unlock`, { method: "POST" });
 
+// "Not interested" — hide this job from the pro's board. Idempotent.
+export const proDismissJob = (id: string) =>
+  api<{ ok: true }>(`/pro/jobs/${id}/dismiss`, { method: "POST" });
+
 // Submit (or update) this pro's quote on a job. Also unlocks the contact.
 export const proSubmitQuote = (id: string, body: { amount?: number | null; message: string }) =>
   api<ProJob>(`/pro/jobs/${id}/quote`, { method: "POST", body: JSON.stringify(body) });

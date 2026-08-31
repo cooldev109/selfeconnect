@@ -526,7 +526,12 @@ export class JobsService {
     if (categoryIds.length === 0) return [];
 
     const jobs = await this.prisma.job.findMany({
-      where: { status: 'open', categoryId: { in: categoryIds } },
+      where: {
+        status: 'open',
+        categoryId: { in: categoryIds },
+        // Hide jobs this pro dismissed as "not interested".
+        dismissals: { none: { driverId } },
+      },
       include: {
         category: true,
         customer: true,
@@ -553,13 +558,38 @@ export class JobsService {
 
     let filtered = rows;
     if (hasLoc && opts.radiusMiles != null) {
-      filtered = rows
-        .filter((r) => r.distanceMiles != null && r.distanceMiles <= opts.radiusMiles!)
-        .sort((a, b) => a.distanceMiles! - b.distanceMiles!);
+      // Filter to the radius but keep the query's newest-first order — pros want
+      // to see the most recently posted jobs at the top, not the closest ones.
+      filtered = rows.filter(
+        (r) => r.distanceMiles != null && r.distanceMiles <= opts.radiusMiles!,
+      );
     }
     return filtered.map((r) =>
       this.shapePro(r.j, r.distanceMiles, r.unlocked, false, this.quoteOf(r.j)),
     );
+  }
+
+  // "Not interested": hide a job from this pro's board. Idempotent, and only for
+  // jobs the pro can actually see (in one of their categories).
+  async dismissForPro(driverId: string, jobId: string) {
+    const driver = await this.prisma.driver.findUnique({
+      where: { id: driverId },
+      include: { categories: { select: { id: true } } },
+    });
+    if (!driver) throw new NotFoundException('driver_not_found');
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { categoryId: true },
+    });
+    if (!job || !driver.categories.some((c) => c.id === job.categoryId)) {
+      throw new NotFoundException('job_not_found');
+    }
+    await this.prisma.jobDismissal.upsert({
+      where: { jobId_driverId: { jobId, driverId } },
+      create: { jobId, driverId },
+      update: {},
+    });
+    return { ok: true };
   }
 
   // Reveal a job's contact details — requires an active subscription. Idempotent.

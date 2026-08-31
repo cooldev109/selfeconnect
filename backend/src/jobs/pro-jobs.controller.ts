@@ -49,6 +49,12 @@ export class ProJobsController {
     return this.jobs.unlockContact(user.id, id);
   }
 
+  // "Not interested" — hide this job from this pro's board. Idempotent.
+  @Post(':id/dismiss')
+  dismiss(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.jobs.dismissForPro(user.id, id);
+  }
+
   // Submit (or update) this pro's quote on a job. Also unlocks the contact.
   @Post(':id/quote')
   quote(

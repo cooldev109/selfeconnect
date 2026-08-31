@@ -154,6 +154,7 @@ model Driver {
   reviews       Review[]
   hiredJobs     Job[]              @relation("JobHired")
   verifications Verification[]
+  jobDismissals JobDismissal[]
 }
 
 model Tip {
@@ -322,16 +323,31 @@ model Job {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  unlocks  JobContactUnlock[]
-  quotes   Quote[]
-  messages Message[]
-  payments Tip[]
-  reviews  Review[]
-  disputes Dispute[]
+  unlocks     JobContactUnlock[]
+  quotes      Quote[]
+  messages    Message[]
+  payments    Tip[]
+  reviews     Review[]
+  disputes    Dispute[]
+  dismissals  JobDismissal[]
 
   @@index([categoryId])
   @@index([status])
   @@index([createdAt])
+}
+
+// A professional dismissing a job from their Find work board ("Not interested").
+// The job stays live for everyone else; it just no longer shows for this pro.
+model JobDismissal {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, driverId])
+  @@index([driverId])
 }
 
 // A customer's rating + written review of a professional. Decoupled from tips:

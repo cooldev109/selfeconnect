@@ -133,6 +133,7 @@ function ProDashboard() {
             value={nearby.length}
             foot={newToday > 0 ? `${newToday} new today` : "In your area"}
             footTone={newToday > 0 ? "text-primary" : "text-muted-foreground"}
+            to="/jobs"
           />
           <StatCard
             icon={CircleCheck}
@@ -140,6 +141,7 @@ function ProDashboard() {
             value={activeJobs.length}
             tone="bg-violet-100 text-violet-600"
             foot={activeJobs.length ? "In progress" : "None right now"}
+            to="/my-jobs"
           />
           <StatCard
             icon={Star}
@@ -156,6 +158,7 @@ function ProDashboard() {
             }
             tone="bg-amber-100 text-amber-600"
             foot={`${ratingsCount} review${ratingsCount === 1 ? "" : "s"}`}
+            to="/reviews"
           />
           <StatCard
             icon={Wallet}
@@ -164,16 +167,17 @@ function ProDashboard() {
             tone="bg-sky-100 text-sky-600"
             foot="Payments received"
             footTone="text-primary"
+            to="/dashboard"
           />
         </div>
 
         {/* Your activity */}
         <DashCard title="Your activity">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Metric icon={Search} value={nearby.length} label="Jobs available" tone="bg-sky-100 text-sky-600" />
-            <Metric icon={Send} value={quotesSent.length} label="Quotes sent" tone="bg-violet-100 text-violet-600" />
-            <Metric icon={Award} value={jobsWon.length} label="Jobs won" tone="bg-primary-soft text-primary" />
-            <Metric icon={CircleCheck} value={completed.length} label="Completed" tone="bg-emerald-100 text-emerald-600" />
+            <Metric icon={Search} value={nearby.length} label="Jobs available" tone="bg-sky-100 text-sky-600" to="/jobs" />
+            <Metric icon={Send} value={quotesSent.length} label="Quotes sent" tone="bg-violet-100 text-violet-600" to="/jobs" />
+            <Metric icon={Award} value={jobsWon.length} label="Jobs won" tone="bg-primary-soft text-primary" to="/my-jobs" />
+            <Metric icon={CircleCheck} value={completed.length} label="Completed" tone="bg-emerald-100 text-emerald-600" to="/my-jobs" />
           </div>
         </DashCard>
 

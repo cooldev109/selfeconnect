@@ -12,16 +12,17 @@ import {
   Bell,
   QrCode,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { ContactActions } from "@/components/ContactActions";
 import { JobPhotos } from "@/components/JobPhotos";
-import { Button, Input } from "@/components/shared";
+import { Button, Input, Modal } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { StatCard, DashCard, EmptyRow } from "@/components/DashKit";
 import { CategorySelect } from "@/components/CategoryPicker";
 import { getAccount } from "@/lib/billing";
-import { proBrowseJobs, proUnlockJob, proSubmitQuote, type ProJob } from "@/lib/jobs";
+import { proBrowseJobs, proUnlockJob, proSubmitQuote, proDismissJob, type ProJob } from "@/lib/jobs";
 
 export const Route = createFileRoute("/jobs")({
   head: () => ({
@@ -64,6 +65,16 @@ function JobBoard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pro-jobs"] }),
   });
 
+  // "Not interested" — confirm, then hide the job from this pro's board.
+  const [dismissing, setDismissing] = useState<ProJob | null>(null);
+  const dismiss = useMutation({
+    mutationFn: (id: string) => proDismissJob(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pro-jobs"] });
+      setDismissing(null);
+    },
+  });
+
   const isActive = !!accountQ.data?.isActive;
   const jobs = jobsQ.data ?? [];
   const newToday = jobs.filter((j) => isNew(j.createdAt)).length;
@@ -104,7 +115,7 @@ function JobBoard() {
               label="Search radius"
               value={`${radius} mi`}
               tone="bg-sky-100 text-sky-600"
-              foot="Nearest first"
+              foot="Newest first"
             />
           </div>
 
@@ -150,6 +161,7 @@ function JobBoard() {
                   onUnlock={() => unlock.mutate(j.id)}
                   onQuote={(amount, message) => quote.mutate({ id: j.id, amount, message })}
                   onSubscribe={() => navigate({ to: "/account" })}
+                  onDismiss={() => setDismissing(j)}
                 />
               ))}
             </div>
@@ -165,7 +177,7 @@ function JobBoard() {
                 <MapPin className="relative h-6 w-6 text-primary" />
               </span>
               <p className="mt-3 text-sm font-semibold text-foreground">Within {radius} miles</p>
-              <p className="text-xs text-muted-foreground">Showing the nearest jobs first.</p>
+              <p className="text-xs text-muted-foreground">Showing the newest jobs first.</p>
             </div>
           </DashCard>
 
@@ -200,6 +212,29 @@ function JobBoard() {
           </DashCard>
         </aside>
       </div>
+
+      <Modal
+        open={!!dismissing}
+        onOpenChange={(o) => { if (!o) setDismissing(null); }}
+        title="Not interested in this job?"
+      >
+        <p className="text-sm text-muted-foreground">
+          Are you sure you're not interested in this job? It'll be removed from your board
+          {dismissing ? <> — “<span className="font-medium text-foreground">{dismissing.title}</span>”</> : null}.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={() => setDismissing(null)}>
+            Cancel
+          </Button>
+          <Button
+            className="rounded-xl"
+            disabled={dismiss.isPending}
+            onClick={() => dismissing && dismiss.mutate(dismissing.id)}
+          >
+            {dismiss.isPending ? "Removing…" : "Yes, not interested"}
+          </Button>
+        </div>
+      </Modal>
     </ProShell>
   );
 }
@@ -212,6 +247,7 @@ function JobCard({
   onUnlock,
   onQuote,
   onSubscribe,
+  onDismiss,
 }: {
   job: ProJob;
   isActive: boolean;
@@ -220,6 +256,7 @@ function JobCard({
   onUnlock: () => void;
   onQuote: (amount: number | null, message: string) => void;
   onSubscribe: () => void;
+  onDismiss: () => void;
 }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -392,6 +429,16 @@ function JobCard({
           <Lock className="mr-2 h-4 w-4" /> Subscribe to unlock
         </Button>
       )}
+
+      <div className="mt-3 flex justify-end border-t border-border/50 pt-3">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-destructive"
+        >
+          <X className="h-3.5 w-3.5" /> Not interested
+        </button>
+      </div>
     </div>
   );
 }
