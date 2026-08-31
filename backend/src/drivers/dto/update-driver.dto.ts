@@ -1,12 +1,18 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
 
 export class UpdateDriverDto {
+  // Email me when new jobs match my trades and area.
+  @IsOptional()
+  @IsBoolean()
+  notifyNewJobs?: boolean;
+
   @IsOptional()
   @IsString()
   @MaxLength(80)

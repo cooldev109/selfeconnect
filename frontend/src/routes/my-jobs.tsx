@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MapPin, Clock, Mail, Phone, BadgeCheck, MessageSquare } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
@@ -17,6 +17,11 @@ import {
 } from "@/lib/jobs";
 
 export const Route = createFileRoute("/my-jobs")({
+  // A notification deep-links here with ?job=<id> so we can open that job's
+  // conversation directly instead of dropping the pro on the list.
+  validateSearch: (s: Record<string, unknown>): { job?: string } => ({
+    job: typeof s.job === "string" ? s.job : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "My jobs — SelfeConnect" },
@@ -48,9 +53,19 @@ const ENGAGEMENT = {
 function MyJobsPage() {
   const jobsQ = useQuery({ queryKey: ["pro-my-jobs"], queryFn: proMyJobs, retry: false });
   const [stage, setStage] = useState<Stage>("active");
+  const { job: focusJobId } = Route.useSearch();
 
   const jobs = jobsQ.data ?? [];
   const stageOf = (j: ProJob) => STAGE_OF[j.status ?? "open"];
+
+  // Deep-linked from a notification: switch to the tab holding that job so it's
+  // actually on screen for its card to open + scroll to.
+  useEffect(() => {
+    if (!focusJobId) return;
+    const target = jobs.find((j) => j.id === focusJobId);
+    if (target) setStage(stageOf(target));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusJobId, jobsQ.data]);
   const counts: Record<Stage, number> = {
     active: jobs.filter((j) => stageOf(j) === "active").length,
     completed: jobs.filter((j) => stageOf(j) === "completed").length,
@@ -113,7 +128,7 @@ function MyJobsPage() {
           ) : (
             <div className="space-y-3">
               {shown.map((j) => (
-                <ProJobCard key={j.id} job={j} />
+                <ProJobCard key={j.id} job={j} autoOpen={j.id === focusJobId} />
               ))}
             </div>
           )}
@@ -123,12 +138,19 @@ function MyJobsPage() {
   );
 }
 
-function ProJobCard({ job }: { job: ProJob }) {
+function ProJobCard({ job, autoOpen = false }: { job: ProJob; autoOpen?: boolean }) {
   const status = job.status ?? "open";
   const engagement = status === "open" ? (job.myQuote ? ENGAGEMENT.quoted : ENGAGEMENT.contacted) : null;
-  const [chatOpen, setChatOpen] = useState(false);
+  const active = STAGE_OF[status] === "active";
+  // Deep-linked from a notification → open this job's conversation and bring it
+  // into view.
+  const [chatOpen, setChatOpen] = useState(autoOpen && active);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (autoOpen) cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [autoOpen]);
   return (
-    <Card className="rounded-2xl">
+    <Card ref={cardRef} className={`rounded-2xl ${autoOpen ? "ring-2 ring-primary/40" : ""}`}>
       <CardContent className="p-5">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold text-foreground">{job.title}</h3>

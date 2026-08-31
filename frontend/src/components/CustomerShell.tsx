@@ -45,7 +45,13 @@ export function CustomerShell({
           queryKey={["customer-notifications"]}
           fetchNotifications={customerNotifications}
           markAllRead={customerReadNotifications}
-          onOpenNotification={() => navigate({ to: "/customer" })}
+          onOpenNotification={(n) =>
+            navigate(
+              n.jobId
+                ? { to: "/customer/jobs/$jobId", params: { jobId: n.jobId } }
+                : { to: "/customer" },
+            )
+          }
         />
       }
       onLogout={async () => {

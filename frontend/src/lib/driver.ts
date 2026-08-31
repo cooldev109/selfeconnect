@@ -33,6 +33,7 @@ export function updateMe(input: {
   facebook?: string;
   tiktok?: string;
   linkedin?: string;
+  notifyNewJobs?: boolean;
 }) {
   return api<Driver>("/me", { method: "PATCH", body: JSON.stringify(input) });
 }

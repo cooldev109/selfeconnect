@@ -63,7 +63,11 @@ export function ProShell({
           queryKey={["pro-notifications"]}
           fetchNotifications={proNotifications}
           markAllRead={proReadNotifications}
-          onOpenNotification={() => navigate({ to: "/my-jobs" })}
+          onOpenNotification={(n) =>
+            navigate(
+              n.jobId ? { to: "/my-jobs", search: { job: n.jobId } } : { to: "/my-jobs" },
+            )
+          }
         />
       }
       onLogout={async () => {

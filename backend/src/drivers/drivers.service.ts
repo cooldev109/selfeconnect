@@ -37,6 +37,7 @@ export type DriverShape = {
   socials: Socials;
   categorySlugs: string[];
   categoryNames: string[];
+  notifyNewJobs: boolean;
 };
 
 export type Socials = {
@@ -86,6 +87,7 @@ export class DriversService {
       },
       categorySlugs: categories.map((c) => c.slug),
       categoryNames: categories.map((c) => c.name),
+      notifyNewJobs: driver.notifyNewJobs,
     };
   }
 
@@ -116,6 +118,7 @@ export class DriversService {
       city: dto.city,
       bio: dto.bio,
     };
+    if (dto.notifyNewJobs !== undefined) data.notifyNewJobs = dto.notifyNewJobs;
 
     // Social links: an empty string clears the link; undefined leaves it alone.
     const clean = (v?: string) => (v === undefined ? undefined : v.trim() || null);

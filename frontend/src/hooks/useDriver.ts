@@ -30,6 +30,7 @@ export interface Driver {
   socials: Socials;
   categorySlugs: string[];
   categoryNames: string[];
+  notifyNewJobs?: boolean;
 }
 
 // The signed-in driver (GET /me).

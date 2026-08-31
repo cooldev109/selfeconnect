@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, KeyRound, LogOut, ExternalLink, Wallet, BadgeCheck, Sparkles, Bell } from "lucide-react";
 import { Badge, Button, Card, CardContent, Input, Modal } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { useMe } from "@/hooks/useDriver";
+import { updateMe } from "@/lib/driver";
 import { logout, changePassword } from "@/lib/auth";
 import {
   getAccount,
@@ -42,8 +43,16 @@ const contactSchema = z.object({
 
 function AccountPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
   const { data: driver } = useMe();
+
+  // Job-alert email preference (defaults on until the profile loads).
+  const notifyOn = driver?.notifyNewJobs ?? true;
+  const alertsMut = useMutation({
+    mutationFn: (v: boolean) => updateMe({ notifyNewJobs: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+  });
 
   const [showCancel, setShowCancel] = useState(false);
   const [email, setEmail] = useState("");
@@ -379,6 +388,40 @@ function AccountPage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Job alerts — the "Manage alerts" link on Find work lands here. */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <Bell className="h-4 w-4 text-primary" /> Job alerts
+            </h2>
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">Email me about new jobs</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Get an email when a new job matches your trades and area.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notifyOn}
+                aria-label="Email me about new jobs"
+                disabled={alertsMut.isPending || !driver}
+                onClick={() => alertsMut.mutate(!notifyOn)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:opacity-60 ${
+                  notifyOn ? "bg-primary" : "bg-muted"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                    notifyOn ? "left-[22px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
           </CardContent>
         </Card>
 

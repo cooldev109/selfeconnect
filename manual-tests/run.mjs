@@ -37,9 +37,10 @@ import { run as ruan } from "./ruan-feedback.mjs";
 import { run as proJobView } from "./pro-job-view.mjs";
 import { run as jobActions } from "./job-actions.mjs";
 import { run as jobDetail } from "./customer-job-detail.mjs";
+import { run as notifDeeplink } from "./notification-deeplink.mjs";
 import { run as findWork } from "./pro-find-work.mjs";
 
-const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions, jobDetail, findWork };
+const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions, jobDetail, findWork, notifDeeplink };
 const pick = process.argv.slice(2).map((s) => s.toLowerCase());
 const phases = pick.length ? pick.filter((k) => ALL[k]) : Object.keys(ALL);
 
