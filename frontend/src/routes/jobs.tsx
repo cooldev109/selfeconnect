@@ -299,6 +299,8 @@ function JobCard({
             </span>
             {job.distanceMiles != null && <span>{job.distanceMiles} mi away</span>}
             {job.budget && <span>{job.budget}</span>}
+            {job.workingHours && <span>{job.workingHours}</span>}
+            {job.timing && <span>{job.timing}</span>}
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" /> {timeAgo(job.createdAt)}
             </span>

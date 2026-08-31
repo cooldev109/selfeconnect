@@ -29,7 +29,8 @@ export async function run(sharedBrowser) {
     customers.push(cust.email);
     const S = Date.now();
     const near = `Near older ${S}`, far = `Far newer ${S}`;
-    const mk = (title) => req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title, description: "Find work board test job.", postcode: "RG1 8EQ", contactConsent: true } });
+    const TIMING = "Within a few days";
+    const mk = (title) => req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title, description: "Find work board test job.", postcode: "RG1 8EQ", timing: TIMING, contactConsent: true } });
     const jNear = await mk(near);
     const jFar = await mk(far);
     // near = distance 0, older; far = ~7 miles away, newest.
@@ -48,6 +49,8 @@ export async function run(sharedBrowser) {
     await p.goto(`${BASE}/jobs`, { waitUntil: "networkidle" });
     await p.getByText(far).first().waitFor({ state: "visible" });
     ok("both jobs show on the board", await p.getByText(near).first().isVisible() && await p.getByText(far).first().isVisible());
+    // Ruan feedback #4: the customer's timeframe shows on the Find work card too.
+    ok("job card shows the customer's timeframe", await p.getByText(TIMING).first().isVisible());
 
     // "Not interested" on the far job → confirmation → removed.
     const card = p.locator("div").filter({ hasText: far }).filter({ has: p.getByRole("button", { name: /Not interested/ }) }).last();
