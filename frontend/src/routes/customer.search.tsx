@@ -55,8 +55,17 @@ function SearchPage() {
     retry: false,
   });
 
+  // "Within X miles" is measured from the customer's postcode, so a set distance
+  // needs one. Without it the distance can't filter anything — so we ask for the
+  // postcode rather than silently ignoring the choice.
+  const [needsPostcode, setNeedsPostcode] = useState(false);
   const apply = (e: React.FormEvent) => {
     e.preventDefault();
+    if (radius > 0 && !postcode.trim()) {
+      setNeedsPostcode(true);
+      return;
+    }
+    setNeedsPostcode(false);
     setApplied({
       category: category || undefined,
       postcode: postcode || undefined,
@@ -92,13 +101,21 @@ function SearchPage() {
             <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
               Your postcode
             </span>
-            <PostcodeInput value={postcode} onChange={setPostcode} ariaLabel="Your postcode" />
+            <PostcodeInput
+              value={postcode}
+              onChange={(pc) => { setPostcode(pc); if (pc.trim()) setNeedsPostcode(false); }}
+              ariaLabel="Your postcode"
+            />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Within</span>
             <select
               value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
+              onChange={(e) => {
+                const r = Number(e.target.value);
+                setRadius(r);
+                if (r === 0) setNeedsPostcode(false);
+              }}
               className="h-11 rounded-xl border border-input bg-background px-3 text-sm"
             >
               {RADII.map((r) => (
@@ -116,11 +133,17 @@ function SearchPage() {
             <SearchIcon className="mr-2 h-4 w-4" /> Search
           </Button>
         </form>
-        {badPostcode ? (
+        {needsPostcode ? (
+          <p className="mt-2 text-xs text-destructive">
+            Enter your postcode to search within a set distance — or choose “Anywhere” to see
+            every professional.
+          </p>
+        ) : badPostcode ? (
           <p className="mt-2 text-xs text-destructive">Enter a valid UK postcode.</p>
         ) : (
           <p id="postcode-help" className="mt-2 text-xs text-muted-foreground">
             Enter where <em>you</em> are — we'll show professionals near you, nearest first.
+            Pick “Anywhere” to see everyone.
           </p>
         )}
       </div>
