@@ -60,7 +60,9 @@ function SearchPage() {
     setApplied({
       category: category || undefined,
       postcode: postcode || undefined,
-      radius: postcode ? radius : undefined,
+      // radius 0 = "Anywhere": send no radius so every professional shows,
+      // still ordered nearest-first when a postcode is given.
+      radius: postcode && radius > 0 ? radius : undefined,
     });
   };
 
@@ -104,6 +106,7 @@ function SearchPage() {
                   {r} mi
                 </option>
               ))}
+              <option value={0}>Anywhere</option>
             </select>
           </label>
           <Button
