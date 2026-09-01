@@ -46,9 +46,11 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 }
 
 /**
- * "Message" — opens the device's SMS app on mobile (sms:), and on desktop,
- * where sms: does nothing, copies the number and confirms, so it never looks
- * broken.
+ * "Message" — opens the device's SMS app on mobile (sms:). On desktop, where
+ * sms: does nothing, we also copy the number as a fallback so the click isn't a
+ * dead end — but the button keeps its "Message" label and the confirmation
+ * shows as a small note beside it, rather than the button turning into a
+ * different "Number copied" button (which read as a bug).
  */
 function MessageButton({
   phone,
@@ -72,13 +74,19 @@ function MessageButton({
       el.remove();
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <a href={`sms:${phone}`} onClick={onClick} className={className} title="Text this number">
-      {copied ? <Check className={iconCls} /> : <MessageSquare className={iconCls} />}
-      {copied ? "Number copied" : "Message"}
-    </a>
+    <span className="inline-flex items-center gap-2">
+      <a href={`sms:${phone}`} onClick={onClick} className={className} title="Text this number">
+        <MessageSquare className={iconCls} /> Message
+      </a>
+      {copied && (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+          <Check className="h-3.5 w-3.5" /> Number copied
+        </span>
+      )}
+    </span>
   );
 }
 
