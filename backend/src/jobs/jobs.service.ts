@@ -529,6 +529,9 @@ export class JobsService {
       where: {
         status: 'open',
         categoryId: { in: categoryIds },
+        // Direct enquiries are private to the pro they're aimed at — never on
+        // the open board.
+        directDriverId: null,
         // Hide jobs this pro dismissed as "not interested".
         dismissals: { none: { driverId } },
       },
@@ -958,6 +961,58 @@ export class JobsService {
       orderBy: { createdAt: 'asc' },
     });
     return messages.map((m) => this.shapeMessage(m));
+  }
+
+  // A customer starts a direct, on-platform conversation with one professional
+  // from their profile. Creates a private enquiry job (off the public board),
+  // engages that pro so the chat + their My jobs work, seeds the first message
+  // and notifies them. Returns the job so the customer lands on the thread.
+  async enquireToPro(customerId: string, proPublicId: string, body: string) {
+    const text = body.trim();
+    if (text.length < 2) throw new BadRequestException('message_required');
+    const pro = await this.prisma.driver.findFirst({
+      where: { publicId: proPublicId.trim().toUpperCase(), role: 'driver' },
+      include: { categories: { select: { id: true }, take: 1 } },
+    });
+    if (!pro) throw new NotFoundException('professional_not_found');
+    const categoryId = pro.categories[0]?.id;
+    if (!categoryId) throw new BadRequestException('pro_unavailable');
+
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { name: true, companyName: true },
+    });
+
+    const job = await this.prisma.job.create({
+      data: {
+        customerId,
+        categoryId,
+        title: `Enquiry for ${pro.name}`,
+        description: text,
+        postcode: pro.postcode ?? 'N/A',
+        latitude: pro.latitude,
+        longitude: pro.longitude,
+        status: 'open',
+        contactConsentAt: new Date(),
+        directDriverId: pro.id,
+        workingDays: [],
+      },
+    });
+    // Engage the pro on this enquiry so the conversation is allowed both ways
+    // and it appears in their My jobs.
+    await this.prisma.jobContactUnlock.create({
+      data: { jobId: job.id, driverId: pro.id },
+    });
+    await this.prisma.message.create({
+      data: { jobId: job.id, driverId: pro.id, fromCustomer: true, body: text },
+    });
+    await this.notifyMessageOnce(
+      { driverId: pro.id },
+      job.id,
+      `New enquiry from ${customer?.companyName || customer?.name || 'a customer'}`,
+      job.title,
+    );
+    return { jobId: job.id };
   }
 
   async customerSendMessage(

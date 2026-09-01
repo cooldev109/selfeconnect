@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Phone, MessageSquare, Copy, Check } from "lucide-react";
+import { Mail, Phone, Copy, Check } from "lucide-react";
 
 /**
  * The three ways to reach someone, plus a copy button for each.
@@ -45,51 +45,6 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
-/**
- * "Message" — opens the device's SMS app on mobile (sms:). On desktop, where
- * sms: does nothing, we also copy the number as a fallback so the click isn't a
- * dead end — but the button keeps its "Message" label and the confirmation
- * shows as a small note beside it, rather than the button turning into a
- * different "Number copied" button (which read as a bug).
- */
-function MessageButton({
-  phone,
-  className,
-  iconCls,
-}: {
-  phone: string;
-  className: string;
-  iconCls: string;
-}) {
-  const [copied, setCopied] = useState(false);
-  const onClick = async () => {
-    try {
-      await navigator.clipboard.writeText(phone);
-    } catch {
-      const el = document.createElement("textarea");
-      el.value = phone;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      el.remove();
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <span className="inline-flex items-center gap-2">
-      <a href={`sms:${phone}`} onClick={onClick} className={className} title="Text this number">
-        <MessageSquare className={iconCls} /> Message
-      </a>
-      {copied && (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-          <Check className="h-3.5 w-3.5" /> Number copied
-        </span>
-      )}
-    </span>
-  );
-}
-
 export function ContactActions({
   email,
   phone,
@@ -123,15 +78,6 @@ export function ContactActions({
             </a>
             <CopyButton value={phone} label="phone number" />
           </span>
-          <MessageButton
-            phone={phone}
-            iconCls={icon}
-            className={`${pill} ${
-              size === "lg"
-                ? "border border-border text-foreground hover:bg-secondary"
-                : "text-primary hover:underline"
-            }`}
-          />
         </>
       )}
       <span className="inline-flex items-center gap-1.5">

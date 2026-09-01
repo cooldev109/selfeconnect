@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock, Flag } from "lucide-react";
+import { Loader2, ArrowLeft, Star, Mail, Phone, MapPin, Heart, Lock, Flag, MessageSquare } from "lucide-react";
 import { Button, Modal } from "@/components/shared";
 import { reportAsCustomer } from "@/lib/disputes";
 import { BrowseShell } from "@/components/BrowseShell";
@@ -13,6 +13,7 @@ import { SocialLinks } from "@/components/SocialLinks";
 import { getProProfile } from "@/lib/pros";
 import { ContactActions } from "@/components/ContactActions";
 import { createReview } from "@/lib/reviews";
+import { enquireToPro } from "@/lib/jobs";
 
 export const Route = createFileRoute("/customer/pros/$publicId")({
   validateSearch: (
@@ -28,12 +29,25 @@ export const Route = createFileRoute("/customer/pros/$publicId")({
 
 function ProProfilePage() {
   const { customer } = useCustomer();
+  const navigate = useNavigate();
   const { publicId } = useParams({ from: "/customer/pros/$publicId" });
   const search = Route.useSearch();
   const q = useQuery({
     queryKey: ["pro-profile", publicId],
     queryFn: () => getProProfile(publicId),
     retry: false,
+  });
+
+  // In-app "Message" — starts a private, on-platform conversation with this pro.
+  const [messaging, setMessaging] = useState(false);
+  const [msgText, setMsgText] = useState("");
+  const enquire = useMutation({
+    mutationFn: () => enquireToPro(publicId, msgText.trim()),
+    onSuccess: ({ jobId }) => {
+      setMessaging(false);
+      setMsgText("");
+      navigate({ to: "/customer/jobs/$jobId", params: { jobId } });
+    },
   });
 
   const [reviewing, setReviewing] = useState(search.review === "1");
@@ -126,12 +140,21 @@ function ProProfilePage() {
                   </div>
                 </div>
                 {customer && (
-                  <Button
-                    className="shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => setReviewing((r) => !r)}
-                  >
-                    <Star className="mr-2 h-4 w-4" /> Write a review
-                  </Button>
+                  <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                    <Button
+                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => setMessaging(true)}
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" /> Message
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-xl border-white/25 bg-white/10 text-ink-foreground hover:bg-white/20"
+                      onClick={() => setReviewing((r) => !r)}
+                    >
+                      <Star className="mr-2 h-4 w-4" /> Write a review
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -250,6 +273,46 @@ function ProProfilePage() {
           )}
         </div>
       )}
+
+      <Modal
+        open={messaging}
+        onOpenChange={(o) => { if (!o) { setMessaging(false); enquire.reset(); } }}
+        title={`Message ${p?.name ?? "this professional"}`}
+      >
+        <p className="text-sm text-muted-foreground">
+          Start a conversation right here on SelfeConnect — describe what you need and{" "}
+          {p?.name?.split(" ")[0] ?? "they"}'ll reply in your messages. Your contact details
+          stay private until you choose to share them.
+        </p>
+        <textarea
+          value={msgText}
+          onChange={(e) => setMsgText(e.target.value)}
+          rows={4}
+          maxLength={2000}
+          autoFocus
+          placeholder={`Hi ${p?.name?.split(" ")[0] ?? "there"}, I'd like some help with…`}
+          className="mt-3 w-full rounded-xl border border-input bg-background p-3 text-sm"
+        />
+        {enquire.isError && (
+          <p className="mt-2 text-sm text-destructive">Couldn't send your message. Please try again.</p>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={() => setMessaging(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="rounded-xl"
+            disabled={msgText.trim().length < 2 || enquire.isPending}
+            onClick={() => enquire.mutate()}
+          >
+            {enquire.isPending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…</>
+            ) : (
+              <><MessageSquare className="mr-1.5 h-4 w-4" /> Send message</>
+            )}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal
         open={reporting}

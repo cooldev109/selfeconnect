@@ -292,6 +292,11 @@ model Job {
   hiredDriverId String?
   hiredDriver   Driver? @relation("JobHired", fields: [hiredDriverId], references: [id], onDelete: SetNull)
 
+  // A direct enquiry sent from a professional's profile is a job aimed at one
+  // pro and kept off the public board — it starts an on-platform conversation
+  // with that specific professional.
+  directDriverId String?
+
   // Location (UK postcode geocoded to lat/lng for distance search).
   addressLine String?
   postcode    String

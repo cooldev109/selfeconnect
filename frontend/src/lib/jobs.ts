@@ -170,6 +170,11 @@ export const proDismissJob = (id: string) =>
 export const proSubmitQuote = (id: string, body: { amount?: number | null; message: string }) =>
   api<ProJob>(`/pro/jobs/${id}/quote`, { method: "POST", body: JSON.stringify(body) });
 
+// Start a direct, on-platform conversation with one professional from their
+// profile. Returns the job that holds the conversation.
+export const enquireToPro = (pro: string, message: string) =>
+  api<{ jobId: string }>("/jobs/enquire", { method: "POST", body: JSON.stringify({ pro, message }) });
+
 // The professional's own pipeline — jobs they've unlocked or been hired for.
 export const proMyJobs = () => api<ProJob[]>("/pro/jobs/mine");
 

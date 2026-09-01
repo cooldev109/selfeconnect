@@ -13,6 +13,7 @@ import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { CustomerSendMessageDto } from './dto/send-message.dto';
+import { EnquireDto } from './dto/enquire.dto';
 import { PayJobDto } from './dto/pay-job.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
@@ -28,6 +29,13 @@ export class JobsController {
   @Post()
   create(@CurrentCustomer() c: CustomerUser, @Body() dto: CreateJobDto) {
     return this.jobs.create(c.id, dto);
+  }
+
+  // Start a direct, on-platform conversation with one professional from their
+  // profile. Declared before ':id' routes so "enquire" isn't read as a job id.
+  @Post('enquire')
+  enquire(@CurrentCustomer() c: CustomerUser, @Body() dto: EnquireDto) {
+    return this.jobs.enquireToPro(c.id, dto.pro, dto.message);
   }
 
   // Photo upload lives in the public JobPhotoController (POST /jobs/photo) so
