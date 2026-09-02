@@ -70,7 +70,7 @@ export function NotificationBell({
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -101,7 +101,7 @@ export function NotificationBell({
                       onOpenNotification?.(n);
                     }}
                     className={`flex w-full items-start gap-3 border-b border-border/40 px-4 py-3 text-left transition hover:bg-secondary ${
-                      n.read ? "" : "bg-primary-soft/40"
+                      n.read ? "" : "bg-red-50"
                     }`}
                   >
                     <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
@@ -118,7 +118,7 @@ export function NotificationBell({
                         {timeAgo(n.createdAt)}
                       </span>
                     </span>
-                    {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                    {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-500" />}
                   </button>
                 );
               })
