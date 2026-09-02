@@ -53,7 +53,8 @@ export async function run() {
     drivers.push(wrongCat.email);
     sql(`update "Driver" set "isActive"=true where id='${wrongCat.id}';`);
 
-    // Right trade but far away (moved to Edinburgh, > 30 miles from Reading).
+    // Right trade but far away (moved to Edinburgh) — still alerted: matching is
+    // by skill, not distance.
     const far = await signupPro({ categorySlugs: ["plumber"] });
     drivers.push(far.email);
     sql(`update "Driver" set "isActive"=true, latitude=55.9533, longitude=-3.1883 where id='${far.id}';`);
@@ -85,9 +86,10 @@ export async function run() {
     // The matching pro is alerted…
     ok("matching pro is emailed a new-job alert", await waitForMail(before, match.email));
     const sent = logSince(before);
+    // …as is any pro with the skill, however far away…
+    ok("far pro (any distance) IS alerted — skill match", gotAlert(sent, far.email));
     // …and nobody who shouldn't be.
     ok("wrong-trade pro is NOT alerted", !gotAlert(sent, wrongCat.email));
-    ok("out-of-range pro is NOT alerted", !gotAlert(sent, far.email));
     ok("opted-out pro is NOT alerted", !gotAlert(sent, optedOut.email));
     ok("inactive (unsubscribed) pro is NOT alerted", !gotAlert(sent, inactive.email));
 
@@ -103,8 +105,8 @@ export async function run() {
     const jobNotifs = async (p) =>
       ((await req("/notifications", { cookie: p.cookie })).body || []).filter((n) => n.kind === "job");
     ok("matching pro gets an in-app new-job alarm", (await jobNotifs(match)).length > 0);
+    ok("far pro gets an in-app alarm too (skill match)", (await jobNotifs(far)).length > 0);
     ok("wrong-trade pro gets no in-app alarm", (await jobNotifs(wrongCat)).length === 0);
-    ok("out-of-range pro gets no in-app alarm", (await jobNotifs(far)).length === 0);
     ok("opted-out pro gets no in-app alarm", (await jobNotifs(optedOut)).length === 0);
 
     // A too-short job description is rejected (min length).

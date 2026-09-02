@@ -56,9 +56,6 @@ const STATUS_TIMESTAMP: Partial<Record<JobStatus, 'hiredAt' | 'startedAt' | 'com
 };
 type JobRow = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
-// How far a professional will realistically travel for a job alert.
-const NOTIFY_RADIUS_MILES = 30;
-
 // Chat is only open while the job is live. Once it's completed or cancelled the
 // customer's side hides the thread, so messaging a closed job reaches no one.
 const MESSAGEABLE_STATUSES: JobStatus[] = ['open', 'hired', 'in_progress'];
@@ -226,14 +223,15 @@ export class JobsService {
           job.latitude != null &&
           job.longitude != null
         ) {
+          // Distance is shown in the alert, but no longer filters it — every
+          // professional with the skill is alarmed, however far, so nobody
+          // misses a job in their trade (they can turn alerts off in Account).
           distanceMiles = this.round1(
             this.geo.distanceMiles(
               { latitude: pro.latitude, longitude: pro.longitude },
               { latitude: job.latitude, longitude: job.longitude },
             ),
           );
-          // Out of realistic travelling range — don't alert them about it.
-          if (distanceMiles > NOTIFY_RADIUS_MILES) continue;
         }
         // An in-app "alarm" in the bell — works regardless of email delivery,
         // and deep-links the pro to the Find work board.
