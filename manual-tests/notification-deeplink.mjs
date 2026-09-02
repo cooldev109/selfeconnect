@@ -27,7 +27,7 @@ export async function run(sharedBrowser) {
     drivers.push(pro.email);
     sql(`update "Driver" set "isActive"=true where id='${pro.id}'`);
 
-    const job = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Deeplink tap job", description: "A tap that drips.", postcode: "RG1 8EQ", contactConsent: true } });
+    const job = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Deeplink tap job", description: "A tap that drips constantly and needs a new washer fitted.", postcode: "RG1 8EQ", contactConsent: true } });
     const jobId = job.body.id;
     // A quote unlocks the job so it shows in the pro's My jobs.
     await req(`/pro/jobs/${jobId}/quote`, { method: "POST", cookie: pro.cookie, body: { amount: 9000, message: "Can do it." } });

@@ -2,7 +2,7 @@ import { api } from "./api";
 
 export interface AppNotification {
   id: string;
-  kind: "quote" | "message" | "hired" | "verification" | "dispute";
+  kind: "quote" | "message" | "hired" | "verification" | "dispute" | "job";
   title: string;
   body: string | null;
   jobId: string | null;

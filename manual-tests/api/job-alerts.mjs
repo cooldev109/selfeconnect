@@ -98,6 +98,23 @@ export async function run() {
       sent.find((l) => l.includes(match.email)) ?? "(no line)",
     );
 
+    // …and the in-app "alarm" (bell) lands for the right pro only — an email
+    // isn't enough, it must show in the app too.
+    const jobNotifs = async (p) =>
+      ((await req("/notifications", { cookie: p.cookie })).body || []).filter((n) => n.kind === "job");
+    ok("matching pro gets an in-app new-job alarm", (await jobNotifs(match)).length > 0);
+    ok("wrong-trade pro gets no in-app alarm", (await jobNotifs(wrongCat)).length === 0);
+    ok("out-of-range pro gets no in-app alarm", (await jobNotifs(far)).length === 0);
+    ok("opted-out pro gets no in-app alarm", (await jobNotifs(optedOut)).length === 0);
+
+    // A too-short job description is rejected (min length).
+    const shortDesc = await req("/jobs", {
+      method: "POST",
+      cookie: cust.cookie,
+      body: { categorySlug: "plumber", title: "Short desc test", description: "too short", postcode: "RG1 8EQ", contactConsent: true },
+    });
+    ok("a too-short job description is rejected", shortDesc.status === 400, `HTTP ${shortDesc.status}`);
+
     if (post.body?.id) await req(`/jobs/${post.body.id}`, { method: "DELETE", cookie: cust.cookie });
   } finally {
     for (const e of drivers) delDriver(e);

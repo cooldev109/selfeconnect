@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, FileText, MessageSquare, BadgeCheck, ShieldCheck, Scale } from "lucide-react";
+import { Bell, FileText, MessageSquare, BadgeCheck, ShieldCheck, Scale, Briefcase } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import type { AppNotification } from "@/lib/notifications";
 
@@ -10,6 +10,7 @@ const ICON = {
   hired: BadgeCheck,
   verification: ShieldCheck,
   dispute: Scale,
+  job: Briefcase,
 } as const;
 
 // The header notification bell: an unread badge, and a dropdown of recent

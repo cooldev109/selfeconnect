@@ -27,7 +27,7 @@ export async function run() {
     customers.push(cust.email);
 
     // A job hired to the pro (so both are parties + notifications route).
-    const job = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Dispute test job", description: "a job we will dispute", postcode: "RG1 8EQ", contactConsent: true } });
+    const job = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Dispute test job", description: "a job we will raise a dispute about during testing", postcode: "RG1 8EQ", contactConsent: true } });
     ok("job created", job.ok && !!job.body?.id, `HTTP ${job.status}`);
     const jobId = job.body.id;
     sql(`update "Job" set status='hired', "hiredDriverId"='${pro.id}' where id='${jobId}';`);

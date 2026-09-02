@@ -536,6 +536,7 @@ enum NotificationKind {
   hired
   verification // M3: a verification was approved or rejected
   dispute // M3.5: a dispute was raised on, or resolved for, a job
+  job // a new job in the pro's trade + area was posted
 }
 
 // M3.5 — trust & safety.

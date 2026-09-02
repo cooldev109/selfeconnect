@@ -232,9 +232,20 @@ export class JobsService {
               { latitude: job.latitude, longitude: job.longitude },
             ),
           );
-          // Out of realistic travelling range — don't email them about it.
+          // Out of realistic travelling range — don't alert them about it.
           if (distanceMiles > NOTIFY_RADIUS_MILES) continue;
         }
+        // An in-app "alarm" in the bell — works regardless of email delivery,
+        // and deep-links the pro to the Find work board.
+        await this.prisma.notification.create({
+          data: {
+            driverId: pro.id,
+            kind: 'job',
+            title: `New ${job.category.name} job${distanceMiles != null ? ` · ${distanceMiles} mi away` : ""}`,
+            body: job.title,
+            jobId: job.id,
+          },
+        });
         const token =
           pro.unsubscribeToken ??
           (await this.access.ensureUnsubscribeToken('professional', pro.id));

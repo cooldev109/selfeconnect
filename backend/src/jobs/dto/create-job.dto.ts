@@ -25,7 +25,7 @@ export class CreateJobDto {
   title!: string;
 
   @IsString()
-  @MinLength(10)
+  @MinLength(25)
   @MaxLength(2000)
   description!: string;
 

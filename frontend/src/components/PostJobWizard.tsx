@@ -43,7 +43,7 @@ const stepSchemas = [
     description: z
       .string()
       .trim()
-      .min(10, "Please describe the job (at least 10 characters)")
+      .min(25, "Please add a bit more detail — at least 25 characters, so professionals can quote accurately.")
       .max(2000),
   }),
   z.object({
