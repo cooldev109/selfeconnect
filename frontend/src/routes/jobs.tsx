@@ -51,7 +51,9 @@ function JobBoard() {
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
   const jobsQ = useQuery({
     queryKey: ["pro-jobs", radius, category],
-    queryFn: () => proBrowseJobs({ radius, category: category || undefined }),
+    // radius 0 = "Anywhere": omit the radius so every job in the pro's trades
+    // shows, however far away (still newest first).
+    queryFn: () => proBrowseJobs({ radius: radius > 0 ? radius : undefined, category: category || undefined }),
     retry: false,
   });
 
@@ -113,7 +115,7 @@ function JobBoard() {
             <StatCard
               icon={MapPin}
               label="Search radius"
-              value={`${radius} mi`}
+              value={radius > 0 ? `${radius} mi` : "Anywhere"}
               tone="bg-sky-100 text-sky-600"
               foot="Newest first"
             />
@@ -135,6 +137,7 @@ function JobBoard() {
                   Within {r} miles
                 </option>
               ))}
+              <option value={0}>Anywhere</option>
             </select>
           </div>
 
@@ -176,7 +179,9 @@ function JobBoard() {
                 <span className="absolute h-16 w-16 rounded-full bg-primary/20" />
                 <MapPin className="relative h-6 w-6 text-primary" />
               </span>
-              <p className="mt-3 text-sm font-semibold text-foreground">Within {radius} miles</p>
+              <p className="mt-3 text-sm font-semibold text-foreground">
+                {radius > 0 ? `Within ${radius} miles` : "Jobs anywhere"}
+              </p>
               <p className="text-xs text-muted-foreground">Showing the newest jobs first.</p>
             </div>
           </DashCard>
