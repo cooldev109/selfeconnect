@@ -55,6 +55,7 @@ export function ProShell({
   return (
     <DashboardShell
       nav={PRO_NAV}
+      homePath="/home"
       title={title}
       subtitle={subtitle}
       actions={actions}

@@ -22,6 +22,7 @@ export function DashboardShell({
   subtitle,
   actions,
   bell,
+  homePath = "/",
   children,
 }: {
   nav: NavItem[];
@@ -33,6 +34,9 @@ export function DashboardShell({
   actions?: ReactNode;
   /** Notification bell, pinned to the top-right of the header. */
   bell?: ReactNode;
+  /** Where the logo links to — the signed-in user's own dashboard, not the
+   * public landing page. */
+  homePath?: string;
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -43,7 +47,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-[#F4F8F8] lg:grid lg:grid-cols-[248px_1fr]">
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-screen flex-col gap-1 bg-[#0F2438] p-4 lg:flex">
-        <Link to="/" className="mb-4 flex items-center gap-2 px-2 py-1.5">
+        <Link to={homePath} className="mb-4 flex items-center gap-2 px-2 py-1.5">
           <LogoMark className="h-7 w-7" tone="white" />
           <span className="font-display text-[15px] font-bold tracking-tight text-white">
             Selfe<span className="text-primary">Connect</span>
@@ -87,7 +91,7 @@ export function DashboardShell({
       {/* Mobile top bar */}
       <div className="sticky top-0 z-30 border-b border-border bg-[#0F2438] lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={homePath} className="flex items-center gap-2">
             <LogoMark className="h-7 w-7" tone="white" />
             <span className="font-display text-[15px] font-bold tracking-tight text-white">
               Selfe<span className="text-primary">Connect</span>

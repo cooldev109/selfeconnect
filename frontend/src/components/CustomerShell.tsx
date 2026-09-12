@@ -37,6 +37,7 @@ export function CustomerShell({
   return (
     <DashboardShell
       nav={CUSTOMER_NAV}
+      homePath="/customer"
       title={title}
       subtitle={subtitle}
       actions={actions}
