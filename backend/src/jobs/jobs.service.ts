@@ -875,6 +875,91 @@ export class JobsService {
     return { driverId: driver.id };
   }
 
+  // ---- Inbox: every conversation for one user, newest activity first ----
+
+  // A professional's inbox: one thread per job they're engaged on (unlocked,
+  // hired, or already messaged), with the last message + their unread count.
+  async listProThreads(driverId: string) {
+    const jobs = await this.prisma.job.findMany({
+      where: {
+        OR: [
+          { unlocks: { some: { driverId } } },
+          { hiredDriverId: driverId },
+          { messages: { some: { driverId } } },
+        ],
+      },
+      include: { customer: { select: { name: true, companyName: true } } },
+    });
+    const rows = await Promise.all(
+      jobs.map(async (j) => {
+        const last = await this.prisma.message.findFirst({
+          where: { jobId: j.id, driverId },
+          orderBy: { createdAt: 'desc' },
+        });
+        const unread = await this.prisma.message.count({
+          where: { jobId: j.id, driverId, fromCustomer: true, readAt: null },
+        });
+        return {
+          jobId: j.id,
+          jobTitle: j.title,
+          jobStatus: j.status,
+          name: j.customer.companyName || j.customer.name,
+          lastMessage: last?.body ?? null,
+          lastAt: last?.createdAt.toISOString() ?? null,
+          unread,
+        };
+      }),
+    );
+    return rows.sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''));
+  }
+
+  // A customer's inbox: one thread per (job, engaged professional), with the
+  // last message + their unread count.
+  async listCustomerThreads(customerId: string) {
+    const jobs = await this.prisma.job.findMany({
+      where: { customerId },
+      include: {
+        unlocks: {
+          include: {
+            driver: { select: { id: true, publicId: true, name: true, company: true } },
+          },
+        },
+      },
+    });
+    const rows: Array<{
+      jobId: string;
+      jobTitle: string;
+      jobStatus: string;
+      proPublicId: string;
+      name: string;
+      lastMessage: string | null;
+      lastAt: string | null;
+      unread: number;
+    }> = [];
+    for (const j of jobs) {
+      for (const u of j.unlocks) {
+        const last = await this.prisma.message.findFirst({
+          where: { jobId: j.id, driverId: u.driverId },
+          orderBy: { createdAt: 'desc' },
+        });
+        const unread = await this.prisma.message.count({
+          where: { jobId: j.id, driverId: u.driverId, fromCustomer: false, readAt: null },
+        });
+        rows.push({
+          jobId: j.id,
+          jobTitle: j.title,
+          jobStatus: j.status,
+          proPublicId: u.driver.publicId,
+          name: u.driver.company || u.driver.name,
+          lastMessage: last?.body ?? null,
+          lastAt: last?.createdAt.toISOString() ?? null,
+          unread,
+        });
+      }
+    }
+    return rows.sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''));
+  }
+
   // The pro's thread with the customer on a job. Reading it marks the
   // customer's messages as read (clears the pro's unread badge).
   async proThreadMessages(driverId: string, jobId: string) {

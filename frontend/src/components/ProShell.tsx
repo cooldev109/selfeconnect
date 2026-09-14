@@ -66,13 +66,15 @@ export function ProShell({
           markAllRead={proReadNotifications}
           onOpenNotification={(n) =>
             navigate(
-              // A new-job alert points at the Find work board (the job isn't in
-              // My jobs yet); message/hired/quote point at the specific job.
+              // A new-job alert → the Find work board; a message → the inbox
+              // thread; anything else on a job → that job in My jobs.
               n.kind === "job"
                 ? { to: "/jobs" }
-                : n.jobId
-                  ? { to: "/my-jobs", search: { job: n.jobId } }
-                  : { to: "/my-jobs" },
+                : n.kind === "message"
+                  ? { to: "/messages", search: { job: n.jobId ?? undefined } }
+                  : n.jobId
+                    ? { to: "/my-jobs", search: { job: n.jobId } }
+                    : { to: "/my-jobs" },
             )
           }
         />

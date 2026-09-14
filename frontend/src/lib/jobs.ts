@@ -209,6 +209,20 @@ export const jobMessages = (id: string, pro: string) =>
 export const sendJobMessage = (id: string, pro: string, body: string) =>
   api<ChatMessage>(`/jobs/${id}/messages`, { method: "POST", body: JSON.stringify({ pro, body }) });
 
+// Inbox — every conversation for the signed-in user, newest activity first.
+export interface InboxThread {
+  jobId: string;
+  jobTitle: string;
+  jobStatus: JobStatus;
+  name: string;
+  proPublicId?: string; // customer threads only
+  lastMessage: string | null;
+  lastAt: string | null;
+  unread: number;
+}
+export const proThreads = () => api<InboxThread[]>("/pro/jobs/threads");
+export const customerThreads = () => api<InboxThread[]>("/jobs/threads");
+
 export const WEEK_DAYS: { value: string; label: string }[] = [
   { value: "mon", label: "Mon" },
   { value: "tue", label: "Tue" },

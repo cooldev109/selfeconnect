@@ -48,7 +48,7 @@ export async function run(sharedBrowser) {
     ok("customer notification opens the related job detail", new RegExp(`/customer/jobs/${jobId}`).test(cp.url()), cp.url());
     await cc.close();
 
-    // --- PRO: notification → My jobs, that job's conversation open ---
+    // --- PRO: a message notification → the inbox, that conversation open ---
     const pc = await browser.newContext({ viewport: { width: 1000, height: 1000 } });
     await pc.addCookies([{ name: "tv_session", value: cookieVal(pro.cookie, "tv_session"), domain: "localhost", path: "/" }]);
     const pp = await pc.newPage(); pp.setDefaultTimeout(30000);
@@ -56,9 +56,10 @@ export async function run(sharedBrowser) {
     await pp.getByRole("button", { name: /Notifications/ }).first().click();
     await pp.getByText("Customer replied to you").first().waitFor({ state: "visible" });
     await pp.getByText("Customer replied to you").first().click();
-    await pp.waitForURL(/\/my-jobs\?job=/, { timeout: 10000 }).catch(() => {});
-    ok("pro notification opens My jobs focused on the job", /\/my-jobs\?job=/.test(pp.url()), pp.url());
-    ok("the focused job's conversation opens", await pp.getByRole("button", { name: /Hide messages/ }).first().isVisible().catch(() => false));
+    await pp.waitForURL(/\/messages\?job=/, { timeout: 10000 }).catch(() => {});
+    ok("pro message notification opens the inbox thread", /\/messages\?job=/.test(pp.url()), pp.url());
+    await pp.getByPlaceholder(/Message the customer/).waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+    ok("the inbox conversation is shown", await pp.getByPlaceholder(/Message the customer/).isVisible().catch(() => false));
     await pc.close();
   } catch (e) {
     ok("no unexpected error", false, (e?.message || String(e)).split("\n")[0]);

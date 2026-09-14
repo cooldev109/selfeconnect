@@ -44,6 +44,13 @@ export class ProJobsController {
     return this.jobs.listMineForPro(user.id);
   }
 
+  // The professional's inbox — one thread per conversation. Declared before
+  // ':id' so "threads" isn't captured as a job id.
+  @Get('threads')
+  threads(@CurrentUser() user: AuthUser) {
+    return this.jobs.listProThreads(user.id);
+  }
+
   @Post(':id/unlock')
   unlock(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.jobs.unlockContact(user.id, id);

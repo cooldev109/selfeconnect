@@ -20,6 +20,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostAJobRouteImport } from './routes/post-a-job'
 import { Route as MyJobsRouteImport } from './routes/my-jobs'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as HomeRouteImport } from './routes/home'
@@ -36,6 +37,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TipDriverIdRouteImport } from './routes/tip.$driverId'
 import { Route as CustomerSignupRouteImport } from './routes/customer.signup'
 import { Route as CustomerSearchRouteImport } from './routes/customer.search'
+import { Route as CustomerMessagesRouteImport } from './routes/customer.messages'
 import { Route as CustomerLoginRouteImport } from './routes/customer.login'
 import { Route as CustomerAccountRouteImport } from './routes/customer.account'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
@@ -109,6 +111,11 @@ const PostAJobRoute = PostAJobRouteImport.update({
 const MyJobsRoute = MyJobsRouteImport.update({
   id: '/my-jobs',
   path: '/my-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -189,6 +196,11 @@ const CustomerSignupRoute = CustomerSignupRouteImport.update({
 const CustomerSearchRoute = CustomerSearchRouteImport.update({
   id: '/customer/search',
   path: '/customer/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerMessagesRoute = CustomerMessagesRouteImport.update({
+  id: '/customer/messages',
+  path: '/customer/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomerLoginRoute = CustomerLoginRouteImport.update({
@@ -299,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
@@ -323,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/messages': typeof CustomerMessagesRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
@@ -346,6 +360,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
@@ -370,6 +385,7 @@ export interface FileRoutesByTo {
   '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/messages': typeof CustomerMessagesRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/admin': typeof AdminIndexRoute
@@ -394,6 +410,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/my-jobs': typeof MyJobsRoute
   '/post-a-job': typeof PostAJobRoute
   '/privacy': typeof PrivacyRoute
@@ -418,6 +435,7 @@ export interface FileRoutesById {
   '/admin/verifications': typeof AdminVerificationsRoute
   '/customer/account': typeof CustomerAccountRoute
   '/customer/login': typeof CustomerLoginRoute
+  '/customer/messages': typeof CustomerMessagesRoute
   '/customer/search': typeof CustomerSearchRoute
   '/customer/signup': typeof CustomerSignupRoute
   '/tip/$driverId': typeof TipDriverIdRouteWithChildren
@@ -444,6 +462,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/jobs'
     | '/login'
+    | '/messages'
     | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
@@ -468,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
+    | '/customer/messages'
     | '/customer/search'
     | '/customer/signup'
     | '/tip/$driverId'
@@ -491,6 +511,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/jobs'
     | '/login'
+    | '/messages'
     | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
@@ -515,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
+    | '/customer/messages'
     | '/customer/search'
     | '/customer/signup'
     | '/admin'
@@ -538,6 +560,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/jobs'
     | '/login'
+    | '/messages'
     | '/my-jobs'
     | '/post-a-job'
     | '/privacy'
@@ -562,6 +585,7 @@ export interface FileRouteTypes {
     | '/admin/verifications'
     | '/customer/account'
     | '/customer/login'
+    | '/customer/messages'
     | '/customer/search'
     | '/customer/signup'
     | '/tip/$driverId'
@@ -587,6 +611,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
+  MessagesRoute: typeof MessagesRoute
   MyJobsRoute: typeof MyJobsRoute
   PostAJobRoute: typeof PostAJobRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -600,6 +625,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   CustomerAccountRoute: typeof CustomerAccountRoute
   CustomerLoginRoute: typeof CustomerLoginRoute
+  CustomerMessagesRoute: typeof CustomerMessagesRoute
   CustomerSearchRoute: typeof CustomerSearchRoute
   CustomerSignupRoute: typeof CustomerSignupRoute
   TipDriverIdRoute: typeof TipDriverIdRouteWithChildren
@@ -687,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/my-jobs'
       fullPath: '/my-jobs'
       preLoaderRoute: typeof MyJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -799,6 +832,13 @@ declare module '@tanstack/react-router' {
       path: '/customer/search'
       fullPath: '/customer/search'
       preLoaderRoute: typeof CustomerSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/messages': {
+      id: '/customer/messages'
+      path: '/customer/messages'
+      fullPath: '/customer/messages'
+      preLoaderRoute: typeof CustomerMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customer/login': {
@@ -995,6 +1035,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
+  MessagesRoute: MessagesRoute,
   MyJobsRoute: MyJobsRoute,
   PostAJobRoute: PostAJobRoute,
   PrivacyRoute: PrivacyRoute,
@@ -1008,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   CustomerAccountRoute: CustomerAccountRoute,
   CustomerLoginRoute: CustomerLoginRoute,
+  CustomerMessagesRoute: CustomerMessagesRoute,
   CustomerSearchRoute: CustomerSearchRoute,
   CustomerSignupRoute: CustomerSignupRoute,
   TipDriverIdRoute: TipDriverIdRouteWithChildren,

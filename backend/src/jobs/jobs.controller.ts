@@ -41,6 +41,13 @@ export class JobsController {
   // Photo upload lives in the public JobPhotoController (POST /jobs/photo) so
   // a logged-out visitor can attach photos before creating their account.
 
+  // The customer's inbox — one thread per (job, professional). Declared before
+  // ':id' so "threads" isn't captured as a job id.
+  @Get('threads')
+  inbox(@CurrentCustomer() c: CustomerUser) {
+    return this.jobs.listCustomerThreads(c.id);
+  }
+
   // Declared before ':id' so it isn't captured as a job id.
   @Get('mine')
   mine(@CurrentCustomer() c: CustomerUser) {

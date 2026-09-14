@@ -48,9 +48,13 @@ export function CustomerShell({
           markAllRead={customerReadNotifications}
           onOpenNotification={(n) =>
             navigate(
-              n.jobId
-                ? { to: "/customer/jobs/$jobId", params: { jobId: n.jobId } }
-                : { to: "/customer" },
+              // A message → the inbox thread; a quote (or anything else on a
+              // job) → that job's detail page.
+              n.kind === "message"
+                ? { to: "/customer/messages", search: { job: n.jobId ?? undefined } }
+                : n.jobId
+                  ? { to: "/customer/jobs/$jobId", params: { jobId: n.jobId } }
+                  : { to: "/customer" },
             )
           }
         />

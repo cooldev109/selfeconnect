@@ -10,6 +10,7 @@ import {
   ClipboardList,
   ShieldCheck,
   LayoutDashboard,
+  MessageSquare,
 } from "lucide-react";
 import type { NavItem } from "@/components/DashboardShell";
 
@@ -18,6 +19,7 @@ export const PRO_NAV: NavItem[] = [
   { to: "/home", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/jobs", label: "Find work", icon: Briefcase },
   { to: "/my-jobs", label: "My jobs", icon: ClipboardList },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard", label: "Payments & tips", icon: LineChart },
   { to: "/reviews", label: "My reviews", icon: Star },
   { to: "/verify", label: "Verification", icon: ShieldCheck },
@@ -30,5 +32,6 @@ export const CUSTOMER_NAV: NavItem[] = [
   { to: "/customer/search", label: "Find a professional", icon: Search },
   { to: "/customer/jobs/new", label: "Post a job", icon: Plus },
   { to: "/customer", label: "My jobs", icon: Briefcase, exact: true },
+  { to: "/customer/messages", label: "Messages", icon: MessageSquare },
   { to: "/customer/account", label: "Account", icon: Settings },
 ];
