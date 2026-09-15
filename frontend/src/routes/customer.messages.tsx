@@ -28,12 +28,13 @@ function CustomerMessagesPage() {
     refetchInterval: 10000,
   });
   const threads = q.data ?? [];
+  // Show the conversation list first; only auto-open a thread when a
+  // notification deep-links to a specific job (?job=…).
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
-    if (selected == null && threads.length) {
-      const target = (job && threads.find((t) => t.jobId === job)) || threads[0];
-      setSelected(keyOf(target));
-    }
+    if (!job) return;
+    const target = threads.find((t) => t.jobId === job);
+    if (target) setSelected(keyOf(target));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data, job]);
 

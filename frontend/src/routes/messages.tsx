@@ -25,11 +25,12 @@ function MessagesPage() {
     refetchInterval: 10000,
   });
   const threads = q.data ?? [];
+  // Show the conversation list first; only auto-open a thread when a
+  // notification deep-links to a specific job (?job=…).
   const [selected, setSelected] = useState<string | null>(job ?? null);
   useEffect(() => {
-    if (selected == null && threads.length) setSelected(job ?? threads[0].jobId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q.data, job]);
+    if (job) setSelected(job);
+  }, [job]);
 
   return (
     <ProShell title="Messages" subtitle="Your conversations with customers.">
