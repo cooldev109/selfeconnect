@@ -15,6 +15,7 @@ export function Inbox({
   onSelect,
   keyOf,
   renderChat,
+  headerAction,
   emptyHint,
 }: {
   threads: InboxThread[];
@@ -24,6 +25,9 @@ export function Inbox({
   /** A unique key per thread (a job may hold more than one). */
   keyOf: (t: InboxThread) => string;
   renderChat: (t: InboxThread) => ReactNode;
+  /** A context action in the open thread's header — e.g. "View job" /
+   * "View profile". */
+  headerAction?: (t: InboxThread) => ReactNode;
   emptyHint: string;
 }) {
   const selected = threads.find((t) => keyOf(t) === selectedKey) ?? null;
@@ -114,6 +118,7 @@ export function Inbox({
             {selected.jobTitle} <JobStatusBadge status={selected.jobStatus} />
           </p>
         </div>
+        {headerAction && <div className="ml-auto shrink-0">{headerAction(selected)}</div>}
       </div>
       <div className="min-h-0 flex-1 p-4">{renderChat(selected)}</div>
     </div>

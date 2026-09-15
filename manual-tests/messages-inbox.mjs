@@ -40,6 +40,7 @@ export async function run(sharedBrowser) {
     ok("pro inbox lists the conversation", await pp.getByText("Inbox leaking tap").first().isVisible());
     await pp.getByText("Inbox leaking tap").first().click();
     ok("pro sees the sent message in the thread", await pp.getByText("Hi! I can come Thursday morning.").first().isVisible());
+    ok("pro thread has a 'View job' button", await pp.getByRole("link", { name: /View job/ }).isVisible());
     await pp.getByPlaceholder(/Message the customer/).fill("Great, see you then.");
     await pp.getByPlaceholder(/Message the customer/).press("Enter");
     await pp.getByText("Great, see you then.").first().waitFor({ state: "visible" });
@@ -55,6 +56,7 @@ export async function run(sharedBrowser) {
     ok("customer inbox lists the conversation", await cp.getByText("Inbox leaking tap").first().isVisible());
     await cp.getByText("Inbox leaking tap").first().click();
     ok("customer sees the pro's messages", await cp.getByText("Great, see you then.").first().isVisible());
+    ok("customer thread has a 'View profile' button", await cp.getByRole("link", { name: /View profile/ }).isVisible());
     await cp.getByPlaceholder(/Message the professional/).fill("Perfect, thank you!");
     await cp.getByPlaceholder(/Message the professional/).press("Enter");
     await cp.getByText("Perfect, thank you!").first().waitFor({ state: "visible" });

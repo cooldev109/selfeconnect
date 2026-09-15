@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { UserRound } from "lucide-react";
 import { CustomerShell } from "@/components/CustomerShell";
 import { Inbox } from "@/components/Inbox";
 import { ChatThread } from "@/components/ChatThread";
@@ -46,6 +47,18 @@ function CustomerMessagesPage() {
         selectedKey={selected}
         onSelect={setSelected}
         keyOf={keyOf}
+        headerAction={(t) =>
+          t.proPublicId ? (
+            <Link
+              to="/customer/pros/$publicId"
+              params={{ publicId: t.proPublicId }}
+              search={{ from: "jobs" }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-secondary"
+            >
+              <UserRound className="h-3.5 w-3.5" /> View profile
+            </Link>
+          ) : null
+        }
         emptyHint="Message a professional from their profile, and your conversations appear here."
         renderChat={(t) => (
           <ChatThread
