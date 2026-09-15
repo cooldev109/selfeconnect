@@ -18,10 +18,11 @@ import { enquireToPro } from "@/lib/jobs";
 export const Route = createFileRoute("/customer/pros/$publicId")({
   validateSearch: (
     s: Record<string, unknown>,
-  ): { review?: string; jobId?: string; from?: string } => ({
+  ): { review?: string; jobId?: string; from?: string; preview?: string } => ({
     review: typeof s.review === "string" ? s.review : undefined,
     jobId: typeof s.jobId === "string" ? s.jobId : undefined,
     from: typeof s.from === "string" ? s.from : undefined,
+    preview: typeof s.preview === "string" ? s.preview : undefined,
   }),
   head: () => ({ meta: [{ title: "Professional profile — SelfeConnect" }] }),
   component: ProProfilePage,
@@ -32,6 +33,9 @@ function ProProfilePage() {
   const navigate = useNavigate();
   const { publicId } = useParams({ from: "/customer/pros/$publicId" });
   const search = Route.useSearch();
+  // Note: a plain "1" would be JSON-parsed to a number on a hard SSR load and
+  // dropped, so the preview flag uses a non-numeric value that round-trips.
+  const preview = search.preview === "yes";
   const q = useQuery({
     queryKey: ["pro-profile", publicId],
     queryFn: () => getProProfile(publicId),
@@ -65,7 +69,7 @@ function ProProfilePage() {
 
   if (q.isLoading) {
     return (
-      <BrowseShell>
+      <BrowseShell preview={preview}>
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
@@ -81,13 +85,15 @@ function ProProfilePage() {
   const fromJobs = search.from === "jobs" || !!search.jobId || search.review === "1";
 
   return (
-    <BrowseShell>
-      <Link
-        to={fromJobs ? "/customer" : "/customer/search"}
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" /> {fromJobs ? "Back to my jobs" : "Back to search"}
-      </Link>
+    <BrowseShell preview={preview}>
+      {!preview && (
+        <Link
+          to={fromJobs ? "/customer" : "/customer/search"}
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> {fromJobs ? "Back to my jobs" : "Back to search"}
+        </Link>
+      )}
 
       {!p ? (
         <DashCard>

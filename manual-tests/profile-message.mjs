@@ -45,6 +45,24 @@ export async function run(sharedBrowser) {
     ok("the message is shown in the conversation", await p.getByText(/free next Tuesday/).first().isVisible().catch(() => false));
     await ctx.close();
 
+    // A professional previewing their own profile lands on a clearly-labelled
+    // preview — not the public visitor view that looks like being logged out
+    // and sends them to the customer login.
+    const proCtx = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+    await proCtx.addCookies([{ name: "tv_session", value: cookieVal(pro.cookie, "tv_session"), domain: "localhost", path: "/" }]);
+    const pv = await proCtx.newPage(); pv.setDefaultTimeout(30000);
+    await pv.goto(`${BASE}/profile`, { waitUntil: "networkidle" });
+    const [preview] = await Promise.all([
+      proCtx.waitForEvent("page"),
+      pv.getByRole("link", { name: /Preview profile/i }).click(),
+    ]);
+    await preview.waitForLoadState("networkidle");
+    ok("preview keeps its ?preview flag (SSR doesn't strip it)", /preview=yes/.test(preview.url()), preview.url());
+    ok("preview shows a 'how customers see your profile' banner", await preview.getByText(/how customers see your profile/i).isVisible());
+    ok("preview offers 'Back to editing', not a public login header", await preview.locator("header").getByRole("link", { name: /Back to editing/i }).isVisible());
+    ok("preview hides the public 'Sign up free' header CTA", !(await preview.locator("header").getByText(/Sign up free/).isVisible().catch(() => false)));
+    await proCtx.close();
+
     // The pro sees it in My jobs, and it's NOT on the public board.
     const mine = await req("/pro/jobs/mine", { cookie: pro.cookie });
     const enquiry = (mine.body || []).find((j) => /Enquiry/.test(j.title || ""));

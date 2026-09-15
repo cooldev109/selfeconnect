@@ -58,6 +58,7 @@ const NOTIF_ICON: Record<AppNotification["kind"], LucideIcon> = {
   hired: BadgeCheck,
   verification: ShieldCheck,
   dispute: Scale,
+  job: Briefcase,
 };
 
 function ProDashboard() {

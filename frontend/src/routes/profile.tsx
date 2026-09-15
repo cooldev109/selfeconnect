@@ -272,7 +272,7 @@ function ProfilePage() {
       subtitle="Your public profile, services and tipping QR code."
       actions={
         <Button asChild variant="outline" className="rounded-xl">
-          <a href={`/customer/pros/${driver.id}`} target="_blank" rel="noreferrer">
+          <a href={`/customer/pros/${driver.id}?preview=yes`} target="_blank" rel="noreferrer">
             <Eye className="mr-1.5 h-4 w-4" /> Preview profile
           </a>
         </Button>
