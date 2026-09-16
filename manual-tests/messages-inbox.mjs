@@ -66,6 +66,24 @@ export async function run(sharedBrowser) {
     // The reply reached the pro's thread server-side.
     const proMsgs = await req(`/pro/jobs/${job.body.id}/messages`, { cookie: pro.cookie });
     ok("the customer's reply is in the DB thread", (proMsgs.body || []).some((m) => /Perfect, thank you/.test(m.body || "")));
+
+    // --- MOBILE: a long job title must truncate, not push the header action
+    // button off the right edge (regression: the thread header overflowed). ---
+    const longJob = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Enquiry for Ruan Cardeal Rinaldo long title overflow check", description: "A dripping kitchen mixer tap that needs a replacement washer fitted soon.", postcode: "RG1 8EQ", contactConsent: true } });
+    await req(`/pro/jobs/${longJob.body.id}/quote`, { method: "POST", cookie: pro.cookie, body: { amount: 9000, message: "On it." } });
+    await req(`/pro/jobs/${longJob.body.id}/messages`, { method: "POST", cookie: pro.cookie, body: { body: "Hello" } });
+    const mc = await browser.newContext({ viewport: { width: 360, height: 740 } });
+    await mc.addCookies([{ name: "tv_session", value: cookieVal(pro.cookie, "tv_session"), domain: "localhost", path: "/" }]);
+    const mp = await mc.newPage(); mp.setDefaultTimeout(30000);
+    await mp.goto(`${BASE}/messages`, { waitUntil: "networkidle" });
+    await mp.getByText(/long title overflow check/).first().click();
+    const vjb = mp.getByRole("link", { name: /View job/ });
+    await vjb.waitFor({ state: "visible" });
+    const vw = await mp.evaluate(() => window.innerWidth);
+    const box = await vjb.boundingBox();
+    ok("on mobile a long title keeps the 'View job' button within the viewport", !!box && box.x + box.width <= vw + 1, box ? `right ${Math.round(box.x + box.width)} > ${vw}` : "no box");
+    ok("on mobile the page does not scroll horizontally", (await mp.evaluate(() => document.documentElement.scrollWidth)) <= vw + 1);
+    await mc.close();
   } catch (e) {
     ok("no unexpected error", false, (e?.message || String(e)).split("\n")[0]);
   } finally {

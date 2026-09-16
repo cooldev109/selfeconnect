@@ -104,7 +104,7 @@ export function Inbox({
         <button
           type="button"
           onClick={() => onSelect(null)}
-          className="rounded-lg p-1 text-muted-foreground hover:bg-secondary lg:hidden"
+          className="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-secondary lg:hidden"
           aria-label="Back to all messages"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -112,13 +112,19 @@ export function Inbox({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E1F5EE] text-xs font-bold text-primary">
           {(selected.name[0] ?? "?").toUpperCase()}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">{selected.name}</p>
-          <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-            {selected.jobTitle} <JobStatusBadge status={selected.jobStatus} />
+          {/* The title must be able to truncate on its own, so keep the badge a
+              separate, non-shrinking sibling — otherwise a long job title pushes
+              the badge (and the whole header) off the right edge on mobile. */}
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="min-w-0 truncate">{selected.jobTitle}</span>
+            <span className="shrink-0">
+              <JobStatusBadge status={selected.jobStatus} />
+            </span>
           </p>
         </div>
-        {headerAction && <div className="ml-auto shrink-0">{headerAction(selected)}</div>}
+        {headerAction && <div className="shrink-0">{headerAction(selected)}</div>}
       </div>
       <div className="min-h-0 flex-1 p-4">{renderChat(selected)}</div>
     </div>
@@ -127,14 +133,17 @@ export function Inbox({
   return (
     <div className="grid h-[calc(100vh-13rem)] min-h-[28rem] overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft lg:grid-cols-[320px_1fr]">
       {/* List — hidden on mobile once a thread is open */}
-      <div className={`min-h-0 flex-col border-border/60 lg:flex lg:border-r ${selected ? "hidden lg:flex" : "flex"}`}>
+      <div className={`min-h-0 min-w-0 flex-col border-border/60 lg:flex lg:border-r ${selected ? "hidden lg:flex" : "flex"}`}>
         <div className="border-b border-border/60 px-4 py-3">
           <p className="font-display text-base font-bold text-foreground">Conversations</p>
         </div>
         {list}
       </div>
-      {/* Thread — or a placeholder on desktop when nothing is selected */}
-      <div className={`min-h-0 ${selected ? "flex" : "hidden lg:flex"} flex-col`}>
+      {/* Thread — or a placeholder on desktop when nothing is selected.
+          min-w-0 lets this grid cell shrink to the container instead of its
+          content's min-content, so the header truncates rather than overflowing
+          off the right edge on mobile. */}
+      <div className={`min-h-0 min-w-0 ${selected ? "flex" : "hidden lg:flex"} flex-col`}>
         {thread ?? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
             Select a conversation to read it.
