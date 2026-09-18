@@ -14,6 +14,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { CustomerSendMessageDto } from './dto/send-message.dto';
 import { EnquireDto } from './dto/enquire.dto';
+import { InviteToJobDto } from './dto/invite-to-job.dto';
 import { PayJobDto } from './dto/pay-job.dto';
 import { CustomerAuthGuard } from '../customer-auth/customer-auth.guard';
 import { CurrentCustomer } from '../customer-auth/current-customer.decorator';
@@ -69,6 +70,22 @@ export class JobsController {
   @Get(':id/quotes')
   quotes(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
     return this.jobs.listQuotes(c.id, id);
+  }
+
+  // Professionals the customer can invite to this job (skilled, not yet engaged).
+  @Get(':id/matching-pros')
+  matchingPros(@CurrentCustomer() c: CustomerUser, @Param('id') id: string) {
+    return this.jobs.listMatchingProsForJob(c.id, id);
+  }
+
+  // Invite one professional to this job — engages them and sends a first message.
+  @Post(':id/invite')
+  invite(
+    @CurrentCustomer() c: CustomerUser,
+    @Param('id') id: string,
+    @Body() dto: InviteToJobDto,
+  ) {
+    return this.jobs.customerInviteToJob(c.id, id, dto.pro, dto.message);
   }
 
   // Chat threads on this job — one per pro the customer can message.

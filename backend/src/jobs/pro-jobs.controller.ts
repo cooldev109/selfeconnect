@@ -25,6 +25,7 @@ export class ProJobsController {
     @CurrentUser() user: AuthUser,
     @Query('radius') radius?: string,
     @Query('category') category?: string,
+    @Query('scope') scope?: string,
   ) {
     let radiusMiles: number | undefined;
     if (radius !== undefined) {
@@ -34,6 +35,7 @@ export class ProJobsController {
     return this.jobs.browseForPro(user.id, {
       radiusMiles,
       categorySlug: category || undefined,
+      scope: scope === 'mine' ? 'mine' : 'all',
     });
   }
 

@@ -134,6 +134,8 @@ export interface ProJob {
   unlocked: boolean;
   /** True when the customer's quote limit is reached and this pro hasn't unlocked. */
   quotesFull: boolean;
+  /** True when this job's trade is one of the pro's own — used to badge/sort the open board. */
+  matchesMySkills?: boolean;
   /** This pro's own quote on the job, if they've submitted one. */
   myQuote?: { amount: number | null; message: string } | null;
   contact: ProJobContact | null;
@@ -151,10 +153,16 @@ export interface JobQuote {
   createdAt: string;
 }
 
-export const proBrowseJobs = (opts: { radius?: number; category?: string }) => {
+export const proBrowseJobs = (opts: {
+  radius?: number;
+  category?: string;
+  scope?: "mine" | "all";
+}) => {
   const p = new URLSearchParams();
   if (opts.radius) p.set("radius", String(opts.radius));
   if (opts.category) p.set("category", opts.category);
+  // The board is open to all trades by default; "mine" narrows to the pro's own.
+  if (opts.scope === "mine") p.set("scope", "mine");
   const qs = p.toString();
   return api<ProJob[]>(`/pro/jobs${qs ? `?${qs}` : ""}`);
 };
@@ -174,6 +182,27 @@ export const proSubmitQuote = (id: string, body: { amount?: number | null; messa
 // profile. Returns the job that holds the conversation.
 export const enquireToPro = (pro: string, message: string) =>
   api<{ jobId: string }>("/jobs/enquire", { method: "POST", body: JSON.stringify({ pro, message }) });
+
+// ---- Invite professionals to a job (customer-initiated outreach) ----
+export interface MatchingPro {
+  publicId: string;
+  name: string;
+  company: string | null;
+  photoUrl: string | null;
+  categories: string[];
+  avgRating: number;
+  reviewCount: number;
+  distanceMiles: number | null;
+}
+// Skilled pros the customer can invite to a job (not yet engaged on it).
+export const jobMatchingPros = (id: string) =>
+  api<MatchingPro[]>(`/jobs/${id}/matching-pros`);
+// Invite one pro to the job — engages them and sends the first message.
+export const inviteToJob = (id: string, pro: string, message: string) =>
+  api<{ proPublicId: string }>(`/jobs/${id}/invite`, {
+    method: "POST",
+    body: JSON.stringify({ pro, message }),
+  });
 
 // The professional's own pipeline — jobs they've unlocked or been hired for.
 export const proMyJobs = () => api<ProJob[]>("/pro/jobs/mine");

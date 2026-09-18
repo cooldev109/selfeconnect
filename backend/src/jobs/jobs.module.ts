@@ -5,13 +5,15 @@ import { JobPhotoController } from './job-photo.controller';
 import { ProJobsController } from './pro-jobs.controller';
 import { CustomerAuthModule } from '../customer-auth/customer-auth.module';
 import { GeoModule } from '../geo/geo.module';
+import { ProsModule } from '../pros/pros.module';
 import { StripeModule } from '../stripe/stripe.module';
 
 @Module({
   // CustomerAuthModule re-exports AuthModule, so both the customer guard (job
   // owners) and the professional AuthGuard (job board) resolve here.
   // StripeModule provides the gateway for the optional job-payment flow.
-  imports: [CustomerAuthModule, GeoModule, StripeModule],
+  // ProsModule powers the "invite professionals to a job" candidate search.
+  imports: [CustomerAuthModule, GeoModule, ProsModule, StripeModule],
   controllers: [JobsController, JobPhotoController, ProJobsController],
   providers: [JobsService],
   exports: [JobsService],

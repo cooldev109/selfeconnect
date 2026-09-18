@@ -12,6 +12,7 @@ import {
   Bell,
   QrCode,
   ArrowRight,
+  Check,
   X,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
@@ -47,13 +48,21 @@ function JobBoard() {
   const qc = useQueryClient();
   const [radius, setRadius] = useState(25);
   const [category, setCategory] = useState("");
+  // The board is open to every trade by default ("all"); "mine" narrows it to
+  // the pro's own trades.
+  const [scope, setScope] = useState<"all" | "mine">("all");
 
   const accountQ = useQuery({ queryKey: ["account"], queryFn: getAccount, retry: false });
   const jobsQ = useQuery({
-    queryKey: ["pro-jobs", radius, category],
-    // radius 0 = "Anywhere": omit the radius so every job in the pro's trades
-    // shows, however far away (still newest first).
-    queryFn: () => proBrowseJobs({ radius: radius > 0 ? radius : undefined, category: category || undefined }),
+    queryKey: ["pro-jobs", radius, category, scope],
+    // radius 0 = "Anywhere": omit the radius so every job shows, however far
+    // away. A specific trade filter overrides the all/mine scope.
+    queryFn: () =>
+      proBrowseJobs({
+        radius: radius > 0 ? radius : undefined,
+        category: category || undefined,
+        scope: category ? "all" : scope,
+      }),
     retry: false,
   });
 
@@ -82,7 +91,7 @@ function JobBoard() {
   const newToday = jobs.filter((j) => isNew(j.createdAt)).length;
 
   return (
-    <ProShell title="Find work" subtitle="Find local jobs that match your skills and send quotes.">
+    <ProShell title="Find work" subtitle="Browse every local job — the ones matching your trade are highlighted.">
       {!isActive && (
         <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-primary/30 bg-primary-soft p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-center gap-2 text-sm font-medium text-primary-hover">
@@ -103,7 +112,12 @@ function JobBoard() {
         <div className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <StatCard icon={Briefcase} label="Jobs available" value={jobs.length} foot="In your categories" />
+            <StatCard
+              icon={Briefcase}
+              label="Jobs available"
+              value={jobs.length}
+              foot={scope === "mine" ? "In your trades" : "Open near you"}
+            />
             <StatCard
               icon={Sparkles}
               label="New today"
@@ -123,8 +137,26 @@ function JobBoard() {
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card p-3 shadow-soft">
-            <div className="min-w-[12rem] flex-1">
-              <CategorySelect value={category} onChange={setCategory} allLabel="All my services" />
+            {/* All jobs / My trades — disabled while a specific trade is picked. */}
+            <div className="inline-flex rounded-xl border border-border bg-background p-0.5">
+              {(["all", "mine"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={!!category}
+                  onClick={() => setScope(s)}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition disabled:opacity-40 ${
+                    !category && scope === s
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s === "all" ? "All jobs" : "My trades"}
+                </button>
+              ))}
+            </div>
+            <div className="min-w-[10rem] flex-1">
+              <CategorySelect value={category} onChange={setCategory} allLabel="All trades" />
             </div>
             <select
               value={radius}
@@ -149,7 +181,9 @@ function JobBoard() {
           ) : jobs.length === 0 ? (
             <DashCard bodyClassName="p-10">
               <EmptyRow>
-                No open jobs match your filters right now. Try a wider radius or a different category.
+                {scope === "mine" && !category
+                  ? "No open jobs in your trades right now. Switch to All jobs, or widen your radius."
+                  : "No open jobs match your filters right now. Try a wider radius or a different trade."}
               </EmptyRow>
             </DashCard>
           ) : (
@@ -159,6 +193,7 @@ function JobBoard() {
                   key={j.id}
                   job={j}
                   isActive={isActive}
+                  highlightMatch={!category}
                   unlocking={unlock.isPending && unlock.variables === j.id}
                   quoting={quote.isPending && quote.variables?.id === j.id}
                   onUnlock={() => unlock.mutate(j.id)}
@@ -247,6 +282,7 @@ function JobBoard() {
 function JobCard({
   job,
   isActive,
+  highlightMatch,
   unlocking,
   quoting,
   onUnlock,
@@ -256,6 +292,8 @@ function JobCard({
 }: {
   job: ProJob;
   isActive: boolean;
+  /** Badge jobs in the pro's own trades (only meaningful on the open, all-trades board). */
+  highlightMatch: boolean;
   unlocking: boolean;
   quoting: boolean;
   onUnlock: () => void;
@@ -293,6 +331,11 @@ function JobCard({
             {isNew(job.createdAt) && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
                 New
+              </span>
+            )}
+            {highlightMatch && job.matchesMySkills && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#E1F5EE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                <Check className="h-3 w-3" /> Matches your skills
               </span>
             )}
             <h3 className="truncate font-semibold text-foreground">{job.title}</h3>

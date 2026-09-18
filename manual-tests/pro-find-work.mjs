@@ -52,6 +52,24 @@ export async function run(sharedBrowser) {
     // Ruan feedback #4: the customer's timeframe shows on the Find work card too.
     ok("job card shows the customer's timeframe", await p.getByText(TIMING).first().isVisible());
 
+    // Open board: a job in another trade is browsable but not badged; the pro's
+    // own-trade jobs carry a "Matches your skills" flag, and "My trades" narrows.
+    const carpTitle = `Carpentry ${S}`;
+    await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "carpenter", title: carpTitle, description: "A carpentry job for the open-board test.", postcode: "RG1 8EQ", contactConsent: true } });
+    await p.reload({ waitUntil: "networkidle" });
+    await p.getByText(carpTitle).first().waitFor({ state: "visible", timeout: 10000 });
+    ok("an other-trade job is visible on the open board", await p.getByText(carpTitle).first().isVisible());
+    const plumbCard = p.locator("div.rounded-2xl").filter({ hasText: near }).last();
+    const carpCard = p.locator("div.rounded-2xl").filter({ hasText: carpTitle }).last();
+    ok("own-trade job shows the 'Matches your skills' badge", await plumbCard.getByText(/Matches your skills/i).isVisible());
+    ok("other-trade job has no match badge", !(await carpCard.getByText(/Matches your skills/i).isVisible().catch(() => false)));
+    await p.getByRole("button", { name: /^My trades$/ }).click();
+    await p.waitForTimeout(900);
+    ok("'My trades' hides the other-trade job", !(await p.getByText(carpTitle).first().isVisible().catch(() => false)));
+    ok("'My trades' keeps an own-trade job", await p.getByText(near).first().isVisible());
+    await p.getByRole("button", { name: /^All jobs$/ }).click();
+    await p.getByText(far).first().waitFor({ state: "visible" });
+
     // "Not interested" on the far job → confirmation → removed.
     const card = p.locator("div").filter({ hasText: far }).filter({ has: p.getByRole("button", { name: /Not interested/ }) }).last();
     await card.getByRole("button", { name: /Not interested/ }).click();

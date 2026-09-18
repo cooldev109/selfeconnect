@@ -18,6 +18,7 @@ import {
   BadgeCheck,
   CreditCard,
   UserRound,
+  UserPlus,
   Receipt,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
@@ -36,6 +37,8 @@ import {
   jobThreads,
   jobMessages,
   sendJobMessage,
+  jobMatchingPros,
+  inviteToJob,
   payForJob,
   getJobReceipt,
   type Job,
@@ -130,6 +133,38 @@ export function JobWorkspace({ job }: { job: Job }) {
     enabled: STAGE_OF[job.status] === "active",
     refetchInterval: 8000,
   });
+
+  // Invite professionals: the customer reaches skilled pros for this job.
+  const [inviting, setInviting] = useState(false);
+  const [inviteTarget, setInviteTarget] = useState<string | null>(null);
+  const [inviteMsg, setInviteMsg] = useState("");
+  const matchQ = useQuery({
+    queryKey: ["job-matching", job.id],
+    queryFn: () => jobMatchingPros(job.id),
+    enabled: inviting,
+  });
+  const invite = useMutation({
+    mutationFn: (v: { pro: string; message: string }) =>
+      inviteToJob(job.id, v.pro, v.message),
+    onSuccess: ({ proPublicId }) => {
+      setInviting(false);
+      setInviteTarget(null);
+      setInviteMsg("");
+      qc.invalidateQueries({ queryKey: ["job-threads", job.id] });
+      qc.invalidateQueries({ queryKey: ["my-job", job.id] });
+      qc.invalidateQueries({ queryKey: ["job-matching", job.id] });
+      setChatWith(proPublicId);
+    },
+  });
+  // Opening the compose for a pro prefills a friendly first message.
+  const openInviteFor = (publicId: string, firstName: string) => {
+    if (inviteTarget === publicId) {
+      setInviteTarget(null);
+      return;
+    }
+    setInviteTarget(publicId);
+    setInviteMsg(`Hi ${firstName}, I've posted "${job.title}" — are you available?`);
+  };
   const hire = useMutation({
     mutationFn: (publicId: string | null) =>
       updateJob(job.id, { status: "hired", hiredDriverPublicId: publicId }),
@@ -238,6 +273,13 @@ export function JobWorkspace({ job }: { job: Job }) {
                 >
                   <Check className="mr-1 h-3.5 w-3.5" /> I've found my professional
                 </Button>
+                <Button
+                  variant="outline"
+                  className="h-9 rounded-lg px-3 text-xs"
+                  onClick={() => setInviting((v) => !v)}
+                >
+                  <UserPlus className="mr-1 h-3.5 w-3.5" /> Invite professionals
+                </Button>
                 <Link
                   to="/customer/jobs/$jobId/edit"
                   params={{ jobId: job.id }}
@@ -324,6 +366,138 @@ export function JobWorkspace({ job }: { job: Job }) {
             </div>
           )}
         </div>
+
+        {/* No one in touch yet → nudge the customer to reach out themselves. */}
+        {job.status === "open" &&
+          job.contactCount === 0 &&
+          (quotesQ.data?.length ?? 0) === 0 &&
+          !inviting && (
+            <div className="mt-5 rounded-xl border border-dashed border-primary/40 bg-primary-soft/50 p-5 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No professionals in touch yet
+              </p>
+              <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+                Invite {job.categoryName.toLowerCase()}s to your job to get responses faster
+                — they'll get your message and can reply right here.
+              </p>
+              <Button
+                className="mt-3 h-9 rounded-lg bg-primary px-4 text-xs text-primary-foreground hover:bg-primary/90"
+                onClick={() => setInviting(true)}
+              >
+                <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Invite professionals
+              </Button>
+            </div>
+          )}
+
+        {/* Invite panel — skilled pros the customer can reach out to. */}
+        {inviting && (
+          <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Invite professionals to this job
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {job.categoryName}s near {job.postcode} — nearest first. They'll get your
+                  message and can reply here.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setInviting(false);
+                  setInviteTarget(null);
+                }}
+                className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </button>
+            </div>
+
+            {matchQ.isLoading ? (
+              <div className="mt-3 flex justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              </div>
+            ) : (matchQ.data?.length ?? 0) === 0 ? (
+              <p className="mt-3 rounded-lg bg-background p-3 text-xs text-muted-foreground">
+                No matching professionals found right now. They'll appear here as they join,
+                or wait for responses to your posting.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {matchQ.data!.map((p) => {
+                  const first = p.name.split(" ")[0] || "there";
+                  const open = inviteTarget === p.publicId;
+                  return (
+                    <div
+                      key={p.publicId}
+                      className="rounded-lg border border-border bg-background p-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{p.company || p.name}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {p.categories.join(" · ")}
+                            {p.distanceMiles != null && ` · ${p.distanceMiles} mi away`}
+                            {p.reviewCount > 0 &&
+                              ` · ★ ${p.avgRating.toFixed(1)} (${p.reviewCount})`}
+                          </p>
+                          <Link
+                            to="/customer/pros/$publicId"
+                            params={{ publicId: p.publicId }}
+                            search={{ from: "jobs" }}
+                            className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          >
+                            <UserRound className="h-3 w-3" /> View profile
+                          </Link>
+                        </div>
+                        <Button
+                          className="h-8 shrink-0 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
+                          onClick={() => openInviteFor(p.publicId, first)}
+                        >
+                          <MessageSquare className="mr-1 h-3.5 w-3.5" />
+                          {open ? "Cancel" : "Message"}
+                        </Button>
+                      </div>
+
+                      {open && (
+                        <div className="mt-2">
+                          <textarea
+                            value={inviteMsg}
+                            onChange={(e) => setInviteMsg(e.target.value)}
+                            rows={3}
+                            maxLength={2000}
+                            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                          />
+                          <div className="mt-2 flex items-center gap-2">
+                            <Button
+                              className="h-9 rounded-lg bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90"
+                              disabled={invite.isPending || inviteMsg.trim().length < 2}
+                              onClick={() =>
+                                invite.mutate({ pro: p.publicId, message: inviteMsg })
+                              }
+                            >
+                              {invite.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                "Send invite"
+                              )}
+                            </Button>
+                            {invite.isError && (
+                              <span className="text-xs text-destructive">
+                                Couldn't send — please try again.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Quotes received — compare and hire directly (open jobs). */}
         {job.status === "open" && (quotesQ.data?.length ?? 0) > 0 && (

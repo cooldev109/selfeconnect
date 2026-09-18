@@ -13,6 +13,7 @@ import sharp from 'sharp';
 import { PrismaService } from '../prisma/prisma.service';
 import { expireLapsedComplimentary } from '../billing/complimentary';
 import { GeoService } from '../geo/geo.service';
+import { ProsService } from '../pros/pros.service';
 import { MailService } from '../mail/mail.service';
 import { AccountAccessService } from '../mail/account-access.service';
 import { STRIPE_GATEWAY, type StripeGateway } from '../stripe/gateway';
@@ -67,6 +68,7 @@ export class JobsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geo: GeoService,
+    private readonly pros: ProsService,
     private readonly mail: MailService,
     private readonly access: AccountAccessService,
     @Inject(STRIPE_GATEWAY) private readonly stripe: StripeGateway,
@@ -392,6 +394,90 @@ export class JobsService {
     }));
   }
 
+  // Professionals the customer can *invite* to their own job: active pros in the
+  // job's trade, nearest first, excluding anyone already engaged on it (they
+  // already have a thread). "Anywhere" radius — the customer is reaching out on
+  // purpose, so distance is shown but never filters.
+  async listMatchingProsForJob(customerId: string, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: {
+        postcode: true,
+        category: { select: { slug: true } },
+        hiredDriver: { select: { publicId: true } },
+        unlocks: { select: { driver: { select: { publicId: true } } } },
+      },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+
+    const engaged = new Set<string>();
+    for (const u of job.unlocks) engaged.add(u.driver.publicId);
+    if (job.hiredDriver?.publicId) engaged.add(job.hiredDriver.publicId);
+
+    const pros = await this.pros.browse({
+      categorySlug: job.category.slug,
+      // 'N/A' is the placeholder on profile enquiries — skip it so browse
+      // doesn't try to geocode a non-postcode.
+      postcode: job.postcode && job.postcode !== 'N/A' ? job.postcode : undefined,
+    });
+    return pros.filter((p) => !engaged.has(p.publicId));
+  }
+
+  // A customer invites one professional to their own job: engages the pro (so
+  // the two-way conversation is allowed and the job shows in their My jobs) and
+  // opens it with the customer's first message. Idempotent — re-inviting an
+  // engaged pro just posts the message. Not capped by maxContacts: that cap
+  // limits inbound pros, not the customer's own outreach.
+  async customerInviteToJob(
+    customerId: string,
+    jobId: string,
+    proPublicId: string,
+    message: string,
+  ) {
+    const text = message.trim();
+    if (text.length < 2) throw new BadRequestException('message_required');
+
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, customerId },
+      select: { id: true, title: true, status: true },
+    });
+    if (!job) throw new NotFoundException('job_not_found');
+    if (!MESSAGEABLE_STATUSES.includes(job.status)) {
+      throw new BadRequestException('job_closed');
+    }
+
+    const pro = await this.prisma.driver.findFirst({
+      where: {
+        publicId: proPublicId.trim().toUpperCase(),
+        role: 'driver',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    if (!pro) throw new NotFoundException('professional_not_found');
+
+    await this.prisma.jobContactUnlock.upsert({
+      where: { jobId_driverId: { jobId, driverId: pro.id } },
+      update: {},
+      create: { jobId, driverId: pro.id },
+    });
+    await this.prisma.message.create({
+      data: { jobId, driverId: pro.id, fromCustomer: true, body: text },
+    });
+
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { name: true, companyName: true },
+    });
+    await this.notifyMessageOnce(
+      { driverId: pro.id },
+      jobId,
+      `New enquiry from ${customer?.companyName || customer?.name || 'a customer'}`,
+      job.title,
+    );
+    return { proPublicId: proPublicId.trim().toUpperCase() };
+  }
+
   async remove(customerId: string, id: string) {
     const existing = await this.prisma.job.findFirst({
       where: { id, customerId },
@@ -424,6 +510,7 @@ export class JobsService {
     unlocked: boolean,
     hired = false,
     myQuote: { amount: number | null; message: string } | null = null,
+    matchesMySkills = false,
   ) {
     // "Full" only matters to a pro who hasn't already unlocked it — someone who
     // reached out earlier keeps their access even after the cap is reached.
@@ -452,6 +539,9 @@ export class JobsService {
       createdAt: j.createdAt.toISOString(),
       unlocked,
       quotesFull,
+      // The board is open to every pro; this flags the jobs in one of their own
+      // trades so the UI can badge them and float them to the top.
+      matchesMySkills,
       // This pro's own quote on the job, if they've submitted one.
       myQuote,
       // Contact is only ever populated once the pro has unlocked it.
@@ -513,36 +603,52 @@ export class JobsService {
     });
   }
 
-  // Open jobs in the professional's own categories, optionally within `radius`
-  // miles of their postcode, nearest first. Contact stays hidden until unlocked.
+  // The open job board: every open job is visible to any professional, so the
+  // board is never empty. Filters narrow it — `scope: 'mine'` to the pro's own
+  // trades, `categorySlug` to one specific trade, `radiusMiles` to a distance.
+  // In the default (all-trades) view, jobs matching the pro's own skills are
+  // floated to the top and flagged; alerts stay skill-matched elsewhere.
+  // Contact stays hidden until unlocked.
   async browseForPro(
     driverId: string,
-    opts: { radiusMiles?: number; categorySlug?: string },
+    opts: { radiusMiles?: number; categorySlug?: string; scope?: 'mine' | 'all' },
   ) {
-    // Expire lapsed complimentary access so a comped pro loses the board too.
+    // Expire lapsed complimentary access so a comped pro loses unlocking too.
     await expireLapsedComplimentary(this.prisma);
     const driver = await this.prisma.driver.findUnique({
       where: { id: driverId },
-      include: { categories: { select: { id: true, slug: true } } },
+      include: { categories: { select: { id: true } } },
     });
     if (!driver) throw new NotFoundException('driver_not_found');
 
-    let categoryIds = driver.categories.map((c) => c.id);
+    const myCategoryIds = new Set(driver.categories.map((c) => c.id));
+
+    // Which jobs' categories to include:
+    // - a specific trade filter → that one trade (any trade, not only the pro's)
+    // - scope 'mine' → the pro's own trades
+    // - default → every trade (the open board)
+    let categoryWhere: Prisma.JobWhereInput = {};
     if (opts.categorySlug) {
-      const match = driver.categories.find((c) => c.slug === opts.categorySlug);
-      categoryIds = match ? [match.id] : [];
+      const cat = await this.prisma.serviceCategory.findFirst({
+        where: { slug: opts.categorySlug, active: true },
+        select: { id: true },
+      });
+      if (!cat) return [];
+      categoryWhere = { categoryId: cat.id };
+    } else if (opts.scope === 'mine') {
+      if (myCategoryIds.size === 0) return [];
+      categoryWhere = { categoryId: { in: [...myCategoryIds] } };
     }
-    if (categoryIds.length === 0) return [];
 
     const jobs = await this.prisma.job.findMany({
       where: {
         status: 'open',
-        categoryId: { in: categoryIds },
         // Direct enquiries are private to the pro they're aimed at — never on
         // the open board.
         directDriverId: null,
         // Hide jobs this pro dismissed as "not interested".
         dismissals: { none: { driverId } },
+        ...categoryWhere,
       },
       include: {
         category: true,
@@ -555,7 +661,7 @@ export class JobsService {
     });
 
     const hasLoc = driver.latitude != null && driver.longitude != null;
-    const rows = jobs.map((j) => {
+    let rows = jobs.map((j) => {
       let distanceMiles: number | null = null;
       if (hasLoc && j.latitude != null && j.longitude != null) {
         distanceMiles = this.round1(
@@ -565,37 +671,41 @@ export class JobsService {
           ),
         );
       }
-      return { j, distanceMiles, unlocked: j.unlocks.length > 0 };
+      return {
+        j,
+        distanceMiles,
+        unlocked: j.unlocks.length > 0,
+        matches: myCategoryIds.has(j.categoryId),
+      };
     });
 
-    let filtered = rows;
     if (hasLoc && opts.radiusMiles != null) {
-      // Filter to the radius but keep the query's newest-first order — pros want
-      // to see the most recently posted jobs at the top, not the closest ones.
-      filtered = rows.filter(
+      // Filter to the radius but keep the newest-first base order.
+      rows = rows.filter(
         (r) => r.distanceMiles != null && r.distanceMiles <= opts.radiusMiles!,
       );
     }
-    return filtered.map((r) =>
-      this.shapePro(r.j, r.distanceMiles, r.unlocked, false, this.quoteOf(r.j)),
+
+    // In the open (all-trades) view, surface the pro's own-trade jobs first.
+    // Array.sort is stable, so newest-first is preserved within each group.
+    // When filtered to a trade or to 'mine', everything is relevant already.
+    if (!opts.categorySlug && opts.scope !== 'mine') {
+      rows.sort((a, b) => Number(b.matches) - Number(a.matches));
+    }
+
+    return rows.map((r) =>
+      this.shapePro(r.j, r.distanceMiles, r.unlocked, false, this.quoteOf(r.j), r.matches),
     );
   }
 
-  // "Not interested": hide a job from this pro's board. Idempotent, and only for
-  // jobs the pro can actually see (in one of their categories).
+  // "Not interested": hide a job from this pro's board. Idempotent. The board is
+  // open to every pro now, so any open job can be dismissed — not just same-trade.
   async dismissForPro(driverId: string, jobId: string) {
-    const driver = await this.prisma.driver.findUnique({
-      where: { id: driverId },
-      include: { categories: { select: { id: true } } },
-    });
-    if (!driver) throw new NotFoundException('driver_not_found');
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      select: { categoryId: true },
+      select: { id: true },
     });
-    if (!job || !driver.categories.some((c) => c.id === job.categoryId)) {
-      throw new NotFoundException('job_not_found');
-    }
+    if (!job) throw new NotFoundException('job_not_found');
     await this.prisma.jobDismissal.upsert({
       where: { jobId_driverId: { jobId, driverId } },
       create: { jobId, driverId },
