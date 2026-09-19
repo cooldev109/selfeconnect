@@ -41,6 +41,9 @@ export function CustomerShell({
       title={title}
       subtitle={subtitle}
       actions={actions}
+      messagesPath="/customer/messages"
+      accountPath="/customer/account"
+      userName={customer.companyName || customer.name}
       bell={
         <NotificationBell
           queryKey={["customer-notifications"]}

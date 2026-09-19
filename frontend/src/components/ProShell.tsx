@@ -59,6 +59,9 @@ export function ProShell({
       title={title}
       subtitle={subtitle}
       actions={actions}
+      messagesPath="/messages"
+      accountPath="/account"
+      userName={driver.company || driver.name}
       bell={
         <NotificationBell
           queryKey={["pro-notifications"]}

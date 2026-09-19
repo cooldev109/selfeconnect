@@ -1,6 +1,6 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, MessageSquare, Settings, ChevronDown, type LucideIcon } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 
 export interface NavItem {
@@ -13,7 +13,9 @@ export interface NavItem {
 
 // Persistent side-navigation shell shared by the professional and customer
 // dashboards. A dark rail on the left (desktop) collapses to a horizontal
-// top bar on mobile. Page content is passed as children.
+// top bar on mobile. On desktop a sticky top app bar carries the page title
+// and the global actions (Messages, notifications, account). Page content is
+// passed as children.
 export function DashboardShell({
   nav,
   onLogout,
@@ -22,6 +24,9 @@ export function DashboardShell({
   subtitle,
   actions,
   bell,
+  messagesPath,
+  accountPath,
+  userName,
   homePath = "/",
   children,
 }: {
@@ -32,8 +37,14 @@ export function DashboardShell({
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
-  /** Notification bell, pinned to the top-right of the header. */
+  /** Notification bell, shown in the top app bar. */
   bell?: ReactNode;
+  /** Where the "Messages" shortcut in the app bar links to. */
+  messagesPath?: string;
+  /** Where the account menu's "Account" item links to. */
+  accountPath?: string;
+  /** The signed-in user's display name, for the account menu. */
+  userName?: string;
   /** Where the logo links to — the signed-in user's own dashboard, not the
    * public landing page. */
   homePath?: string;
@@ -42,6 +53,8 @@ export function DashboardShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.to : pathname.startsWith(item.to);
+  // Fall back to the active section's label so the app bar always has context.
+  const heading = title ?? nav.find(isActive)?.label ?? "";
 
   return (
     <div className="min-h-screen bg-[#F4F8F8] lg:grid lg:grid-cols-[248px_1fr]">
@@ -126,9 +139,38 @@ export function DashboardShell({
 
       {/* Main content */}
       <main className="min-w-0">
+        {/* Desktop sticky top app bar — page context + global actions. */}
+        <header className="sticky top-0 z-30 hidden border-b border-border/60 bg-background/80 backdrop-blur-xl lg:block">
+          <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3 sm:px-8">
+            <div className="min-w-0">
+              {heading && (
+                <h1 className="truncate font-display text-lg font-bold text-foreground">
+                  {heading}
+                </h1>
+              )}
+              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              {actions && <div className="flex items-center gap-2">{actions}</div>}
+              {messagesPath && (
+                <Link
+                  to={messagesPath}
+                  aria-label="Messages"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition hover:text-foreground"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                </Link>
+              )}
+              {bell}
+              <AccountMenu userName={userName} accountPath={accountPath} onLogout={onLogout} />
+            </div>
+          </div>
+        </header>
+
         <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
+          {/* Mobile-only in-content header (the desktop app bar covers this). */}
           {(title || actions || bell) && (
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4 lg:hidden">
               <div>
                 {title && (
                   <h1 className="font-display text-2xl font-bold text-foreground">{title}</h1>
@@ -144,6 +186,76 @@ export function DashboardShell({
           {children}
         </div>
       </main>
+    </div>
+  );
+}
+
+// The account/avatar menu in the top app bar: the user's name, an Account link,
+// and Log out. A small dropdown that closes on an outside click.
+function AccountMenu({
+  userName,
+  accountPath,
+  onLogout,
+}: {
+  userName?: string;
+  accountPath?: string;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const initial = (userName?.trim()?.[0] ?? "?").toUpperCase();
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Account menu"
+        className="flex h-10 items-center gap-1.5 rounded-xl border border-border bg-background py-1 pl-1 pr-2 text-muted-foreground transition hover:text-foreground"
+      >
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-soft text-sm font-bold text-primary">
+          {initial}
+        </span>
+        <ChevronDown className="h-4 w-4" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-border bg-popover shadow-elevated">
+          {userName && (
+            <div className="truncate border-b border-border/60 px-4 py-3 text-sm font-semibold text-foreground">
+              {userName}
+            </div>
+          )}
+          {accountPath && (
+            <Link
+              to={accountPath}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground transition hover:bg-secondary"
+            >
+              <Settings className="h-4 w-4 text-muted-foreground" /> Account
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-foreground transition hover:bg-secondary"
+          >
+            <LogOut className="h-4 w-4 text-muted-foreground" /> Log out
+          </button>
+        </div>
+      )}
     </div>
   );
 }
