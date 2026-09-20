@@ -68,6 +68,15 @@ export async function run(sharedBrowser) {
     ok("My Jobs shows the full description (#10)", await aPage.getByText(/remove a sofa and a bed/).first().isVisible());
     ok("My Jobs shows the job photo (#10)", await aPage.locator('img[alt="Job photo"]').first().isVisible());
     ok("My Jobs reads 'Quoted' for a pro who quoted (#9)", await aPage.getByText("Quoted").first().isVisible());
+    // The card no longer embeds the chat or the verbose quote recap — messaging
+    // is a button that jumps to this job's conversation in the Messages inbox.
+    ok("My Jobs no longer shows the 'Your quote' recap", !(await aPage.getByText(/Your quote/i).first().isVisible().catch(() => false)));
+    ok("My Jobs has no inline chat box", !(await aPage.getByPlaceholder(/Message the customer/i).first().isVisible().catch(() => false)));
+    const msgLink = aPage.getByRole("link", { name: /Message customer/i }).first();
+    ok("My Jobs shows a 'Message customer' button", await msgLink.isVisible());
+    await msgLink.click();
+    await aPage.waitForURL(/\/messages\?job=/, { timeout: 10000 }).catch(() => {});
+    ok("'Message customer' opens the inbox conversation", /\/messages\?job=/.test(aPage.url()), aPage.url());
     await aCtx.close();
 
     // proB (unlock only): My Jobs reads "Contacted", not "Quoted".

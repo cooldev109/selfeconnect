@@ -58,7 +58,9 @@ try {
   await pp.waitForURL(/\/(home|jobs|dashboard)/, { timeout: 20000 });
   await pp.goto(`${WEB}/my-jobs`, { waitUntil: "networkidle" });
   await pp.getByText(TITLE).first().waitFor({ state: "visible" });
-  await pp.getByRole("button", { name: /Message customer/i }).first().click();
+  // "Message customer" now jumps to the Messages inbox with this job's thread open.
+  await pp.getByRole("link", { name: /Message customer/i }).first().click();
+  await pp.waitForURL(/\/messages\?job=/, { timeout: 10000 });
   await pp.getByPlaceholder("Message the customer…").fill("Hi! I can sort the tap on Thursday.");
   await pp.getByRole("button", { name: /Send message/i }).click();
   await pp.getByText(/sort the tap on Thursday/i).waitFor({ state: "visible" });

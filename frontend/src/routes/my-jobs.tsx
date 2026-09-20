@@ -1,20 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MapPin, Clock, Mail, Phone, BadgeCheck, MessageSquare } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Badge, Button, Card, CardContent } from "@/components/shared";
 import { ProShell } from "@/components/ProShell";
-import { ChatThread } from "@/components/ChatThread";
 import { JobPhotos } from "@/components/JobPhotos";
 import { JobStatusBadge } from "@/components/JobStatusBadge";
-import {
-  proMyJobs,
-  proJobMessages,
-  proSendJobMessage,
-  type ProJob,
-  type JobStatus,
-} from "@/lib/jobs";
+import { proMyJobs, type ProJob, type JobStatus } from "@/lib/jobs";
 
 export const Route = createFileRoute("/my-jobs")({
   // A notification deep-links here with ?job=<id> so we can open that job's
@@ -140,66 +133,74 @@ function MyJobsPage() {
 
 function ProJobCard({ job, autoOpen = false }: { job: ProJob; autoOpen?: boolean }) {
   const status = job.status ?? "open";
-  const engagement = status === "open" ? (job.myQuote ? ENGAGEMENT.quoted : ENGAGEMENT.contacted) : null;
+  // A small pipeline-status pill (has the pro quoted, or only reached out) — the
+  // verbose quote recap itself is gone; this is just status, not the quote.
+  const engagement =
+    status === "open" ? (job.myQuote ? ENGAGEMENT.quoted : ENGAGEMENT.contacted) : null;
   const active = STAGE_OF[status] === "active";
-  // Deep-linked from a notification → open this job's conversation and bring it
-  // into view.
-  const [chatOpen, setChatOpen] = useState(autoOpen && active);
   const cardRef = useRef<HTMLDivElement>(null);
+  // Deep-linked from a notification → bring this job's card into view.
   useEffect(() => {
     if (autoOpen) cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [autoOpen]);
+
   return (
     <Card ref={cardRef} className={`rounded-2xl ${autoOpen ? "ring-2 ring-primary/40" : ""}`}>
       <CardContent className="p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-semibold text-foreground">{job.title}</h3>
-          {engagement ? (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${engagement.cls}`}
-            >
-              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${engagement.dot}`} aria-hidden />
-              {engagement.label}
-            </span>
-          ) : (
-            <JobStatusBadge status={status} />
-          )}
-          {job.hired && (
-            <Badge className="rounded-full border-0 bg-violet-100 text-violet-800">
-              <BadgeCheck className="mr-1 h-3.5 w-3.5" /> They hired you
-            </Badge>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          {/* Title, status and the job's key facts — the scannable summary. */}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-semibold text-foreground">{job.title}</h3>
+              {engagement ? (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${engagement.cls}`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${engagement.dot}`}
+                    aria-hidden
+                  />
+                  {engagement.label}
+                </span>
+              ) : (
+                <JobStatusBadge status={status} />
+              )}
+              {job.hired && (
+                <Badge className="rounded-full border-0 bg-violet-100 text-violet-800">
+                  <BadgeCheck className="mr-1 h-3.5 w-3.5" /> They hired you
+                </Badge>
+              )}
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{job.categoryName}</span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" /> {job.postcode}
+                {job.distanceMiles != null && ` · ${job.distanceMiles} mi`}
+              </span>
+              {job.budget && <span>{job.budget}</span>}
+              {job.workingHours && <span>{job.workingHours}</span>}
+              {job.timing && <span>{job.timing}</span>}
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
+              </span>
+            </div>
+          </div>
+
+          {/* Chat lives in the Messages inbox now — this jumps straight to this
+              job's conversation. Only while the job is active (a closed job's
+              chat reaches no one). */}
+          {active && (
+            <Button asChild variant="outline" className="h-9 shrink-0 rounded-lg px-3 text-xs">
+              <Link to="/messages" search={{ job: job.id }}>
+                <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message customer
+              </Link>
+            </Button>
           )}
         </div>
 
-        {/* The full job the customer posted — description, details and photos —
-            carried through from the board so nothing is lost in "My jobs". */}
-        <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{job.description}</p>
-
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{job.categoryName}</span>
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" /> {job.postcode}
-            {job.distanceMiles != null && ` · ${job.distanceMiles} mi`}
-          </span>
-          {job.budget && <span>{job.budget}</span>}
-          {job.workingHours && <span>{job.workingHours}</span>}
-          {job.timing && <span>{job.timing}</span>}
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" /> Posted {timeAgo(job.createdAt)}
-          </span>
-        </div>
+        <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{job.description}</p>
 
         <JobPhotos photos={job.photos} />
-
-        {/* The pro's own quote on this job, when they've sent one. */}
-        {job.myQuote && (
-          <p className="mt-3 rounded-xl border border-primary/15 bg-[#E1F5EE]/40 px-3 py-2 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              Your quote{job.myQuote.amount != null ? `: £${(job.myQuote.amount / 100).toFixed(2)}` : ""}
-            </span>{" "}
-            — {job.myQuote.message}
-          </p>
-        )}
 
         {/* Contact — already unlocked, so the pro can reach the customer. */}
         {job.contact && (
@@ -221,34 +222,6 @@ function ProJobCard({ job, autoOpen = false }: { job: ProJob; autoOpen?: boolean
                 </a>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Chat with the customer about this job. */}
-        {/* Chat is only available while the job is active — the customer's
-            side hides it once the job is completed/cancelled, so messaging a
-            closed job would reach no one. */}
-        {STAGE_OF[job.status ?? "open"] === "active" && (
-          <div className="mt-3">
-            <Button
-              variant="outline"
-              className="h-9 rounded-lg px-3 text-xs"
-              onClick={() => setChatOpen((o) => !o)}
-            >
-              <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-              {chatOpen ? "Hide messages" : "Message customer"}
-            </Button>
-            {chatOpen && (
-              <div className="mt-2">
-                <ChatThread
-                  queryKey={["pro-thread", job.id]}
-                  fetchMessages={() => proJobMessages(job.id)}
-                  sendMessage={(b) => proSendJobMessage(job.id, b)}
-                  isMine={(m) => !m.fromCustomer}
-                  placeholder="Message the customer…"
-                />
-              </div>
-            )}
           </div>
         )}
       </CardContent>
