@@ -139,9 +139,19 @@ function ProJobCard({ job, autoOpen = false }: { job: ProJob; autoOpen?: boolean
     status === "open" ? (job.myQuote ? ENGAGEMENT.quoted : ENGAGEMENT.contacted) : null;
   const active = STAGE_OF[status] === "active";
   const cardRef = useRef<HTMLDivElement>(null);
-  // Deep-linked from a notification → bring this job's card into view.
+  // Deep-linked from "View job" / a notification → bring this job's card into
+  // view. Defer past the router's scroll-to-top on navigation (which otherwise
+  // yanks the page back to the top), and re-settle once photos/layout load.
   useEffect(() => {
-    if (autoOpen) cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!autoOpen) return;
+    const scroll = () =>
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t1 = setTimeout(scroll, 200);
+    const t2 = setTimeout(scroll, 600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [autoOpen]);
 
   return (
