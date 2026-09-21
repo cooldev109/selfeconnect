@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -134,6 +134,13 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
+
+// Smooth-scroll to a section on this page without leaving a #hash in the URL —
+// keeps the whole site uniformly path-based. The href stays for a no-JS fallback.
+function scrollToSection(e: MouseEvent<HTMLAnchorElement>, id: string) {
+  e.preventDefault();
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+}
 
 function Home() {
   const pricing = usePricing();
@@ -335,13 +342,25 @@ function Home() {
             <Logo withTagline={false} />
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-foreground">
+            <a
+              href="#how-it-works"
+              onClick={(e) => scrollToSection(e, "how-it-works")}
+              className="transition-colors hover:text-foreground"
+            >
               For customers
             </a>
-            <a href="#professionals" className="transition-colors hover:text-foreground">
+            <a
+              href="#professionals"
+              onClick={(e) => scrollToSection(e, "professionals")}
+              className="transition-colors hover:text-foreground"
+            >
               For professionals
             </a>
-            <a href="#pricing" className="transition-colors hover:text-foreground">
+            <a
+              href="#pricing"
+              onClick={(e) => scrollToSection(e, "pricing")}
+              className="transition-colors hover:text-foreground"
+            >
               Pricing
             </a>
             <Link to="/about" className="transition-colors hover:text-foreground">
