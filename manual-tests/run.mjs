@@ -44,8 +44,11 @@ import { run as jobInvite } from "./job-invite.mjs";
 import { run as findWork } from "./pro-find-work.mjs";
 import { run as topbar } from "./topbar.mjs";
 import { run as myjobsScroll } from "./myjobs-scroll.mjs";
+import { run as proOnboardingUi } from "./pro-onboarding-ui.mjs";
+import { run as jobPaymentsUi } from "./job-payments-ui.mjs";
+import { run as jobChatUi } from "./job-chat-ui.mjs";
 
-const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions, jobDetail, findWork, notifDeeplink, profileMessage, inbox, jobInvite, topbar, myjobsScroll };
+const ALL = { p1, p2, p3, p4, p5, p6, p7, p8, m3, ruan, proJobView, jobActions, jobDetail, findWork, notifDeeplink, profileMessage, inbox, jobInvite, topbar, myjobsScroll, proOnboardingUi, jobPaymentsUi, jobChatUi };
 const pick = process.argv.slice(2).map((s) => s.toLowerCase());
 const phases = pick.length ? pick.filter((k) => ALL[k]) : Object.keys(ALL);
 
