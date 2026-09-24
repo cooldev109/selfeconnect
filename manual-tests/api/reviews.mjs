@@ -37,9 +37,16 @@ export async function run() {
     const self = await req(`/drivers/${pid}/reviews`, { method: "POST", cookie: pro.cookie, headers: ipHdr("203.0.113.5"), body: { rating: 5 } });
     ok("pro cannot review themselves (403)", self.status === 403, `HTTP ${self.status} ${JSON.stringify(self.body)}`);
 
-    // A verified review from a signed-in customer (POST /reviews).
+    // A verified review from a signed-in customer (POST /reviews) — only allowed
+    // off a real completed job the customer had with this pro.
     const cust = await signupCustomer();
     customers.push(cust.email);
+    // Without a completed job, the review is refused.
+    const noJob = await req(`/reviews`, { method: "POST", cookie: cust.cookie, body: { driverPublicId: pid, rating: 5, comment: "never hired them" } });
+    ok("a review with no completed job is refused (403)", noJob.status === 403, `HTTP ${noJob.status} ${JSON.stringify(noJob.body)}`);
+    // Set up a completed job with this pro, then the review is accepted.
+    const rjob = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Reviewable job", description: "A completed job so the customer can leave a review.", postcode: "RG1 8EQ", contactConsent: true } });
+    sql(`update "Job" set "hiredDriverId"='${pro.id}', status='completed' where id='${rjob.body.id}';`);
     const v = await req(`/reviews`, { method: "POST", cookie: cust.cookie, body: { driverPublicId: pid, rating: 5, comment: "Hired through the site — spotless" } });
     ok("customer verified review accepted (2xx)", v.ok, `HTTP ${v.status} ${JSON.stringify(v.body)}`);
     const isVerified = sql(`select "customerId" is not null from "Review" where id='${v.body?.id}';`);

@@ -98,7 +98,10 @@ export async function run(sharedBrowser) {
     ok("public profile shows the Verified Pro badge", await custPage.getByText("Verified Pro").first().isVisible());
 
     // ---------- REVIEW INTEGRITY ----------
-    // Customer leaves a review (API), then the pro reports it in the UI.
+    // A review needs a real completed job with this pro — set one up, then the
+    // customer leaves a review (API) and the pro reports it in the UI.
+    const rvJob = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "M3 review job", description: "A completed job so the customer can leave a review.", postcode: "RG1 8EQ", contactConsent: true } });
+    sql(`update "Job" set status='completed', "hiredDriverId"='${pro.id}' where id='${rvJob.body.id}';`);
     const rv = await req("/reviews", { method: "POST", cookie: cust.cookie, body: { driverPublicId: pro.publicId, rating: 1, comment: "e2e fake review" } });
     const reviewId = rv.body?.id;
     ok("customer review created for the report flow", rv.ok && !!reviewId, `HTTP ${rv.status}`);

@@ -70,7 +70,8 @@ export async function run() {
     const receipt = await req(`/jobs/${job.id}/receipt`, { cookie: cust.cookie });
     ok("owner can request the payment receipt", receipt.ok && "receiptUrl" in (receipt.body ?? {}), `HTTP ${receipt.status} ${JSON.stringify(receipt.body)}`);
 
-    // Leave a review linked to the job → it's marked paid on the public profile.
+    // Complete the job, then leave a review → it's marked paid on the profile.
+    sql(`update "Job" set status='completed' where id='${job.id}';`);
     const review = await req("/reviews", { method: "POST", cookie: cust.cookie, body: { driverPublicId: pro.publicId, jobId: job.id, rating: 5, comment: "Great job, paid easily through the app." } });
     ok("customer leaves a review for the job (2xx)", review.ok, `HTTP ${review.status} ${JSON.stringify(review.body)}`);
     const profile = await req(`/pros/${pro.publicId}`, { cookie: cust.cookie });

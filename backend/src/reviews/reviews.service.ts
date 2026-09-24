@@ -91,15 +91,23 @@ export class ReviewsService {
     });
     if (!driver) throw new NotFoundException('professional_not_found');
 
-    let jobId: string | undefined;
-    if (dto.jobId) {
-      const job = await this.prisma.job.findFirst({
-        where: { id: dto.jobId, customerId },
-        select: { id: true },
-      });
-      if (!job) throw new NotFoundException('job_not_found');
-      jobId = job.id;
-    }
+    // A review must be tied to a REAL, completed job between this customer and
+    // THIS professional — you can only review someone you actually hired and
+    // finished a job with. Prefer the specific job passed in; otherwise fall
+    // back to their most recent completed job with this pro. No such job → no
+    // review (this is what stops arbitrary, out-of-the-blue reviews).
+    const job = await this.prisma.job.findFirst({
+      where: {
+        customerId,
+        hiredDriverId: driver.id,
+        status: 'completed',
+        ...(dto.jobId ? { id: dto.jobId } : {}),
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    });
+    if (!job) throw new ForbiddenException('review_requires_completed_job');
+    const jobId = job.id;
 
     const comment = dto.comment?.trim() || null;
     const review = await this.prisma.review.upsert({

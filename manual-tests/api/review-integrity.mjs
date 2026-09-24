@@ -23,7 +23,11 @@ export async function run() {
     const cust = await signupCustomer();
     customers.push(cust.email);
 
-    // A customer leaves a plain (no-job) review.
+    // A review requires a real completed job with this pro — set one up.
+    const setupJob = await req("/jobs", { method: "POST", cookie: cust.cookie, body: { categorySlug: "plumber", title: "Integrity setup job", description: "A completed job so the customer can leave a review.", postcode: "RG1 8EQ", contactConsent: true } });
+    sql(`update "Job" set status='completed', "hiredDriverId"='${pro.id}' where id='${setupJob.body.id}';`);
+
+    // The customer leaves a review off that completed job.
     const rv = await req("/reviews", { method: "POST", cookie: cust.cookie, body: { driverPublicId: pro.publicId, rating: 2, comment: "meh" } });
     ok("customer creates a review", rv.ok && !!rv.body?.id, `HTTP ${rv.status}`);
     const reviewId = rv.body.id;
@@ -31,7 +35,7 @@ export async function run() {
     const prof0 = await req(`/pros/${pro.publicId}`, { cookie: cust.cookie });
     const item0 = (prof0.body?.reviews ?? []).find((x) => x.id === reviewId);
     ok("review shows on the public profile with its id", !!item0);
-    ok("a plain review is not a Verified Job Review", item0?.verifiedJob === false);
+    ok("a completed-job review is a Verified Job Review", item0?.verifiedJob === true);
 
     // The pro reports it.
     const rep = await req(`/me/reviews/${reviewId}/report`, { method: "POST", cookie: pro.cookie, body: { reason: "This is fake, from a competitor" } });

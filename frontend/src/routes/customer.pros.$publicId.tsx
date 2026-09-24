@@ -153,13 +153,10 @@ function ProProfilePage() {
                     >
                       <MessageSquare className="mr-2 h-4 w-4" /> Message
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="rounded-xl border-white/25 bg-white/10 text-ink-foreground hover:bg-white/20"
-                      onClick={() => setReviewing((r) => !r)}
-                    >
-                      <Star className="mr-2 h-4 w-4" /> Write a review
-                    </Button>
+                    {/* Reviews are earned, not arbitrary: a customer can only
+                        review a pro from a job they hired them for and marked
+                        complete (that flow deep-links here with ?review=1&jobId).
+                        So there's no free-floating "Write a review" button. */}
                   </div>
                 )}
               </div>

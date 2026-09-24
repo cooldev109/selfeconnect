@@ -83,11 +83,15 @@ export async function run(sharedBrowser) {
     const hasTime = await custPage.locator("text=/\\b\\d{1,2}:\\d{2}\\b/").first().isVisible().catch(() => false);
     ok("the chat message shows a time", hasTime);
 
-    // #15 — the review form opens right under the hero, above the gallery.
+    // #15 — the review form opens right under the hero, above the gallery. It's
+    // reached via "Leave a review" on a completed job (client-side deep-link);
+    // there's no free-floating "Write a review" button any more.
     sql(`update "Driver" set "galleryPhotos"=ARRAY['https://x/a.webp']::text[] where id='${pro.id}'`);
-    await custPage.goto(`${BASE}/customer/pros/${pro.publicId}`, { waitUntil: "networkidle" });
-    await custPage.getByRole("button", { name: /Write a review/ }).first().click();
-    await custPage.waitForTimeout(500);
+    sql(`update "Job" set status='completed', "hiredDriverId"='${pro.id}' where id='${jobId}'`);
+    await custPage.goto(`${BASE}/customer/jobs/${jobId}`, { waitUntil: "networkidle" });
+    await custPage.getByRole("link", { name: /Leave a review/i }).first().click();
+    await custPage.waitForURL(/\/customer\/pros\//, { timeout: 10000 });
+    await custPage.waitForTimeout(600);
     const pos = await custPage.evaluate(() => {
       const svc = [...document.querySelectorAll("*")].find((e) => e.childNodes.length === 1 && e.textContent?.trim() === "How was the service?");
       const g = [...document.querySelectorAll("h2")].find((e) => e.textContent?.includes("Recent work"));
