@@ -4,7 +4,7 @@ import { AdminGuard } from '../admin/admin.guard';
 import { VerificationService } from './verification.service';
 import { VerificationController } from './verification.controller';
 import { AdminVerificationController } from './admin-verification.controller';
-import { SMS_GATEWAY, MockSmsGateway } from './sms.gateway';
+import { SMS_GATEWAY, createSmsGateway } from './sms.gateway';
 
 @Module({
   imports: [AuthModule], // provides AuthGuard; MailService is global
@@ -13,9 +13,10 @@ import { SMS_GATEWAY, MockSmsGateway } from './sms.gateway';
     VerificationService,
     AdminGuard,
     {
-      // No SMS provider wired yet → inert mock (dev/test surface the code).
+      // Real Twilio gateway when TWILIO_* env vars are set, else the inert mock
+      // (dev/test surface the code). Going live = set the env vars, no code change.
       provide: SMS_GATEWAY,
-      useFactory: () => new MockSmsGateway(),
+      useFactory: () => createSmsGateway(),
     },
   ],
   exports: [VerificationService],
