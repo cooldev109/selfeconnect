@@ -59,10 +59,15 @@ export async function run() {
     const er = await req("/me/verification/email/resend", { method: "POST", cookie: pro.cookie });
     ok("email verification resend ok", er.ok && er.body?.ok === true, `HTTP ${er.status}`);
 
-    // --- phone OTP ---
-    const p0 = await req("/me/verification/phone/start", { method: "POST", cookie: pro.cookie, body: { phone: "+44 7700 900123" } });
+    // --- phone OTP (Twilio Verify in prod; in-memory mock here) ---
+    // Unique number per run: the per-phone rate limiter is keyed by number.
+    const phone = `+44 7700 9${String(Date.now()).slice(-5)}`;
+    const p0 = await req("/me/verification/phone/start", { method: "POST", cookie: pro.cookie, body: { phone } });
     ok("phone start returns a 6-digit dev code (mock)", p0.ok && /^\d{6}$/.test(p0.body?.devCode ?? ""), `HTTP ${p0.status} ${JSON.stringify(p0.body)}`);
     const code = p0.body.devCode;
+    // Rate limiting: a repeat request for the same number within 60s is refused.
+    const pdup = await req("/me/verification/phone/start", { method: "POST", cookie: pro.cookie, body: { phone } });
+    ok("a repeat SMS request is rate-limited (429)", pdup.status === 429, `HTTP ${pdup.status} ${JSON.stringify(pdup.body)}`);
     const wrong = code === "000000" ? "111111" : "000000";
     const pbad = await req("/me/verification/phone/confirm", { method: "POST", cookie: pro.cookie, body: { code: wrong } });
     ok("wrong phone code rejected (400)", pbad.status === 400, `HTTP ${pbad.status}`);

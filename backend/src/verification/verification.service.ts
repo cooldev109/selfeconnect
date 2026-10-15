@@ -1,10 +1,12 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { createHash, randomInt, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -12,7 +14,11 @@ import type { Response } from 'express';
 import type { VerificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
-import { SMS_GATEWAY, type SmsGateway } from './sms.gateway';
+import {
+  PHONE_VERIFIER,
+  type PhoneVerifier,
+  SmsRateLimiter,
+} from './phone-verifier';
 import {
   computeVerificationBadges,
   type VerificationBadges,
@@ -39,17 +45,12 @@ const EXT_MIME: Record<string, string> = {
   webp: 'image/webp',
 };
 const SAFE_DOC = /^ver_[a-zA-Z0-9_-]+\.(pdf|jpg|png|webp)$/;
-const PHONE_CODE_TTL_MS = 10 * 60 * 1000;
 
 const TYPE_LABEL: Record<DocType, string> = {
   identity: 'Identity',
   insurance: 'Insurance',
   qualification: 'Qualification',
 };
-
-function sha256(s: string): string {
-  return createHash('sha256').update(s).digest('hex');
-}
 
 function verificationDir(): string {
   return join(process.env.UPLOAD_DIR || 'uploads', 'verification');
@@ -60,8 +61,11 @@ export class VerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-    @Inject(SMS_GATEWAY) private readonly sms: SmsGateway,
+    @Inject(PHONE_VERIFIER) private readonly phone: PhoneVerifier,
   ) {}
+
+  // Per-phone SMS limits: >= 60s between requests, <= 3 per 10 minutes.
+  private readonly smsLimiter = new SmsRateLimiter(60 * 1000, 10 * 60 * 1000, 3);
 
   private assertDocType(type: string): DocType {
     if (!(DOC_TYPES as readonly string[]).includes(type)) {
@@ -154,51 +158,45 @@ export class VerificationService {
     const number = (phone ?? driver.phone ?? '').trim();
     if (number.length < 6) throw new BadRequestException('no_phone');
 
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    await this.prisma.driver.update({
-      where: { id: driverId },
-      data: {
-        // Adopting a new number resets any prior verified state for it.
-        ...(phone ? { phone: number, phoneVerifiedAt: null } : {}),
-        phoneVerifyCodeHash: sha256(code),
-        phoneVerifyExpiresAt: new Date(Date.now() + PHONE_CODE_TTL_MS),
-      },
-    });
-    await this.sms.send(
-      number,
-      `Your SelfeConnect verification code is ${code}. It expires in 10 minutes.`,
-    );
+    // Abuse / cost protection: >= 60s between requests, <= 3 per 10 min per phone.
+    const limit = this.smsLimiter.check(number);
+    if (!limit.ok) {
+      throw new HttpException(
+        {
+          message: limit.reason === 'too_soon' ? 'sms_too_soon' : 'sms_too_many',
+          retryAfterSec: limit.retryAfterSec,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
 
-    // In mock mode (no SMS provider) surface the code outside production so the
-    // flow is completable in dev + automated tests.
-    const devCode =
-      this.sms.isMock && process.env.NODE_ENV !== 'production' ? code : undefined;
-    return { ok: true as const, mock: this.sms.isMock, devCode };
+    // Adopting a new number resets any prior verified state for it.
+    if (phone) {
+      await this.prisma.driver.update({
+        where: { id: driverId },
+        data: { phone: number, phoneVerifiedAt: null },
+      });
+    }
+
+    // Twilio Verify owns the code (generate/send/expiry); the mock surfaces it
+    // as devCode outside production so dev + tests can complete the flow.
+    const { devCode } = await this.phone.start(number);
+    return { ok: true as const, mock: this.phone.isMock, devCode };
   }
 
   async confirmPhone(driverId: string, code: string) {
     const driver = await this.prisma.driver.findUnique({
       where: { id: driverId },
-      select: { phoneVerifyCodeHash: true, phoneVerifyExpiresAt: true },
+      select: { phone: true },
     });
-    if (!driver) throw new NotFoundException('driver_not_found');
-    if (
-      !driver.phoneVerifyCodeHash ||
-      !driver.phoneVerifyExpiresAt ||
-      driver.phoneVerifyExpiresAt.getTime() < Date.now()
-    ) {
-      throw new BadRequestException('code_expired');
-    }
-    if (sha256(code) !== driver.phoneVerifyCodeHash) {
-      throw new BadRequestException('bad_code');
-    }
+    if (!driver?.phone) throw new BadRequestException('no_phone');
+
+    const approved = await this.phone.check(driver.phone, code.trim());
+    if (!approved) throw new BadRequestException('bad_code');
+
     await this.prisma.driver.update({
       where: { id: driverId },
-      data: {
-        phoneVerifiedAt: new Date(),
-        phoneVerifyCodeHash: null,
-        phoneVerifyExpiresAt: null,
-      },
+      data: { phoneVerifiedAt: new Date() },
     });
     return { ok: true as const, verified: true };
   }
