@@ -18,6 +18,7 @@ import {
   PHONE_VERIFIER,
   type PhoneVerifier,
   SmsRateLimiter,
+  toE164UK,
 } from './phone-verifier';
 import {
   computeVerificationBadges,
@@ -155,8 +156,11 @@ export class VerificationService {
       select: { phone: true },
     });
     if (!driver) throw new NotFoundException('driver_not_found');
-    const number = (phone ?? driver.phone ?? '').trim();
-    if (number.length < 6) throw new BadRequestException('no_phone');
+    const raw = (phone ?? driver.phone ?? '').trim();
+    if (raw.length < 6) throw new BadRequestException('no_phone');
+    // Twilio Verify needs E.164 (e.g. "07595697886" → "+447595697886").
+    const number = toE164UK(raw);
+    if (!number) throw new BadRequestException('invalid_phone');
 
     // Abuse / cost protection: >= 60s between requests, <= 3 per 10 min per phone.
     const limit = this.smsLimiter.check(number);
@@ -170,7 +174,7 @@ export class VerificationService {
       );
     }
 
-    // Adopting a new number resets any prior verified state for it.
+    // Adopting a new number resets any prior verified state for it (store E.164).
     if (phone) {
       await this.prisma.driver.update({
         where: { id: driverId },
@@ -179,9 +183,17 @@ export class VerificationService {
     }
 
     // Twilio Verify owns the code (generate/send/expiry); the mock surfaces it
-    // as devCode outside production so dev + tests can complete the flow.
-    const { devCode } = await this.phone.start(number);
-    return { ok: true as const, mock: this.phone.isMock, devCode };
+    // as devCode outside production so dev + tests can complete the flow. A
+    // provider failure becomes a clean message rather than a 500.
+    try {
+      const { devCode } = await this.phone.start(number);
+      return { ok: true as const, mock: this.phone.isMock, devCode };
+    } catch {
+      throw new HttpException(
+        { message: 'couldnt_send_code' },
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
   }
 
   async confirmPhone(driverId: string, code: string) {
@@ -190,8 +202,10 @@ export class VerificationService {
       select: { phone: true },
     });
     if (!driver?.phone) throw new BadRequestException('no_phone');
+    const number = toE164UK(driver.phone);
+    if (!number) throw new BadRequestException('invalid_phone');
 
-    const approved = await this.phone.check(driver.phone, code.trim());
+    const approved = await this.phone.check(number, code.trim());
     if (!approved) throw new BadRequestException('bad_code');
 
     await this.prisma.driver.update({

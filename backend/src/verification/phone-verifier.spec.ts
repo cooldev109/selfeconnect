@@ -3,7 +3,23 @@ import {
   MockPhoneVerifier,
   TwilioVerifyPhoneVerifier,
   SmsRateLimiter,
+  toE164UK,
 } from './phone-verifier';
+
+describe('toE164UK', () => {
+  it('normalizes UK local, spaced, 44 and 0044 forms to E.164', () => {
+    expect(toE164UK('07595697886')).toBe('+447595697886');
+    expect(toE164UK('+44 7595 697886')).toBe('+447595697886');
+    expect(toE164UK('447595697886')).toBe('+447595697886');
+    expect(toE164UK('0044 7595 697886')).toBe('+447595697886');
+    expect(toE164UK('+447595697886')).toBe('+447595697886');
+  });
+  it('rejects clearly invalid input', () => {
+    expect(toE164UK('')).toBeNull();
+    expect(toE164UK('123')).toBeNull();
+    expect(toE164UK('abc')).toBeNull();
+  });
+});
 
 describe('createPhoneVerifier (keyless-first selection)', () => {
   const ENV = process.env;

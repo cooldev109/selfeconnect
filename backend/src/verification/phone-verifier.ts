@@ -1,6 +1,26 @@
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'node:crypto';
 
+// Normalize a user-entered phone number to E.164 (what Twilio Verify requires).
+// UK-first: "07595697886" → "+447595697886". Already-international numbers are
+// kept as-is. Returns null if it can't be made into a plausible E.164 number.
+export function toE164UK(raw: string): string | null {
+  let s = (raw || '').replace(/[\s()\-.]/g, '');
+  if (!s) return null;
+  if (s.startsWith('+')) {
+    // already international — leave it
+  } else if (s.startsWith('00')) {
+    s = '+' + s.slice(2);
+  } else if (s.startsWith('0')) {
+    s = '+44' + s.slice(1);
+  } else if (s.startsWith('44')) {
+    s = '+' + s;
+  } else {
+    s = '+44' + s;
+  }
+  return /^\+[1-9]\d{7,14}$/.test(s) ? s : null;
+}
+
 // Phone verification via Twilio Verify. Verify owns the code lifecycle — it
 // generates, sends, retries and checks the OTP — so the app never stores a code.
 // Keyless-first, like the Stripe gateway: when the TWILIO_* env vars are set a
