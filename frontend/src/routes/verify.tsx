@@ -233,6 +233,23 @@ function EmailCard({ state }: { state: VerificationState["email"] }) {
   );
 }
 
+// Turn the backend's short error codes into human text; show a real message
+// as-is, and fall back for anything unknown.
+const VERIFY_ERRORS: Record<string, string> = {
+  couldnt_send_code: "We couldn't send the code right now. Please try again shortly.",
+  sms_too_soon: "Please wait a moment before requesting another code.",
+  sms_too_many: "Too many attempts — please try again later.",
+  invalid_phone: "That doesn't look like a valid phone number.",
+  no_phone: "Please enter your phone number.",
+  bad_code: "That code isn't right. Please check it and try again.",
+};
+function friendlyVerifyError(e: unknown, fallback: string): string {
+  const m = e instanceof Error ? e.message : "";
+  if (VERIFY_ERRORS[m]) return VERIFY_ERRORS[m];
+  // A raw snake_case code we don't recognise → use the fallback, not the code.
+  return m && !/^[a-z0-9_]+$/.test(m) ? m : fallback;
+}
+
 function PhoneCard({ state, onDone }: { state: VerificationState["phone"]; onDone: () => void }) {
   const [phone, setPhone] = useState(state.number ?? "");
   const [code, setCode] = useState("");
@@ -247,12 +264,12 @@ function PhoneCard({ state, onDone }: { state: VerificationState["phone"]; onDon
       setDevCode(r.devCode ?? null);
       setError(null);
     },
-    onError: (e) => setError(e instanceof Error ? e.message : "Could not send code"),
+    onError: (e) => setError(friendlyVerifyError(e, "Could not send the code. Please try again.")),
   });
   const confirm = useMutation({
     mutationFn: () => confirmPhoneVerify(code),
     onSuccess: onDone,
-    onError: (e) => setError(e instanceof Error ? e.message : "Invalid code"),
+    onError: (e) => setError(friendlyVerifyError(e, "Invalid code. Please try again.")),
   });
 
   return (
